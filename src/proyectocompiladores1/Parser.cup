@@ -1,0 +1,100 @@
+package proyectocompiladores1;
+import java_cup.runtime.*;
+import java.util.*;
+
+
+
+//------------------------------------------------PARSER CODE-------------------------------------------------------
+parser code {:
+
+public void report_error(String message, Object info){
+  StringBuilder m = new StringBuilder("Error");
+  if(info instanceof java_cup.runtime.Symbol){
+       java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
+       if(s.left >= 0){
+        m.append(" en la linea " + (s.left+1));
+         if(s.right >=0)
+           m.append(", columna " + (s.right+1));
+      }
+    }
+     m.append(" : " + message);
+     System.err.println(m);
+}
+
+public void report_fatal_error(String message, Object info){
+   report_error(message, info);
+   System.exit(1);
+}
+:}
+
+//------------------------------------------------TERMINALES-------------------------------------------------------
+
+terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,PUNTO,IDENTIFICADOR;
+terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,COMILLAS,INTERROGACION,UNACOMILLA,CORCHETEDER,CORCHETEIZQ,MAINBEGIN,DOSPUNTOS;
+terminal   NUMERO,REAL;
+terminal Integer   INT;
+terminal Double    DOUBLE;
+terminal Char      CHAR;
+terminal String    STRING;
+terminal Boolean   BOOLEAN;
+terminal   AND,EQUALS,OR,FOR,IF,THEN,ELSE,WHILE,ENDIF,ENDWHILE,BEGIN,END,SWITCH,CASE,DO,TRUE,FALSE,PUBLIC,PRIVATE,CLASS,NEW,VOID,BREAK,RETURN,PRINT;
+
+//------------------------------------------------NO-TERMINALES----------------------------------------------------
+
+non terminal Program,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Decl,AsigValor,Type,StatementBody;
+non terminal Statement,Ifstatement,ForStatement,WhileStatement,Expresion,ExpresionIncremento,ExpresionDecremento;
+non terminal OperadorRelacional,OperadorAritmetico,OperadorBooleano,OperadorCompraracion,OperadorNegacion;
+non terminal Print
+//non terminal 
+//------------------------------------------------PRECEDENCIA--------------------------------------------------------
+
+precedence left  SUMA,MENOS;
+precedence left  MULT,DIV,MOD;
+precedence left  PARIZQ;
+
+
+//------------------------------------------------GRAMATICA-------------------------------------------------------
+
+start with Expresion;
+
+Program                        ::= MAINBEGIN Body End;
+
+Body                           ::= DeclaracionVariable PUNTOCOMA StatementBody;
+//DECLARACION VARIABLES
+DeclaracionVariable            ::= DeclaracionSimple| DeclaracionMultiple ;
+DeclaracionSimple              ::=Type IDENTIFICADOR Asignacion ;
+Asignacion                     ::= ASIGNACION AsigValor| ;
+DeclaracionMultiple            ::=Type IDENTIFICADOR Decl ;
+Decl                           ::= COMA IDENTIFICADOR Decl | ;
+AsigValor                      ::= NUMERO | REAL | TRUE | FALSE | STRING | Expresion;
+
+Type                          ::=INT|                  {::}
+                                 DOUBLE|               {::}
+                                 CHAR|                 {::}
+                                 BOOLEAN|              {::}
+                                 STRING|               {::}
+                                 ; 
+//PRINT
+Print                        ::=PRINT PARIZQ AsigValor PARDER PUNTOCOMA;
+
+StatementBody                  ::= Expresion | Statement ;
+Statement                      ::= IfStatement
+                                   |ForStatement
+                                   |WhileStatement
+                                   | ;
+WhileStatement                 ::=WHILE Expresion Do Statement ;
+Expresion                      ::=Suma|Resta
+ExpresionIncremento            ::= IDENTIFICADOR MAS MAS PUNTOCOMA ;
+ExpresionDecremento            ::= IDENTIFICADOR MENOS MENOS PUNTOCOMA;
+OperadorRelacional             ::= MAYOR| MENOR | MENORIGUAL | MAYORIGUAL | DIFERENTE | IGUAL ;
+OperadorAritmetico            ::= MAS | MENOS | MULT | DIV | MOD ;
+OperadorBooleano               ::= TRUE | FLASE ;
+OperadorComparacion            ::= AND | OR ;
+OperadorNegacion               ::= NOT;
+
+
+          
+
+
+
+
