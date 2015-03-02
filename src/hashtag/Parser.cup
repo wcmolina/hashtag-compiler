@@ -1,4 +1,4 @@
-package proyectocompiladores1;
+package hashtag;
 import java_cup.runtime.*;
 import java.util.*;
 

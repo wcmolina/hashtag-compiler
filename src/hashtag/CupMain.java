@@ -16,10 +16,10 @@ public class CupMain {
     public static void main(String[] args) {
         String opts[] = new String[5];
         opts[0] = "-destdir";
-        opts[1] = "src\\ProyectoCompiladores1\\";
+        opts[1] = "src\\hashtag\\";
         opts[2] = "-parser";
         opts[3] = "Parser";
-        opts[4] = "src\\ProyectoCompiladores1\\Parser.cup";
+        opts[4] = "src\\hashtag\\Parser.cup";
         
         try {
             java_cup.Main.main(opts);
