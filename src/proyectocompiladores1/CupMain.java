@@ -8,6 +8,8 @@ package proyectocompiladores1;
 /**
  *
  * @author Wilmer Carranza
+ * 
+ * Clase solo de prueba, esto pasaria a la interfaz.
  */
 public class CupMain {
 
@@ -18,7 +20,7 @@ public class CupMain {
         opts[2] = "-parser";
         opts[3] = "Parser";
         opts[4] = "src\\ProyectoCompiladores1\\Parser.cup";
-
+        
         try {
             java_cup.Main.main(opts);
         } catch (Exception e) {

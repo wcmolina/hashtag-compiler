@@ -6,8 +6,6 @@
 package proyectocompiladores1;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -17,15 +15,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java_cup.runtime.Symbol;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
@@ -45,22 +38,26 @@ public class Interfaz extends javax.swing.JFrame {
      * Creates new form Interfaz
      */
     JFileChooser jf = new JFileChooser();
-    String nombre = "", texto = "", file;
+    String nombre = "", texto = "", file = "";
     int opcion;
     JFrame tokensFrame;
-    
+
     public Interfaz() {
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        
+
         final StyleContext cont = StyleContext.getDefaultStyleContext();
         final AttributeSet attr = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLUE);
         final AttributeSet attrBlack = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLACK);
-        
-        TabSet tabs = new TabSet(new TabStop[]{new TabStop(20)});
-        AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
-        
+        TabStop[] tabs = new TabStop[20];
+        for (int j = 0; j < tabs.length; j++) {
+            tabs[j] = new TabStop((j + 1) * 32);
+        }
+        TabSet tabSet = new TabSet(tabs);
+        //TabSet tabs = new TabSet(new TabStop[]{new TabStop(20)});
+        AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
+
         DefaultStyledDocument doc = new DefaultStyledDocument() {
             @Override
             public void insertString(int offset, String str, AttributeSet a) throws BadLocationException {
@@ -73,10 +70,10 @@ public class Interfaz extends javax.swing.JFrame {
                 int after = findFirstNonWordChar(text, offset + str.length());
                 int wordL = before;
                 int wordR = before;
-                
+
                 while (wordR <= after) {
                     if (wordR == after || String.valueOf(text.charAt(wordR)).matches("\\W")) {
-                        if (text.substring(wordL, wordR).matches("(\\W)*(int|bool|true|false|string)")) {
+                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|string|true|false|function|do|end|case|switch|if|for|while|mainbegin|mainend)")) {
                             setCharacterAttributes(wordL, wordR - wordL, attr, false);
                         } else {
                             setCharacterAttributes(wordL, wordR - wordL, attrBlack, false);
@@ -86,19 +83,19 @@ public class Interfaz extends javax.swing.JFrame {
                     wordR++;
                 }
             }
-            
+
             @Override
             public void remove(int offs, int len) throws BadLocationException {
                 super.remove(offs, len);
-                
+
                 String text = getText(0, getLength());
                 int before = findLastNonWordChar(text, offs);
                 if (before < 0) {
                     before = 0;
                 }
                 int after = findFirstNonWordChar(text, offs);
-                
-                if (text.substring(before, after).matches("(\\W)*(int|bool|string|true|false)")) {
+
+                if (text.substring(before, after).matches("(\\W)*(int|boolean|string|true|false|function|end|case|switch|if|for|while|mainbegin|mainend)")) {
                     setCharacterAttributes(before, after - before, attr, false);
                 } else {
                     setCharacterAttributes(before, after - before, attrBlack, false);
@@ -155,10 +152,10 @@ public class Interfaz extends javax.swing.JFrame {
         });
 
         consoleTextArea.setEditable(false);
-        consoleTextArea.setBackground(new java.awt.Color(51, 51, 51));
+        consoleTextArea.setBackground(new java.awt.Color(24, 24, 24));
         consoleTextArea.setColumns(20);
         consoleTextArea.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
-        consoleTextArea.setForeground(new java.awt.Color(255, 255, 255));
+        consoleTextArea.setForeground(new java.awt.Color(218, 73, 57));
         consoleTextArea.setRows(5);
         consoleTextArea.setToolTipText("");
         jScrollPane3.setViewportView(consoleTextArea);
@@ -230,7 +227,7 @@ public class Interfaz extends javax.swing.JFrame {
                         .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(387, 387, 387)
                         .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 367, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 406, Short.MAX_VALUE)
                         .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
@@ -246,7 +243,7 @@ public class Interfaz extends javax.swing.JFrame {
                         .addComponent(runButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(openButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
+                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -273,20 +270,21 @@ public class Interfaz extends javax.swing.JFrame {
         try {
             bw.close();
         } catch (IOException ex) {
-            System.out.println("Error: " + ex.getMessage());
+            //JOptionPane.showMessageDialog(getRootPane(), "Error: " + ex.getMessage());
+            this.consoleTextArea.setText("Error: " + ex.getMessage());
         }
-        
+
         codeTextPane.setText("");
-        
+
 
     }//GEN-LAST:event_saveButtonActionPerformed
-    
+
     String fileToString(String fileName) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fileName));
         try {
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
-            
+
             while (line != null) {
                 sb.append(line);
                 sb.append("\n");
@@ -299,7 +297,20 @@ public class Interfaz extends javax.swing.JFrame {
     }
 
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
-        // TODO add your handling code here:
+        if (file == "") {
+            this.consoleTextArea.setText("Error: archivo vacio.");
+        } else {
+            try {
+                Parser p = new Parser(new Lexer(new FileReader(file)));
+                Object result = p.parse().value;
+            } catch (LexicalErrorException lee) {
+                this.consoleTextArea.setText("Error: " + lee.getMessage());
+            } catch (FileNotFoundException fnfe) {
+                this.consoleTextArea.setText("Error: " + fnfe.getMessage());
+            } catch (Exception e) {
+                this.consoleTextArea.setText("Error: " + e.getMessage());
+            }
+        }
 
     }//GEN-LAST:event_runButtonActionPerformed
 
@@ -324,7 +335,7 @@ public class Interfaz extends javax.swing.JFrame {
             try {
                 while ((texto = br.readLine()) != null) {
                     str.append(texto).append("\n");
-                    
+
                 }
                 this.codeTextPane.setText(str.toString());
             } catch (IOException ex) {
@@ -357,7 +368,7 @@ public class Interfaz extends javax.swing.JFrame {
     private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
         this.openMenuItemActionPerformed(evt);
     }//GEN-LAST:event_openButtonActionPerformed
-    
+
     private int findLastNonWordChar(String text, int index) {
         while (--index >= 0) {
             if (String.valueOf(text.charAt(index)).matches("\\W")) {
@@ -366,7 +377,7 @@ public class Interfaz extends javax.swing.JFrame {
         }
         return index;
     }
-    
+
     private int findFirstNonWordChar(String text, int index) {
         while (index < text.length()) {
             if (String.valueOf(text.charAt(index)).matches("\\W")) {
