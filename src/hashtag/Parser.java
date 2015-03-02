@@ -4,7 +4,7 @@
 // Sun Mar 01 22:33:03 CST 2015
 //----------------------------------------------------
 
-package proyectocompiladores1;
+package hashtag;
 
 import java_cup.runtime.*;
 import java.util.*;

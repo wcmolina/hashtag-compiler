@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package proyectocompiladores1;
+package hashtag;
 
 import java.io.File;
 
