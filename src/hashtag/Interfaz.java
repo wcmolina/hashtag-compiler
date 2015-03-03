@@ -44,7 +44,7 @@ public class Interfaz extends javax.swing.JFrame {
      * Creates new form Interfaz
      */
     String FILE;
-    boolean CONTENT_CHANGED;
+    boolean CONTENT_CHANGED; //bandera para ver si hay cambios en el textpane
 
     public Interfaz() {
         initComponents();
@@ -117,7 +117,6 @@ public class Interfaz extends javax.swing.JFrame {
         DocumentListener documentListener = new DocumentListener() {
             @Override
             public void changedUpdate(DocumentEvent documentEvent) {
-                setContentChange(true);
             }
 
             @Override
@@ -153,13 +152,13 @@ public class Interfaz extends javax.swing.JFrame {
 
         runButton = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
-        consoleTextArea = new javax.swing.JTextArea();
+        console = new javax.swing.JTextArea();
         saveButton = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         jsp = new javax.swing.JScrollPane();
         codeTextPane = new javax.swing.JTextPane();
         openButton = new javax.swing.JButton();
-        status = new javax.swing.JTextField();
+        status = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -180,14 +179,14 @@ public class Interfaz extends javax.swing.JFrame {
             }
         });
 
-        consoleTextArea.setEditable(false);
-        consoleTextArea.setBackground(new java.awt.Color(24, 24, 24));
-        consoleTextArea.setColumns(20);
-        consoleTextArea.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
-        consoleTextArea.setForeground(new java.awt.Color(218, 73, 57));
-        consoleTextArea.setRows(5);
-        consoleTextArea.setToolTipText("");
-        jScrollPane3.setViewportView(consoleTextArea);
+        console.setEditable(false);
+        console.setBackground(new java.awt.Color(24, 24, 24));
+        console.setColumns(20);
+        console.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
+        console.setForeground(new java.awt.Color(218, 73, 57));
+        console.setRows(5);
+        console.setToolTipText("");
+        jScrollPane3.setViewportView(console);
 
         saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/floppy-128.png"))); // NOI18N
         saveButton.setBorder(BorderFactory.createEmptyBorder());
@@ -215,9 +214,10 @@ public class Interfaz extends javax.swing.JFrame {
             }
         });
 
-        status.setEditable(false);
+        status.setBackground(new java.awt.Color(255, 255, 255));
+        status.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         status.setText("Linea 1, Columna 1");
-        status.setFocusable(false);
+        status.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jMenu1.setText("File");
 
@@ -252,7 +252,6 @@ public class Interfaz extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jsp)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -262,27 +261,28 @@ public class Interfaz extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 415, Short.MAX_VALUE)
                         .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(status))
+                    .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addComponent(jLabel6))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(saveButton, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
                         .addComponent(runButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(openButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(openButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jLabel6)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jsp, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 31, Short.MAX_VALUE)
-                .addGap(5, 5, 5))
+                .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -323,7 +323,7 @@ public class Interfaz extends javax.swing.JFrame {
                 rn++;
             }
         } catch (BadLocationException e) {
-            consoleTextArea.setText("Error: " + e.getMessage());
+            console.setText("Error: " + e.getMessage());
         }
         return rn;
     }
@@ -332,7 +332,7 @@ public class Interfaz extends javax.swing.JFrame {
         try {
             return pos - Utilities.getRowStart(editor, pos) + 1;
         } catch (BadLocationException e) {
-            consoleTextArea.setText("Error: " + e.getMessage());
+            console.setText("Error: " + e.getMessage());
         }
         return -1;
     }
@@ -340,11 +340,13 @@ public class Interfaz extends javax.swing.JFrame {
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         // TODO add your handling code here:
         if (!CONTENT_CHANGED) {
-            this.consoleTextArea.setText("Nothing to save.");
+            this.console.setText("Nothing to save.");
         } else {
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new FileWriter(FILE));
+                writer.write(this.codeTextPane.getText());
+                writer.close();
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
             }
@@ -352,23 +354,27 @@ public class Interfaz extends javax.swing.JFrame {
     }//GEN-LAST:event_saveButtonActionPerformed
 
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
-        if (FILE.isEmpty()) {
-            this.consoleTextArea.setText("Error: archivo vacio.");
+        resetComponents();
+        if (FILE == null) {
+            this.console.setText("Error: no file specified. Please open your source code file first.");
         } else {
             try {
-                Parser p = new Parser(new Lexer(new FileReader(FILE)));
+                Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 Object result = p.parse().value;
             } catch (LexicalErrorException lee) {
-                this.consoleTextArea.setText("Error: " + lee.getMessage());
+                this.console.setText("Error: " + lee.getMessage());
             } catch (FileNotFoundException fnfe) {
-                this.consoleTextArea.setText("Error: " + fnfe.getMessage());
+                this.console.setText("Error: " + fnfe.getMessage());
             } catch (Exception e) {
-                this.consoleTextArea.setText("Error: " + e.getMessage());
+                this.console.setText("Error: " + e.getMessage());
             }
         }
 
     }//GEN-LAST:event_runButtonActionPerformed
 
+    private void resetComponents() {
+        this.console.setText("");
+    }
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_exitMenuItemActionPerformed
@@ -382,16 +388,16 @@ public class Interfaz extends javax.swing.JFrame {
             try {
                 fr = new FileReader(FILE);
             } catch (FileNotFoundException ex) {
-                this.consoleTextArea.setText("Error: " + ex.getMessage());
+                this.console.setText("Error: " + ex.getMessage());
             }
             BufferedReader br = new BufferedReader(fr);
             StringBuilder str = new StringBuilder();
             String text;
             try {
                 while ((text = br.readLine()) != null) {
-                    str.append(text).append("\n"); //removes empty line at the end.
+                    str.append(text).append("\n");
                 }
-                str.deleteCharAt(str.length() - 1);
+                str.deleteCharAt(str.length() - 1); //removes empty line at the end.
                 this.codeTextPane.setText(str.toString());
             } catch (IOException ex) {
                 Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
@@ -440,7 +446,7 @@ public class Interfaz extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane codeTextPane;
-    private javax.swing.JTextArea consoleTextArea;
+    private javax.swing.JTextArea console;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
@@ -452,6 +458,6 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JButton runButton;
     private javax.swing.JButton saveButton;
-    private javax.swing.JTextField status;
+    private javax.swing.JLabel status;
     // End of variables declaration//GEN-END:variables
 }
