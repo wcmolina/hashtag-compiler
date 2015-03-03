@@ -12,21 +12,27 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
+import javax.swing.text.Utilities;
 
 /**
  *
@@ -37,10 +43,8 @@ public class Interfaz extends javax.swing.JFrame {
     /**
      * Creates new form Interfaz
      */
-    JFileChooser jf = new JFileChooser();
-    String nombre = "", texto = "", file = "";
-    int opcion;
-    JFrame tokensFrame;
+    String FILE;
+    boolean CONTENT_CHANGED;
 
     public Interfaz() {
         initComponents();
@@ -55,7 +59,6 @@ public class Interfaz extends javax.swing.JFrame {
             tabs[j] = new TabStop((j + 1) * 32);
         }
         TabSet tabSet = new TabSet(tabs);
-        //TabSet tabs = new TabSet(new TabStop[]{new TabStop(20)});
         AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
 
         DefaultStyledDocument doc = new DefaultStyledDocument() {
@@ -103,7 +106,6 @@ public class Interfaz extends javax.swing.JFrame {
             }
         };
 
-        //this.codeTextPane = new JTextPane(doc);
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
         LinePainter lp = new LinePainter(codeTextPane, Color.decode("#DDE6F3"));
@@ -111,6 +113,32 @@ public class Interfaz extends javax.swing.JFrame {
         TextLineNumber tln = new TextLineNumber(codeTextPane);
         tln.setBackground(Color.decode("#E0E0E0"));
         jsp.setRowHeaderView(tln);
+
+        DocumentListener documentListener = new DocumentListener() {
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                setContentChange(true);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                setContentChange(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                setContentChange(true);
+            }
+        };
+
+        this.codeTextPane.getDocument().addDocumentListener(documentListener);
+        this.codeTextPane.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                status.setText("Linea " + getRow(e.getDot(), (JTextComponent) e.getSource()) + ", Columna " + getColumn(e.getDot(), (JTextComponent) e.getSource()));
+            }
+        });
+        CONTENT_CHANGED = false;
         getContentPane().setBackground(Color.decode("#E0E0E0"));
     }
 
@@ -131,6 +159,7 @@ public class Interfaz extends javax.swing.JFrame {
         jsp = new javax.swing.JScrollPane();
         codeTextPane = new javax.swing.JTextPane();
         openButton = new javax.swing.JButton();
+        status = new javax.swing.JTextField();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -171,7 +200,7 @@ public class Interfaz extends javax.swing.JFrame {
             }
         });
 
-        codeTextPane.setBorder(null);
+        codeTextPane.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         codeTextPane.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
         jsp.setViewportView(codeTextPane);
 
@@ -185,6 +214,10 @@ public class Interfaz extends javax.swing.JFrame {
                 openButtonActionPerformed(evt);
             }
         });
+
+        status.setEditable(false);
+        status.setText("Linea 1, Columna 1");
+        status.setFocusable(false);
 
         jMenu1.setText("File");
 
@@ -220,15 +253,16 @@ public class Interfaz extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jsp)
-                    .addComponent(jScrollPane3)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(387, 387, 387)
                         .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 406, Short.MAX_VALUE)
-                        .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 415, Short.MAX_VALUE)
+                        .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(status))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -243,131 +277,23 @@ public class Interfaz extends javax.swing.JFrame {
                         .addComponent(runButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(openButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE)
+                .addComponent(jsp, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 31, Short.MAX_VALUE)
+                .addGap(5, 5, 5))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
-        // TODO add your handling code here:
-        PrintWriter pw = null;
-        BufferedWriter bw = null;
-        try {
-            bw = new BufferedWriter(new FileWriter(file));
-        } catch (Exception ex) {
-            System.out.println("Error: " + ex.getMessage());
-        }
-        try {
-            String texto = codeTextPane.getText().replace("\n", "\r\n");
-            bw.write(texto);
-        } catch (IOException ex) {
-            System.out.println("Error: " + ex.getMessage());
-        }
-        try {
-            bw.close();
-        } catch (IOException ex) {
-            //JOptionPane.showMessageDialog(getRootPane(), "Error: " + ex.getMessage());
-            this.consoleTextArea.setText("Error: " + ex.getMessage());
-        }
-
-        codeTextPane.setText("");
-
-
-    }//GEN-LAST:event_saveButtonActionPerformed
-
-    String fileToString(String fileName) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(fileName));
-        try {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                sb.append("\n");
-                line = br.readLine();
-            }
-            return sb.toString();
-        } finally {
-            br.close();
-        }
+    /*
+     The following are methods used in code above
+     */
+    private void setContentChange(boolean b) {
+        CONTENT_CHANGED = b;
     }
-
-    private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
-        if (file == "") {
-            this.consoleTextArea.setText("Error: archivo vacio.");
-        } else {
-            try {
-                Parser p = new Parser(new Lexer(new FileReader(file)));
-                Object result = p.parse().value;
-            } catch (LexicalErrorException lee) {
-                this.consoleTextArea.setText("Error: " + lee.getMessage());
-            } catch (FileNotFoundException fnfe) {
-                this.consoleTextArea.setText("Error: " + fnfe.getMessage());
-            } catch (Exception e) {
-                this.consoleTextArea.setText("Error: " + e.getMessage());
-            }
-        }
-
-    }//GEN-LAST:event_runButtonActionPerformed
-
-    private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_exitMenuItemActionPerformed
-
-    private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
-        opcion = jf.showOpenDialog(this);
-        if (opcion == JFileChooser.APPROVE_OPTION) {
-            file = jf.getSelectedFile().getPath();
-            //jTextField1.setText("Archivo " + file);
-            this.codeTextPane.setText("");
-            FileReader fr = null;
-            try {
-                fr = new FileReader(file);
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            BufferedReader br = new BufferedReader(fr);
-            StringBuilder str = new StringBuilder();
-            try {
-                while ((texto = br.readLine()) != null) {
-                    str.append(texto).append("\n");
-
-                }
-                this.codeTextPane.setText(str.toString());
-            } catch (IOException ex) {
-                Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            /*
-             Parser myParser;
-             if (scanner != null){
-             myParser = new Parser(scanner);
-             try {
-             myParser.parse();
-             } catch (Exception ex) {
-             Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
-             }
-             }
-            
-             Symbol s = null;
-             do{
-             try {
-             s = scanner.next_token();
-             System.out.println("Token: " + s.toString());
-             } catch (IOException ex) {
-             Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
-             }
-                
-             }while(s.sym != 0);*/
-        }
-    }//GEN-LAST:event_openMenuItemActionPerformed
-
-    private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
-        this.openMenuItemActionPerformed(evt);
-    }//GEN-LAST:event_openButtonActionPerformed
 
     private int findLastNonWordChar(String text, int index) {
         while (--index >= 0) {
@@ -387,6 +313,95 @@ public class Interfaz extends javax.swing.JFrame {
         }
         return index;
     }
+
+    private int getRow(int pos, JTextComponent editor) {
+        int rn = (pos == 0) ? 1 : 0;
+        try {
+            int offs = pos;
+            while (offs > 0) {
+                offs = Utilities.getRowStart(editor, offs) - 1;
+                rn++;
+            }
+        } catch (BadLocationException e) {
+            consoleTextArea.setText("Error: " + e.getMessage());
+        }
+        return rn;
+    }
+
+    private int getColumn(int pos, JTextComponent editor) {
+        try {
+            return pos - Utilities.getRowStart(editor, pos) + 1;
+        } catch (BadLocationException e) {
+            consoleTextArea.setText("Error: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
+        // TODO add your handling code here:
+        if (!CONTENT_CHANGED) {
+            this.consoleTextArea.setText("Nothing to save.");
+        } else {
+            Writer writer = null;
+            try {
+                writer = new BufferedWriter(new FileWriter(FILE));
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+    }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
+        if (FILE.isEmpty()) {
+            this.consoleTextArea.setText("Error: archivo vacio.");
+        } else {
+            try {
+                Parser p = new Parser(new Lexer(new FileReader(FILE)));
+                Object result = p.parse().value;
+            } catch (LexicalErrorException lee) {
+                this.consoleTextArea.setText("Error: " + lee.getMessage());
+            } catch (FileNotFoundException fnfe) {
+                this.consoleTextArea.setText("Error: " + fnfe.getMessage());
+            } catch (Exception e) {
+                this.consoleTextArea.setText("Error: " + e.getMessage());
+            }
+        }
+
+    }//GEN-LAST:event_runButtonActionPerformed
+
+    private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_exitMenuItemActionPerformed
+
+    private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
+        JFileChooser jf = new JFileChooser();
+        if (jf.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            FILE = jf.getSelectedFile().getPath();
+            this.codeTextPane.setText("");
+            FileReader fr = null;
+            try {
+                fr = new FileReader(FILE);
+            } catch (FileNotFoundException ex) {
+                this.consoleTextArea.setText("Error: " + ex.getMessage());
+            }
+            BufferedReader br = new BufferedReader(fr);
+            StringBuilder str = new StringBuilder();
+            String text;
+            try {
+                while ((text = br.readLine()) != null) {
+                    str.append(text).append("\n"); //removes empty line at the end.
+                }
+                str.deleteCharAt(str.length() - 1);
+                this.codeTextPane.setText(str.toString());
+            } catch (IOException ex) {
+                Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_openMenuItemActionPerformed
+
+    private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
+        this.openMenuItemActionPerformed(evt);
+    }//GEN-LAST:event_openButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -437,5 +452,6 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JButton runButton;
     private javax.swing.JButton saveButton;
+    private javax.swing.JTextField status;
     // End of variables declaration//GEN-END:variables
 }
