@@ -104,11 +104,11 @@ COMENTARIOUNALINEA={HASHTAG}.
     "function"       {return symbol(sym.FUNCTION);}
     "mainbegin"      {return symbol(sym.MAINBEGIN);}
     "begin"          {return symbol(sym.BEGIN); }
-    "mainend"        {return symbol(sym.ENDMAIN); }
+    "endmain"        {return symbol(sym.ENDMAIN);}
     "switch"         {return symbol(sym.SWITCH);}
     "case"           {return symbol(sym.CASE);}
     "do"             {return symbol(sym.DO);}
-    "end"            {return symbol(sym.END); }
+    "end"            {return symbol(sym.END);}
     "true"           {return symbol(sym.TRUE);}
     "false"          {return symbol(sym.FALSE);}
     "break"          {return symbol(sym.BREAK);}

@@ -78,7 +78,7 @@ public class Interfaz extends javax.swing.JFrame {
 
                 while (wordR <= after) {
                     if (wordR == after || String.valueOf(text.charAt(wordR)).matches("\\W")) {
-                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|true|false|string|mainbegin|mainend|begin|end|if|else|do|function|return|case|switch"
+                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch"
                                 + "|while|for|break|print|and|or)")) {
                             setCharacterAttributes(wordL, wordR - wordL, keyword, false);
                         } else {
@@ -363,7 +363,7 @@ public class Interfaz extends javax.swing.JFrame {
             } else {
                 this.console.setText("No changes have been made");
                 //this.console.setForeground(Color.decode("#DA4939"));
-                
+
             }
 
         }
@@ -381,21 +381,18 @@ public class Interfaz extends javax.swing.JFrame {
     }
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
-        if (FILE_PATH == null) {
-            this.console.setText("Error: no file specified. Please open your source code file first.");
-        } else {
-            try {
-                Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
-                Object result = p.parse().value;
+        try {
+            Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
+            Object result = p.parse().value;
 
-            } catch (LexicalErrorException lee) {
-                this.console.setText("Error: " + lee.getMessage());
-            } catch (FileNotFoundException fnfe) {
-                this.console.setText("Error: " + fnfe.getMessage());
-            } catch (Exception e) {
-                this.console.setText("Error: " + e.getMessage());
-            }
+        } catch (LexicalErrorException lee) {
+            this.console.setText("Error: " + lee.getMessage());
+        } catch (FileNotFoundException fnfe) {
+            this.console.setText("Error: " + fnfe.getMessage());
+        } catch (Exception e) {
+            this.console.setText("Error: " + e.getMessage());
         }
+
 
     }//GEN-LAST:event_runButtonActionPerformed
 
