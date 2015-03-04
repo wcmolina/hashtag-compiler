@@ -21,7 +21,7 @@ public class LexerMain {
     
     public static void main(String[] args) {
         // TODO code application logic here
-       jflex.Main.generate(new File("src\\ProyectoCompiladores1\\Lexer.flex"));
+       jflex.Main.generate(new File("src\\hashtag\\Lexer.flex"));
     }
     
 }

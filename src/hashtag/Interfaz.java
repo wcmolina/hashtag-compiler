@@ -6,8 +6,10 @@
 package hashtag;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -15,9 +17,12 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
+import javax.swing.JOptionPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -43,7 +48,7 @@ public class Interfaz extends javax.swing.JFrame {
     /**
      * Creates new form Interfaz
      */
-    String FILE;
+    String FILE_PATH;
     boolean CONTENT_CHANGED; //bandera para ver si hay cambios en el textpane
 
     public Interfaz() {
@@ -52,14 +57,11 @@ public class Interfaz extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         final StyleContext cont = StyleContext.getDefaultStyleContext();
-        final AttributeSet attr = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLUE);
-        final AttributeSet attrBlack = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLACK);
-        TabStop[] tabs = new TabStop[20];
-        for (int j = 0; j < tabs.length; j++) {
-            tabs[j] = new TabStop((j + 1) * 32);
-        }
-        TabSet tabSet = new TabSet(tabs);
-        AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
+
+        final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLUE);
+        final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLACK);
+        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.LIGHT_GRAY);
+        final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.ORANGE);
 
         DefaultStyledDocument doc = new DefaultStyledDocument() {
             @Override
@@ -76,35 +78,26 @@ public class Interfaz extends javax.swing.JFrame {
 
                 while (wordR <= after) {
                     if (wordR == after || String.valueOf(text.charAt(wordR)).matches("\\W")) {
-                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|string|true|false|function|do|end|case|switch|if|for|while|mainbegin|mainend)")) {
-                            setCharacterAttributes(wordL, wordR - wordL, attr, false);
+                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|true|false|string|mainbegin|mainend|begin|end|if|else|do|function|return|case|switch"
+                                + "|while|for|break|print|and|or)")) {
+                            setCharacterAttributes(wordL, wordR - wordL, keyword, false);
                         } else {
-                            setCharacterAttributes(wordL, wordR - wordL, attrBlack, false);
+                            setCharacterAttributes(wordL, wordR - wordL, plain, false);
                         }
                         wordL = wordR;
                     }
                     wordR++;
                 }
             }
-
-            @Override
-            public void remove(int offs, int len) throws BadLocationException {
-                super.remove(offs, len);
-
-                String text = getText(0, getLength());
-                int before = findLastNonWordChar(text, offs);
-                if (before < 0) {
-                    before = 0;
-                }
-                int after = findFirstNonWordChar(text, offs);
-
-                if (text.substring(before, after).matches("(\\W)*(int|boolean|string|true|false|function|end|case|switch|if|for|while|mainbegin|mainend)")) {
-                    setCharacterAttributes(before, after - before, attr, false);
-                } else {
-                    setCharacterAttributes(before, after - before, attrBlack, false);
-                }
-            }
         };
+
+        TabStop[] tabs = new TabStop[20];
+        for (int j = 0; j < tabs.length; j++) {
+            tabs[j] = new TabStop((j + 1) * 32);
+        }
+
+        TabSet tabSet = new TabSet(tabs);
+        AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
 
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
@@ -159,6 +152,7 @@ public class Interfaz extends javax.swing.JFrame {
         codeTextPane = new javax.swing.JTextPane();
         openButton = new javax.swing.JButton();
         status = new javax.swing.JLabel();
+        filePathLabel = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -180,10 +174,10 @@ public class Interfaz extends javax.swing.JFrame {
         });
 
         console.setEditable(false);
-        console.setBackground(new java.awt.Color(24, 24, 24));
+        console.setBackground(new java.awt.Color(42, 42, 42));
         console.setColumns(20);
         console.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
-        console.setForeground(new java.awt.Color(218, 73, 57));
+        console.setForeground(new java.awt.Color(255, 255, 255));
         console.setRows(5);
         console.setToolTipText("");
         jScrollPane3.setViewportView(console);
@@ -218,6 +212,11 @@ public class Interfaz extends javax.swing.JFrame {
         status.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         status.setText("Linea 1, Columna 1");
         status.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        filePathLabel.setBackground(new java.awt.Color(255, 255, 255));
+        filePathLabel.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        filePathLabel.setText("File:");
+        filePathLabel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jMenu1.setText("File");
 
@@ -262,7 +261,10 @@ public class Interfaz extends javax.swing.JFrame {
                         .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(status, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(filePathLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -281,7 +283,9 @@ public class Interfaz extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
+                    .addComponent(filePathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -339,28 +343,51 @@ public class Interfaz extends javax.swing.JFrame {
 
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         // TODO add your handling code here:
-        if (!CONTENT_CHANGED) {
-            this.console.setText("Nothing to save.");
-        } else {
-            Writer writer = null;
-            try {
-                writer = new BufferedWriter(new FileWriter(FILE));
-                writer.write(this.codeTextPane.getText());
-                writer.close();
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
+        if (FILE_PATH == null) { //es porque aun no ha abierto un archivo y quiere guardar lo que hay en el textpane...
+            JFileChooser fc = new JFileChooser();
+            fc.setDialogTitle("Save As");
+            int userSelection = fc.showSaveDialog(this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fc.getSelectedFile();
+                FILE_PATH = fileToSave.getAbsolutePath();
+                save(FILE_PATH, this.codeTextPane.getText());
+                this.filePathLabel.setText("File: " + FILE_PATH);
             }
+        } else { //ya hay una referencia de un archivo abierto y quiere guardarlo.
+            if (CONTENT_CHANGED) { //si hay cambios, entonces
+                int dialogResult = JOptionPane.showConfirmDialog(null, "File will be overwritten. Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
+                if (dialogResult == JOptionPane.YES_OPTION) {
+                    save(FILE_PATH, this.codeTextPane.getText());
+                    CONTENT_CHANGED = false;
+                }
+            } else {
+                this.console.setText("No changes have been made");
+                //this.console.setForeground(Color.decode("#DA4939"));
+                
+            }
+
         }
     }//GEN-LAST:event_saveButtonActionPerformed
 
+    private void save(String path, String content) {
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(path));
+            writer.write(content);
+            writer.close();
+        } catch (IOException ex) {
+            this.console.setText("Error: " + ex.getMessage());
+        }
+    }
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
-        if (FILE == null) {
+        if (FILE_PATH == null) {
             this.console.setText("Error: no file specified. Please open your source code file first.");
         } else {
             try {
                 Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 Object result = p.parse().value;
+
             } catch (LexicalErrorException lee) {
                 this.console.setText("Error: " + lee.getMessage());
             } catch (FileNotFoundException fnfe) {
@@ -382,11 +409,11 @@ public class Interfaz extends javax.swing.JFrame {
     private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
         JFileChooser jf = new JFileChooser();
         if (jf.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            FILE = jf.getSelectedFile().getPath();
+            FILE_PATH = jf.getSelectedFile().getPath();
             this.codeTextPane.setText("");
             FileReader fr = null;
             try {
-                fr = new FileReader(FILE);
+                fr = new FileReader(FILE_PATH);
             } catch (FileNotFoundException ex) {
                 this.console.setText("Error: " + ex.getMessage());
             }
@@ -399,6 +426,8 @@ public class Interfaz extends javax.swing.JFrame {
                 }
                 str.deleteCharAt(str.length() - 1); //removes empty line at the end.
                 this.codeTextPane.setText(str.toString());
+                this.filePathLabel.setText("File: " + FILE_PATH);
+                CONTENT_CHANGED = false;
             } catch (IOException ex) {
                 Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -448,6 +477,7 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JTextPane codeTextPane;
     private javax.swing.JTextArea console;
     private javax.swing.JMenuItem exitMenuItem;
+    private javax.swing.JLabel filePathLabel;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;

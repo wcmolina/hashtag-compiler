@@ -1,5 +1,6 @@
-package proyectocompiladores1;
+package hashtag;
 import java_cup.runtime.Symbol;
+import java.util.ArrayList;
 %%
 
 %class Lexer
