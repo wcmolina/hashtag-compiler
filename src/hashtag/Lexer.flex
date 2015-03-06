@@ -115,7 +115,11 @@ COMENTARIOUNALINEA={HASHTAG}.
     "return"         {return symbol(sym.RETURN);}
     "print"          {return symbol(sym.PRINT);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
-    [^]              {throw new LexicalErrorException("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn);}
+    [^]              {
+                        int l = yyline+1;
+                        int c = yycolumn+1;
+                        Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + l + ", columna: " + c);
+                     }
 }
 
 <COMMENT> {

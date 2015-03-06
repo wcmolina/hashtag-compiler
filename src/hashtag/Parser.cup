@@ -2,21 +2,23 @@ package hashtag;
 import java_cup.runtime.*;
 import java.util.*;
 
-/*------------------------------------------------PARSER CODE-------------------------------------------------------*/
+
+
+//------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
 
-public void report_error(String message, Object info) {
+public void report_error(String message, Object info){
   StringBuilder m = new StringBuilder("Error");
   if(info instanceof java_cup.runtime.Symbol){
        java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
        if(s.left >= 0){
-        m.append(" en la linea " + (s.left+1));
+        m.append(" in line " + (s.left+1));
          if(s.right >=0)
-           m.append(", columna " + (s.right+1));
+           m.append(", column " + (s.right+1));
       }
     }
-     m.append(" : " + message + "," + info);
-     System.err.println(m);
+     m.append(" : " + message);
+     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
 }
 
 public void report_fatal_error(String message, Object info){
@@ -25,65 +27,65 @@ public void report_fatal_error(String message, Object info){
 }
 :}
 
-/*------------------------------------------------TERMINALES-------------------------------------------------------*/
+//------------------------------------------------TERMINALES-------------------------------------------------------
 
-terminal   SUMA, MENOS, DIV, MULT, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL, NOT, DIFERENTE, IGUAL, ASIGNACION, PUNTO;
-terminal   PARDER, PARIZQ, MOD, COMA, PUNTOCOMA, COMILLAS, INTERROGACION, UNACOMILLA, CORCHETEDER, CORCHETEIZQ, MAINBEGIN, ENDMAIN, DOSPUNTOS, FUNCTION;
-terminal   REAL;
-terminal Integer   INT, IDENTIFICADOR, NUMERO;
+terminal MAINBEGIN, ENDMAIN, BEGIN, DO, END;
+terminal FUNCTION, RETURN, PRINT;
+terminal FOR, WHILE, BREAK;
+terminal IF, ELSE, AND, OR, SWITCH, CASE;
+terminal SUMA, MENOS, DIV, MULT, MOD;
+terminal MAYOR, MENOR, MENORIGUAL, MAYORIGUAL, IGUAL, DIFERENTE, NOT, TRUE, FALSE;
+terminal PARIZQ, PARDER, COMA, PUNTOCOMA, INTERROGACION, UNACOMILLA, CORCHETEIZQ, CORCHETEDER, DOSPUNTOS, ASIGNACION, PUNTO;
+terminal IDENTIFICADOR;
+terminal NUMERO, REAL;
+
+terminal Integer   INT;
 terminal Double    DOUBLE;
 terminal Char      CHAR;
 terminal String    STRING;
 terminal Boolean   BOOLEAN;
-terminal   AND, EQUALS, OR, FOR, IF, THEN, ELSE, WHILE, ENDIF, ENDWHILE, BEGIN, END, SWITCH, CASE, DO, TRUE, FALSE, PUBLIC, PRIVATE, CLASS, NEW, VOID, BREAK, RETURN, PRINT;
 
-/*------------------------------------------------NO-TERMINALES----------------------------------------------------*/
 
-non terminal Object     expr_list, expr_part;
-non terminal Integer    expr, factor, term;
+//------------------------------------------------NO-TERMINALES----------------------------------------------------
+non terminal Program, Mainbody, FunctionList, FunctionPart, ParamsList, ParamsPart, Type;
+non terminal Body, Vardeclist, Vardecpart;
+non terminal ExpresionAritmetica, Expr, Factor, Term;
 
-/*------------------------------------------------PRECEDENCIA--------------------------------------------------------*/
 
-precedence left  SUMA, MENOS;
-precedence left  MULT, DIV;
+//------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
-/*------------------------------------------------GRAMATICA-------------------------------------------------------*/
+precedence left  SUMA,MENOS;
+precedence left  MULT,DIV,MOD;
 
-   expr_list ::= expr_list expr_part
-                 |
-                 expr_part;
+//------------------------------------------------GRAMATICA-------------------------------------------------------
 
-   expr_part ::= expr:e
-                 {: System.out.println(" = " + e); :}
-                 PUNTOCOMA
-                 ;
+start with Program;
 
-   expr      ::= expr:e SUMA factor:f
-                 {: RESULT = new Integer(e.intValue() + f.intValue()); :}
-                 |
-                 expr:e MENOS factor:f
-                 {: RESULT = new Integer(e.intValue() - f.intValue()); :}
-                 |
-                 factor:f
-                 {: RESULT = new Integer(f.intValue()); :}
-                 ;
+Program                     ::= BEGIN FunctionList Mainbody END | BEGIN Mainbody END;
+FunctionList                ::= FunctionList FunctionPart
+                                |
+                                FunctionPart;
 
-   factor    ::= factor:f MULT term:t
-                 {: RESULT = new Integer(f.intValue() * t.intValue()); :}
-                 |
-                 factor:f DIV term:t
-                 {: RESULT = new Integer(f.intValue() / t.intValue()); :}
-                 |
-                 term:t
-                 {: RESULT = new Integer(t.intValue()); :}
-                 ;
+FunctionPart                ::= FUNCTION Type IDENTIFICADOR PARIZQ ParamsList PARDER DO Body END;
+ParamsList                  ::= ParamsList COMA ParamsPart
+                                |
+                                ParamsPart
+                                | ;
 
-   term      ::= PARIZQ expr:e PARDER
-                 {: RESULT = e; :}
-                 |
-                 NUMERO:n
-                 {: RESULT = n; :}
-                 |
-                 IDENTIFICADOR:i
-                 {: RESULT = i; :}
-                 ;
+ParamsPart                  ::= Type IDENTIFICADOR;
+Type                        ::= INT | DOUBLE | BOOLEAN | STRING | CHAR;
+
+Mainbody                    ::= MAINBEGIN Body ENDMAIN;
+Body                        ::= Vardeclist ;
+Vardeclist                  ::= Vardeclist PUNTOCOMA Vardecpart
+                                |
+                                Vardecpart
+                                | ;
+Vardecpart                  ::= Type IDENTIFICADOR ASIGNACION ExpresionAritmetica
+                                |
+                                ParamsPart PUNTOCOMA ;
+
+ExpresionAritmetica         ::= Expr PUNTOCOMA;
+Expr                        ::= Expr SUMA Factor | Expr MENOS Factor | Factor;
+Factor                      ::= Factor MULT Term | Factor DIV Term | Term;
+Term                        ::= PARIZQ Expr PARDER | NUMERO | IDENTIFICADOR;

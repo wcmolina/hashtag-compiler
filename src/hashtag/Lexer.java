@@ -582,7 +582,7 @@ class Lexer implements java_cup.runtime.Scanner {
    * @return      the next token
    * @exception   java.io.IOException  if any I/O-Error occurs
    */
-  public java_cup.runtime.Symbol next_token() throws java.io.IOException, LexicalErrorException {
+  public java_cup.runtime.Symbol next_token() throws java.io.IOException {
     int zzInput;
     int zzAction;
 
@@ -722,7 +722,9 @@ class Lexer implements java_cup.runtime.Scanner {
           }
         case 58: break;
         case 2: 
-          { throw new LexicalErrorException("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn);
+          { int l = yyline+1;
+                        int c = yycolumn+1;
+                        Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + l + ", columna: " + c);
           }
         case 59: break;
         case 3: 

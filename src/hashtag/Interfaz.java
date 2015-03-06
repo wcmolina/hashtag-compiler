@@ -57,7 +57,6 @@ public class Interfaz extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         final StyleContext cont = StyleContext.getDefaultStyleContext();
-
         final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLUE);
         final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLACK);
         final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.LIGHT_GRAY);
@@ -78,7 +77,7 @@ public class Interfaz extends javax.swing.JFrame {
 
                 while (wordR <= after) {
                     if (wordR == after || String.valueOf(text.charAt(wordR)).matches("\\W")) {
-                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch"
+                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|char|double|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch"
                                 + "|while|for|break|print|and|or)")) {
                             setCharacterAttributes(wordL, wordR - wordL, keyword, false);
                         } else {
@@ -384,13 +383,9 @@ public class Interfaz extends javax.swing.JFrame {
         try {
             Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
             Object result = p.parse().value;
-
-        } catch (LexicalErrorException lee) {
-            this.console.setText("Error: " + lee.getMessage());
         } catch (FileNotFoundException fnfe) {
             this.console.setText("Error: " + fnfe.getMessage());
         } catch (Exception e) {
-            this.console.setText("Error: " + e.getMessage());
         }
 
 
@@ -472,7 +467,7 @@ public class Interfaz extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextPane codeTextPane;
-    private javax.swing.JTextArea console;
+    public static javax.swing.JTextArea console;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JLabel filePathLabel;
     private javax.swing.JLabel jLabel6;
