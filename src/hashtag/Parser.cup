@@ -49,7 +49,7 @@ terminal Boolean   BOOLEAN;
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
 non terminal Program, Mainbody, FunctionList, FunctionPart, ParamsList, ParamsPart, Type;
 non terminal Body, Vardeclist, Vardecpart;
-non terminal ExpresionAritmetica, Expr, Factor, Term;
+non terminal ExpresionAritmetica, Expr, Factor, Term, Vals;
 
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -83,7 +83,11 @@ Vardeclist                  ::= Vardeclist PUNTOCOMA Vardecpart
                                 | ;
 Vardecpart                  ::= Type IDENTIFICADOR ASIGNACION ExpresionAritmetica
                                 |
+                                Type IDENTIFICADOR ASIGNACION Vals
+                                |
                                 ParamsPart PUNTOCOMA ;
+
+Vals                        ::= CHAR | STRING | TRUE | FALSE;
 
 ExpresionAritmetica         ::= Expr PUNTOCOMA;
 Expr                        ::= Expr SUMA Factor | Expr MENOS Factor | Factor;

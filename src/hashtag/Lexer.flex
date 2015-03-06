@@ -55,7 +55,7 @@ COMENTARIOUNALINEA={HASHTAG}.
 %%
 
 <YYINITIAL> {
-    {COMILLAS}              {string.setLength(0); yybegin(SSTRING);}
+    {COMILLAS}              {string.setLength(0); string.append("\"");yybegin(SSTRING);}
     {LLAVEIZQ}              {comment.setLength(0); yybegin(COMMENT);}
     {COMENTARIOUNALINEA}    {/*Ignore*/}
     {NUMERO}                {return symbol(sym.NUMERO, new Integer(yytext()));}
@@ -128,6 +128,9 @@ COMENTARIOUNALINEA={HASHTAG}.
 }
 
 <SSTRING>{
-    {COMILLAS}         {yybegin (YYINITIAL);}
+    {COMILLAS}         {
+                        string.append("\"");
+                        yybegin (YYINITIAL);
+}
     .                  {string.append(yytext());}
 }
