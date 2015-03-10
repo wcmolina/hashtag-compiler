@@ -12,10 +12,11 @@ public void report_error(String message, Object info){
   if(info instanceof java_cup.runtime.Symbol){
        java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
        if(s.left >= 0){
-        m.append(" in line " + (s.left+1));
+        m.append(" en la linea " + (s.left+1));
          if(s.right >=0)
-           m.append(", column " + (s.right+1));
+           m.append(", columna " + (s.right+1));
       }
+      m.append(" @ symbol: " + s);
     }
      m.append(" : " + message);
      Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
@@ -29,16 +30,10 @@ public void report_fatal_error(String message, Object info){
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
 
-terminal MAINBEGIN, ENDMAIN, BEGIN, DO, END;
-terminal FUNCTION, RETURN, PRINT;
-terminal FOR, WHILE, BREAK;
-terminal IF, ELSE, AND, OR, SWITCH, CASE;
-terminal SUMA, MENOS, DIV, MULT, MOD;
-terminal MAYOR, MENOR, MENORIGUAL, MAYORIGUAL, IGUAL, DIFERENTE, NOT, TRUE, FALSE;
-terminal PARIZQ, PARDER, COMA, PUNTOCOMA, INTERROGACION, UNACOMILLA, CORCHETEIZQ, CORCHETEDER, DOSPUNTOS, ASIGNACION, PUNTO;
-terminal IDENTIFICADOR;
-terminal NUMERO, REAL;
-
+terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,PUNTO,IDENTIFICADOR;
+terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,COMILLAS,INTERROGACION,UNACOMILLA,CORCHETEDER,CORCHETEIZQ,MAINBEGIN,DOSPUNTOS;
+terminal   AND,OR,FOR,IF,THEN,ELSE,WHILE,BEGIN,END,ENDMAIN,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
+terminal   NUMERO,REAL,CADENA,CARACTER,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
 terminal Integer   INT;
 terminal Double    DOUBLE;
 terminal Char      CHAR;
@@ -47,49 +42,85 @@ terminal Boolean   BOOLEAN;
 
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
-non terminal Program, Mainbody, FunctionList, FunctionPart, ParamsList, ParamsPart, Type;
-non terminal Body, Vardeclist, Vardecpart;
-non terminal ExpresionAritmetica, Expr, Factor, Term, Vals;
-
+non terminal Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,DeclS,Type,Asignacion,AsigValor,Var,Program,Body2;
+non terminal Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
+non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
+non terminal ExpresionBooleana,ExpresionAritmetica,Num,Factor,Term;
+non terminal Print,LlamadoMetodos,Booleana,Parametros,Multiple,Valor,Cadena;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
 precedence left  SUMA,MENOS;
-precedence left  MULT,DIV,MOD;
+precedence left  MULT,DIV,MOD; 
+precedence left  PARIZQ;
+//leer usuario , llamado metodos
 
 //------------------------------------------------GRAMATICA-------------------------------------------------------
 
 start with Program;
+Program                        ::= BEGIN Body2 Main END;
+Main                           ::= MAINBEGIN Body ENDMAIN;
+Body                           ::= Instruccion PUNTOCOMA Body | Bloque Body | Asignacion PUNTOCOMA|  ;
 
-Program                     ::= BEGIN FunctionList Mainbody END | BEGIN Mainbody END;
-FunctionList                ::= FunctionList FunctionPart
-                                |
-                                FunctionPart;
+/*DECLARACION VARIABLES ASIGNACION VARIABLES */
+Instruccion                    ::= DeclaracionVariable | Llamado ;
+DeclaracionVariable            ::= Type IDENTIFICADOR Var;
+Var                            ::= DeclaracionSimple | DeclaracionMultiple;
+DeclaracionSimple              ::= DeclS;
+DeclaracionMultiple            ::= COMA IDENTIFICADOR DeclaracionMultiple | ;
+Valor                          ::= NUMERO 
+                                   | IDENTIFICADOR
+                                   | REAL;
+AsigValor                      ::=  Cadena
+                                   | CARACTER
+                                   | Booleana
+                                   ;
+Booleana=                      ::= TRUE | FALSE;
+Cadena                         ::= CADENA |ExpresionAritmetica;
+DeclS                          ::= ASIGNACION AsigValor;
+Asignacion                     ::= IDENTIFICADOR DeclS;
+Type                           ::= INT                 
+                                   |DOUBLE              
+                                   |CHAR
+                                   |BOOLEAN
+                                   |STRING ; 
+/*LLAMADOS*/
+Llamado                        ::= Print | LlamadoMetodos;
+LlamadoMetodos                 ::= IDENTIFICADOR PARIZQ PARDER;
+Parametros                     ::= Type IDENTIFICADOR Multiple | Type IDENTIFICADOR |;
+Multiple                       ::= COMA Parametros;
+Print                          ::= PRINT PARIZQ AsigValor PARDER  ;
+Body2                          ::= FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER DO Body END Body2 | ;
 
-FunctionPart                ::= FUNCTION Type IDENTIFICADOR PARIZQ ParamsList PARDER DO Body END;
-ParamsList                  ::= ParamsList COMA ParamsPart
-                                |
-                                ParamsPart
-                                | ;
+/*BLOQUE*/
+Bloque                         ::= Loops END| Conditional END;
+Loops                          ::= ForLoop | WhileLoop ;
+Conditional                    ::= IfConditional  | SwitchConditional ;
+ForLoop                        ::= FOR PARIZQ ExprFor PARDER DO Body ;
+ExprFor                        ::= DeclaracionVariable PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
+WhileLoop                      ::= WHILE PARIZQ ExpresionBooleana PARDER DO Body ;
+IfConditional                  ::= IF PARIZQ ExpresionBooleana PARDER DO Body;
+SwitchConditional              ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch ;
+ExpresionSwitch                ::= CASE Switch DOSPUNTOS Body BREAK PUNTOCOMA ExpresionSwitch  | OTHER DOSPUNTOS Body;
+Switch                         ::= NUMERO | CARACTER;
 
-ParamsPart                  ::= Type IDENTIFICADOR;
-Type                        ::= INT | DOUBLE | BOOLEAN | STRING | CHAR;
+/*EXPRESIONES*/
+Expresion                      ::= ExpresionBooleana | ExpresionAritmetica;
+ExpresionAritmetica            ::= ExpresionAritmetica SUMA Factor | ExpresionAritmetica MENOS Factor | Factor;
+Factor                         ::= Factor MULT Term | Factor DIV Term | Term;
+Term                           ::= PARIZQ ExpresionAritmetica Term | Valor;
+ExpresionBooleana              ::= ExpresionComparacion UnionExpresion | ExpresionComparacion|Booleana ;
 
-Mainbody                    ::= MAINBEGIN Body ENDMAIN;
-Body                        ::= Vardeclist ;
-Vardeclist                  ::= Vardeclist PUNTOCOMA Vardecpart
-                                |
-                                Vardecpart
-                                | ;
-Vardecpart                  ::= Type IDENTIFICADOR ASIGNACION ExpresionAritmetica
-                                |
-                                Type IDENTIFICADOR ASIGNACION Vals
-                                |
-                                ParamsPart PUNTOCOMA ;
-
-Vals                        ::= CHAR | STRING | TRUE | FALSE;
-
-ExpresionAritmetica         ::= Expr PUNTOCOMA;
-Expr                        ::= Expr SUMA Factor | Expr MENOS Factor | Factor;
-Factor                      ::= Factor MULT Term | Factor DIV Term | Term;
-Term                        ::= PARIZQ Expr PARDER | NUMERO | IDENTIFICADOR;
+UnionExpresion                 ::= OperadorComparacion ExpresionComparacion UnionExpresion | OperadorComparacion ExpresionComparacion;
+ExpresionComparacion           ::= AsigValor OperadorRelacional AsigValor | NOT ExpresionComparacion;
+OperadorRelacional             ::= MAYOR 
+                                  |MENOR
+                                  |MAYORIGUAL
+                                  |MENORIGUAL
+                                  |IGUAL
+                                  |DIFERENTE;
+OperadorComparacion            ::= AND | OR ;
+ExpresionIncDec                ::= IDENTIFICADOR Incremento | IDENTIFICADOR Decremento;
+Incremento                     ::= SUMA SUMA;
+Decremento                     ::= MENOS MENOS;
+ 

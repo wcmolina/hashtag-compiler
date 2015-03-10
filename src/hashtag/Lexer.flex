@@ -1,6 +1,5 @@
 package hashtag;
 import java_cup.runtime.Symbol;
-import java.util.ArrayList;
 %%
 
 %class Lexer
@@ -14,11 +13,13 @@ import java.util.ArrayList;
 %{
     /*para los simbolos generales*/
     private Symbol symbol(int type){
+      System.out.println("TOKEN FOUND: " + type);
       return new Symbol(type,yyline,yycolumn);
     }
 
     /*para el tipo de token con su valor*/
     private Symbol symbol (int type, Object value){
+        System.out.println("TOKEN FOUND: " + type + value);
       return new Symbol(type,yyline,yycolumn,value);
     }
 
@@ -42,8 +43,9 @@ SALTOLINEA=[\n\t\r]
 IDENTIFICADOR={LETRA}({ALPHANUMERICO}|{GUIONBAJO})*
 NUMERO= {DIGITO}
 REAL= {DIGITO}"."{DIGITO}
-LLAVEIZQ=[\{]
-LLAVEDER=[\}]
+CARACTER= ' . '
+LLAVEIZQ=[{]
+LLAVEDER=[}]
 COMILLAS=[\"]
 CONTENIDOCOMENT=([^}])*
 HASHTAG=[#]
@@ -51,18 +53,19 @@ COMENTARIOUNALINEA={HASHTAG}.
 
 /*--------ESTADOS------------*/
 %state COMMENT
-%state SSTRING
+%state SSTRING 
 %%
 
 <YYINITIAL> {
-    {COMILLAS}              {string.setLength(0); string.append("\"");yybegin(SSTRING);}
+    {COMILLAS}              {string.setLength(0); yybegin(SSTRING);}
     {LLAVEIZQ}              {comment.setLength(0); yybegin(COMMENT);}
     {COMENTARIOUNALINEA}    {/*Ignore*/}
     {NUMERO}                {return symbol(sym.NUMERO, new Integer(yytext()));}
     {REAL}                  {return symbol(sym.REAL, new Double(yytext()));}
+    {CARACTER}              {return symbol(sym.CARACTER, new Character(yytext().charAt(1)));}  
     {SALTOLINEA}            {/*Ignore*/}
     {ESPACIO}               {/*Ignore*/}
-
+    
     /*-----------------------------------------OPERADORES----------------------------------*/
     "+"              {return symbol(sym.SUMA);}
     "-"              {return symbol(sym.MENOS);}
@@ -76,7 +79,6 @@ COMENTARIOUNALINEA={HASHTAG}.
     "!="             {return symbol(sym.DIFERENTE);}
     "=="             {return symbol(sym.IGUAL);}
     "="              {return symbol(sym.ASIGNACION);}
-    "."              {return symbol(sym.PUNTO);}
     /*---------------------------------------SIGNOS----------------------------------------*/
     "("              {return symbol(sym.PARIZQ);}
     ")"              {return symbol(sym.PARDER);}
@@ -84,16 +86,15 @@ COMENTARIOUNALINEA={HASHTAG}.
     ","              {return symbol(sym.COMA);}
     ";"              {return symbol(sym.PUNTOCOMA);}
     "?"              {return symbol(sym.INTERROGACION);}
-    "'"              {return symbol(sym.UNACOMILLA);}
     "["              {return symbol(sym.CORCHETEDER);}
     "]"              {return symbol(sym.CORCHETEIZQ);}
     ":"              {return symbol(sym.DOSPUNTOS);}
     /*------------------------------TIPOS DE DATOS-----------------------------------------*/
-    "int"              {return symbol(sym.INT, yytext());}
-    "double"           {return symbol(sym.DOUBLE, yytext());}
-    "char"             {return symbol(sym.CHAR);}
-    "string"           {return symbol(sym.STRING);}
-    "boolean"          {return symbol(sym.BOOLEAN);}
+    "int"            {return symbol(sym.INT, yytext());}
+    "double"         {return symbol(sym.DOUBLE, yytext());}
+    "char"           {return symbol (sym.CHAR);}
+    "string"         {return symbol(sym.STRING);}
+    "boolean"        {return symbol(sym.BOOLEAN);}
     /*-----------------------------PALABRAS RESERVADAS-------------------------------------*/
     "and"            {return symbol(sym.AND);}
     "or"             {return symbol(sym.OR);}
@@ -104,22 +105,23 @@ COMENTARIOUNALINEA={HASHTAG}.
     "function"       {return symbol(sym.FUNCTION);}
     "mainbegin"      {return symbol(sym.MAINBEGIN);}
     "begin"          {return symbol(sym.BEGIN); }
-    "endmain"        {return symbol(sym.ENDMAIN);}
+    "endmain"        {return symbol(sym.ENDMAIN); }
     "switch"         {return symbol(sym.SWITCH);}
     "case"           {return symbol(sym.CASE);}
     "do"             {return symbol(sym.DO);}
-    "end"            {return symbol(sym.END);}
+    "end"            {return symbol(sym.END); }
     "true"           {return symbol(sym.TRUE);}
     "false"          {return symbol(sym.FALSE);}
+    "other"          {return symbol (sym.OTHER);}
     "break"          {return symbol(sym.BREAK);}
     "return"         {return symbol(sym.RETURN);}
+    "readint"        {return symbol(sym.READINT);}
+    "readdouble"     {return symbol(sym.READDOUBLE);}
+    "readstring"     {return symbol(sym.READSTRING);}
+    "readchar"       {return symbol(sym.READCHAR);}
     "print"          {return symbol(sym.PRINT);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
-    [^]              {
-                        int l = yyline+1;
-                        int c = yycolumn+1;
-                        Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + l + ", columna: " + c);
-                     }
+    [^]              {Interfaz.console.setText(Interfaz.console.getText()+"Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn+"\n");}
 }
 
 <COMMENT> {
@@ -128,9 +130,7 @@ COMENTARIOUNALINEA={HASHTAG}.
 }
 
 <SSTRING>{
-    {COMILLAS}         {
-                        string.append("\"");
-                        yybegin (YYINITIAL);
-}
-    .                  {string.append(yytext());}
-}
+    
+    {COMILLAS}          {yybegin (YYINITIAL); return symbol(sym.CADENA, string.toString());  }
+    .                   { string.append(yytext());}
+} 

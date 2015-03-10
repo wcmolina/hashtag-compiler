@@ -7,6 +7,8 @@ package hashtag;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -92,7 +94,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         TabStop[] tabs = new TabStop[20];
         for (int j = 0; j < tabs.length; j++) {
-            tabs[j] = new TabStop((j + 1) * 32);
+            tabs[j] = new TabStop((j+1) * 28);
         }
 
         TabSet tabSet = new TabSet(tabs);
@@ -382,10 +384,9 @@ public class Interfaz extends javax.swing.JFrame {
         resetComponents();
         try {
             Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
-            Object result = p.parse().value;
-        } catch (FileNotFoundException fnfe) {
-            this.console.setText("Error: " + fnfe.getMessage());
+            p.parse();
         } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
 
 
@@ -414,7 +415,7 @@ public class Interfaz extends javax.swing.JFrame {
             String text;
             try {
                 while ((text = br.readLine()) != null) {
-                    str.append(text).append("\n");
+                    str.append(text.replaceAll("\\t", "    ")).append("\n");
                 }
                 str.deleteCharAt(str.length() - 1); //removes empty line at the end.
                 this.codeTextPane.setText(str.toString());
