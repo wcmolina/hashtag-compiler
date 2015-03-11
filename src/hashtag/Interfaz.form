@@ -118,7 +118,7 @@
     <Component class="javax.swing.JButton" name="runButton">
       <Properties>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="3" name="/img/run.png"/>
+          <Image iconType="3" name="/resources/gui/icons/run.png"/>
         </Property>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection code="BorderFactory.createEmptyBorder()" type="code"/>
@@ -165,7 +165,7 @@
     <Component class="javax.swing.JButton" name="saveButton">
       <Properties>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="3" name="/img/floppy-128.png"/>
+          <Image iconType="3" name="/resources/gui/icons/floppy-128.png"/>
         </Property>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection code="BorderFactory.createEmptyBorder()" type="code"/>
@@ -203,7 +203,7 @@
     <Component class="javax.swing.JButton" name="openButton">
       <Properties>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="3" name="/img/open.png"/>
+          <Image iconType="3" name="/resources/gui/icons/open.png"/>
         </Property>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection code="BorderFactory.createEmptyBorder()" type="code"/>

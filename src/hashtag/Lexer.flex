@@ -13,13 +13,11 @@ import java_cup.runtime.Symbol;
 %{
     /*para los simbolos generales*/
     private Symbol symbol(int type){
-      System.out.println("TOKEN FOUND: " + type);
       return new Symbol(type,yyline,yycolumn);
     }
 
     /*para el tipo de token con su valor*/
     private Symbol symbol (int type, Object value){
-        System.out.println("TOKEN FOUND: " + type + value);
       return new Symbol(type,yyline,yycolumn,value);
     }
 

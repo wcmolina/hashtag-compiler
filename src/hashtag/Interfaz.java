@@ -6,9 +6,6 @@
 package hashtag;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,8 +16,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
@@ -32,7 +27,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -94,7 +88,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         TabStop[] tabs = new TabStop[20];
         for (int j = 0; j < tabs.length; j++) {
-            tabs[j] = new TabStop((j+1) * 28);
+            tabs[j] = new TabStop((j + 1) * 28);
         }
 
         TabSet tabSet = new TabSet(tabs);
@@ -163,7 +157,7 @@ public class Interfaz extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Compilador");
 
-        runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/run.png"))); // NOI18N
+        runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/run.png"))); // NOI18N
         runButton.setBorder(BorderFactory.createEmptyBorder());
         runButton.setFocusPainted(false);
         runButton.setFocusable(false);
@@ -183,7 +177,7 @@ public class Interfaz extends javax.swing.JFrame {
         console.setToolTipText("");
         jScrollPane3.setViewportView(console);
 
-        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/floppy-128.png"))); // NOI18N
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/floppy-128.png"))); // NOI18N
         saveButton.setBorder(BorderFactory.createEmptyBorder());
         saveButton.setFocusPainted(false);
         saveButton.setFocusable(false);
@@ -198,7 +192,7 @@ public class Interfaz extends javax.swing.JFrame {
         codeTextPane.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
         jsp.setViewportView(codeTextPane);
 
-        openButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/open.png"))); // NOI18N
+        openButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/open.png"))); // NOI18N
         openButton.setBorder(BorderFactory.createEmptyBorder());
         openButton.setFocusPainted(false);
         openButton.setFocusable(false);
@@ -382,6 +376,22 @@ public class Interfaz extends javax.swing.JFrame {
     }
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
+        Node root;
+        root = new Node("stmt");
+        Node c = new Node("c");
+        c.addChild(new Node("a"));
+        c.addChild(new Node("b"));
+        root.addChild(c);
+        root.addChild(new Node("d"));
+        Node ea = new Node("e");
+        ea.addChild(new Node("asdf"));
+        Node f = new Node("f");
+        f.addChild(new Node("hola"));
+        f.addChild(new Node("adios"));
+        root.addChild(ea);
+        root.addChild(f);
+        root.addChild(new Node("if_stmt"));
+        root.print("", true);
         try {
             Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
             p.parse();

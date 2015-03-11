@@ -75,7 +75,7 @@ AsigValor                      ::=  Cadena
                                    | CARACTER
                                    | Booleana
                                    ;
-Booleana=                      ::= TRUE | FALSE;
+Booleana                       ::= TRUE | FALSE;
 Cadena                         ::= CADENA |ExpresionAritmetica;
 DeclS                          ::= ASIGNACION AsigValor;
 Asignacion                     ::= IDENTIFICADOR DeclS;
