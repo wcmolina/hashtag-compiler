@@ -53,35 +53,71 @@ public class Interfaz extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         final StyleContext cont = StyleContext.getDefaultStyleContext();
-        final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLUE);
+        final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#0000ff"));
         final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.BLACK);
-        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.LIGHT_GRAY);
-        final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.ORANGE);
+        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#969696"));
+        final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#ce7b00"));
 
         DefaultStyledDocument doc = new DefaultStyledDocument() {
             @Override
-            public void insertString(int offset, String str, AttributeSet a) throws BadLocationException {
+            public void insertString(int offset, String str, AttributeSet a) throws BadLocationException { //cuando se insertan caracteres.
                 super.insertString(offset, str, a);
                 String text = getText(0, getLength());
-                int before = findLastNonWordChar(text, offset);
-                if (before < 0) {
-                    before = 0;
-                }
-                int after = findFirstNonWordChar(text, offset + str.length());
+                //int before = findLastNonWordChar(text, offset);
+                int before = 0;
+                /*if (before < 0) {
+                 before = 0;
+                 }*/
+                //int after = findFirstNonWordChar(text, offset + str.length());
+                int after = offset + str.length();
                 int wordL = before;
                 int wordR = before;
 
                 while (wordR <= after) {
-                    if (wordR == after || String.valueOf(text.charAt(wordR)).matches("\\W")) {
-                        if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|char|double|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch"
-                                + "|while|for|break|print|and|or)")) {
-                            setCharacterAttributes(wordL, wordR - wordL, keyword, false);
+                    if (wordR == after || String.valueOf(text.charAt(wordR)).matches("(\\s)")) {
+                        if (text.substring(wordL, wordR).matches(".*(\".*\")")) {
+                            setCharacterAttributes(wordL, wordR - wordL, string, false);
                         } else {
-                            setCharacterAttributes(wordL, wordR - wordL, plain, false);
+                            if (text.substring(wordL, wordR).matches("(\\W)*(int|boolean|char|double|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch|other|not"
+                                    + "|while|for|break|print|and|or)")) {
+                                setCharacterAttributes(wordL, wordR - wordL, keyword, false);
+                            } else {
+                                if (text.substring(wordL, wordR).matches("(.*#.*)")) {
+                                    setCharacterAttributes(wordL, wordR - wordL, comment, false);
+                                } else {
+                                    setCharacterAttributes(wordL, wordR - wordL, plain, false);
+                                }
+                            }
                         }
                         wordL = wordR;
                     }
                     wordR++;
+                }
+            }
+
+            @Override
+            public void remove(int offs, int len) throws BadLocationException { //para cuando se borra algun caracter
+                super.remove(offs, len);
+
+                String text = getText(0, getLength());
+                int before = findLastNonWordChar(text, offs);
+                if (before < 0) {
+                    before = 0;
+                }
+                int after = findFirstNonWordChar(text, offs);
+                if (text.substring(before, after).matches(".*(\".*\")")) {
+                    setCharacterAttributes(before, after - before, string, false);
+                } else {
+                    if (text.substring(before, after).matches("(\\W)*(int|boolean|char|double|true|false|string|mainbegin|endmain|begin|end|if|else|do|function|return|case|switch|other|not"
+                            + "|while|for|break|print|and|or)")) {
+                        setCharacterAttributes(before, after - before, keyword, false);
+                    } else {
+                        if (text.substring(before, after).matches("(.*#.*)")) {
+                            setCharacterAttributes(before, after - before, comment, false);
+                        } else {
+                            setCharacterAttributes(before, after - before, plain, false);
+                        }
+                    }
                 }
             }
         };
@@ -98,7 +134,7 @@ public class Interfaz extends javax.swing.JFrame {
         this.codeTextPane.setParagraphAttributes(paraSet, false);
         LinePainter lp = new LinePainter(codeTextPane, Color.decode("#DDE6F3"));
         jsp.setViewportView(codeTextPane);
-        TextLineNumber tln = new TextLineNumber(codeTextPane);
+        LineNumber tln = new LineNumber(codeTextPane);
         tln.setBackground(Color.decode("#E0E0E0"));
         jsp.setRowHeaderView(tln);
 
@@ -156,6 +192,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Compilador");
+        setPreferredSize(new java.awt.Dimension(1000, 660));
 
         runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/run.png"))); // NOI18N
         runButton.setBorder(BorderFactory.createEmptyBorder());
@@ -189,7 +226,7 @@ public class Interfaz extends javax.swing.JFrame {
         });
 
         codeTextPane.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        codeTextPane.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
+        codeTextPane.setFont(new java.awt.Font("Consolas", 0, 13)); // NOI18N
         jsp.setViewportView(codeTextPane);
 
         openButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/open.png"))); // NOI18N
@@ -247,20 +284,22 @@ public class Interfaz extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(387, 387, 387)
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 415, Short.MAX_VALUE)
-                        .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(387, 387, 387)
+                                .addComponent(jLabel6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 415, Short.MAX_VALUE)
+                                .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(status, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(filePathLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addComponent(filePathLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -274,13 +313,13 @@ public class Interfaz extends javax.swing.JFrame {
                         .addGap(20, 20, 20)
                         .addComponent(jLabel6)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jsp, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jsp, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
-                    .addComponent(filePathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE))
+                    .addComponent(filePathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -376,22 +415,6 @@ public class Interfaz extends javax.swing.JFrame {
     }
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
-        Node root;
-        root = new Node("stmt");
-        Node c = new Node("c");
-        c.addChild(new Node("a"));
-        c.addChild(new Node("b"));
-        root.addChild(c);
-        root.addChild(new Node("d"));
-        Node ea = new Node("e");
-        ea.addChild(new Node("asdf"));
-        Node f = new Node("f");
-        f.addChild(new Node("hola"));
-        f.addChild(new Node("adios"));
-        root.addChild(ea);
-        root.addChild(f);
-        root.addChild(new Node("if_stmt"));
-        root.print("", true);
         try {
             Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
             p.parse();
@@ -466,6 +489,9 @@ public class Interfaz extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(Interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
