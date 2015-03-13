@@ -39,8 +39,8 @@ GUIONBAJO=[_]
 ESPACIO=[" "]
 SALTOLINEA=[\n\t\r]
 IDENTIFICADOR={LETRA}({ALPHANUMERICO}|{GUIONBAJO})*
-NUMERO= {DIGITO}
-REAL= {DIGITO}"."{DIGITO}
+NUMERO= [\-]?{DIGITO}
+REAL= [\-]?{DIGITO}"."{DIGITO}
 CARACTER= ' . '
 LLAVEIZQ=[{]
 LLAVEDER=[}]
@@ -110,7 +110,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "end"            {return symbol(sym.END); }
     "true"           {return symbol(sym.TRUE);}
     "false"          {return symbol(sym.FALSE);}
-    "other"          {return symbol (sym.OTHER);}
+    "other"          {return symbol(sym.OTHER);}
     "break"          {return symbol(sym.BREAK);}
     "return"         {return symbol(sym.RETURN);}
     "readint"        {return symbol(sym.READINT);}
@@ -119,7 +119,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "readchar"       {return symbol(sym.READCHAR);}
     "print"          {return symbol(sym.PRINT);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
-    [^]              {Interfaz.console.setText(Interfaz.console.getText()+"Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn+"\n");}
+    [^]              {Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn + "\n");}
 }
 
 <COMMENT> {

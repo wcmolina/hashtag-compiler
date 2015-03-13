@@ -163,6 +163,7 @@ public class Interfaz extends javax.swing.JFrame {
         });
         CONTENT_CHANGED = false;
         getContentPane().setBackground(Color.decode("#E0E0E0"));
+        this.codeTextPane.setText("begin\n\nmainbegin\n\n\nendmain\n\nend");
     }
 
     /**
