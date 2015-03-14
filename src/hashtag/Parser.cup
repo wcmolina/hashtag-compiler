@@ -75,7 +75,7 @@ Valor                           ::= NUMERO
                                     |
                                     REAL;
 
-AsigValor                       ::=  Cadena
+AsigValor                       ::= Cadena
                                     |
                                     CARACTER
                                     |
