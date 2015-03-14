@@ -30,9 +30,9 @@ public void report_fatal_error(String message, Object info){
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
 
-terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,PUNTO,IDENTIFICADOR;
-terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,COMILLAS,INTERROGACION,UNACOMILLA,CORCHETEDER,CORCHETEIZQ,MAINBEGIN,DOSPUNTOS;
-terminal   AND,OR,FOR,IF,THEN,ELSE,WHILE,BEGIN,END,ENDMAIN,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
+terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,IDENTIFICADOR;
+terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
+terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,ENDMAIN,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
 terminal   NUMERO,REAL,CADENA,CARACTER,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
 terminal Integer   INT;
 terminal Double    DOUBLE;
@@ -42,10 +42,10 @@ terminal Boolean   BOOLEAN;
 
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
-non terminal Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,Body2;
+non terminal Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,Body2,Stmts;
 non terminal Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,IfElse,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
-non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ElseIf,Else,ConditionGroup,T,SubContenido,Contenido;
+non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
+non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
 non terminal Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -59,8 +59,9 @@ precedence left  PARIZQ;
 
 start with Program;
 Program                         ::= BEGIN Body2 Main END;
-Main                            ::= MAINBEGIN Body ENDMAIN;
-Body                            ::= Instruccion PUNTOCOMA Body | Bloque Body | Asignacion PUNTOCOMA Body |  ;
+Main                            ::= MAINBEGIN Stmts ENDMAIN;
+Stmts                           ::= DO Body END | DO Stmts END;
+Body                            ::= Instruccion PUNTOCOMA Body | Bloque Body | Asignacion PUNTOCOMA Body | ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
 Instruccion                     ::= DeclaracionVariable | Llamado ;
@@ -80,7 +81,7 @@ AsigValor                       ::=  Cadena
                                     |
                                     Booleana
                                    ;
-Booleana=                       ::= TRUE
+Booleana                        ::= TRUE
                                     |
                                     FALSE;
 
@@ -105,54 +106,137 @@ Type                            ::= INT
 /*LLAMADOS*/
 Llamado                         ::= Print
                                     |
-                                    LlamadoMetodos;
+                                    LlamadoMetodos
+                                    ;
 
 LlamadoMetodos                  ::= IDENTIFICADOR Contenido ;
 Contenido                       ::= PARIZQ  SubContenido PARDER;
-SubContenido                    ::= IDENTIFICADOR T  | ;
-T                               ::= COMA IDENTIFICADOR  T| ;   
+SubContenido                    ::= IDENTIFICADOR T
+                                    | ;
+
+T                               ::= COMA IDENTIFICADOR  T
+                                    | ;
+   
 /*PARAMETROD*/                     
-Parametros                      ::= Type IDENTIFICADOR Multiple | Type IDENTIFICADOR |;
+Parametros                      ::= Type IDENTIFICADOR Multiple
+                                    |
+                                    Type IDENTIFICADOR
+                                    | ;
+
 Multiple                        ::= COMA Parametros;
 Print                           ::= PRINT PARIZQ x PARDER  ;
-x                               ::= AsigValor | LlamadoMetodos|  ;
+x                               ::= AsigValor
+                                    |
+                                    LlamadoMetodos
+                                    |  ;
 /*FUNCTION */
-Body2                           ::= FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER DO Body EndFunction END Body2 | ;
-EndFunction                     ::= RETURN Return PUNTOCOMA| ;
-Return                          ::= LlamadoMetodos| AsigValor | ;
+Body2                           ::= FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER DO Body EndFunction END Body2
+                                    | ;
+
+EndFunction                     ::= RETURN Return PUNTOCOMA
+                                    | ;
+
+Return                          ::= LlamadoMetodos
+                                    |
+                                    AsigValor
+                                    | ;
 
 /*BLOQUE*/
-Bloque                          ::= Loops END| Conditional END;
-Loops                           ::= ForLoop | WhileLoop ;
-Conditional                     ::= IfConditional  | SwitchConditional ;
-ForLoop                         ::= FOR PARIZQ ExprFor PARDER DO Body ;
+Bloque                          ::= Loops
+                                    |
+                                    Conditional;
+
+Loops                           ::= ForLoop
+                                    |
+                                    WhileLoop ;
+
+Conditional                     ::= IfConditional
+                                    |
+                                    SwitchConditional ;
+
+ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts;
+
 ExprFor                         ::= DeclaracionVariable PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
-WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER DO Body ;
-IfConditional                   ::= IF ConditionGroup DO Body IfElse;
+
+WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER Stmts;
+
+IfConditional                   ::= IF ConditionGroup Stmts
+                                    |
+                                    IF ConditionGroup Stmts ELSE Stmts;
+
 ConditionGroup                  ::= PARIZQ ExpresionBooleana PARDER;
-IfElse                          ::= ElseIf ConditionGroup DO Body IfElse| Else Body | ;
-ElseIf                          ::= ELSE IF;
-SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch ;
-ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Body BREAK PUNTOCOMA ExpresionSwitch  | OTHER DOSPUNTOS Body;
-Switch                          ::= NUMERO | CARACTER;
+
+SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
+
+ExpresionSwitch                 ::= CASE Switch DOSPUNTOS DO Body BREAK PUNTOCOMA END ExpresionSwitch
+                                    |
+                                    OTHER DOSPUNTOS DO Body BREAK PUNTOCOMA END;
+
+Switch                          ::= NUMERO
+                                    |
+                                    CARACTER;
 
 /*EXPRESIONES*/
-Expresion                       ::= ExpresionBooleana | ExpresionAritmetica;
-ExpresionAritmetica             ::= ExpresionAritmetica SUMA Factor | ExpresionAritmetica MOD Factor | ExpresionAritmetica MENOS Factor | Factor;
-Factor                          ::= Factor MULT Term | Factor DIV Term | Term;
-Term                            ::= PARIZQ ExpresionAritmetica Term | Valor;
-ExpresionBooleana               ::= ExpresionComparacion UnionExpresion | ExpresionComparacion|Booleana ;
+Expresion                       ::= ExpresionBooleana
+                                    |
+                                    ExpresionAritmetica;
 
-UnionExpresion                  ::= OperadorComparacion ExpresionComparacion UnionExpresion | OperadorComparacion ExpresionComparacion;
-ExpresionComparacion            ::= AsigValor OperadorRelacional AsigValor | NOT ExpresionComparacion;
-OperadorRelacional              ::= MAYOR 
-                                    |MENOR
-                                    |MAYORIGUAL
-                                    |MENORIGUAL
-                                    |IGUAL
-                                    |DIFERENTE
+ExpresionAritmetica             ::= ExpresionAritmetica SUMA Factor
+                                    |
+                                    ExpresionAritmetica MOD Factor
+                                    |
+                                    ExpresionAritmetica MENOS Factor
+                                    |
+                                    Factor
                                     ;
-OperadorComparacion             ::= AND | OR ;
-ExpresionIncDec                 ::= IDENTIFICADOR Incremento | IDENTIFICADOR Decremento;
+
+Factor                          ::= Factor MULT Term
+                                    |
+                                    Factor DIV Term
+                                    |
+                                    Term
+                                    ;
+
+Term                            ::= PARIZQ ExpresionAritmetica Term
+                                    |
+                                    Valor
+                                    ;
+
+ExpresionBooleana               ::= ExpresionComparacion UnionExpresion
+                                    |
+                                    ExpresionComparacion
+                                    |
+                                    Booleana
+                                    ;
+
+UnionExpresion                  ::= OperadorComparacion ExpresionComparacion UnionExpresion
+                                    |
+                                    OperadorComparacion ExpresionComparacion
+                                    ;
+
+ExpresionComparacion            ::= AsigValor OperadorRelacional AsigValor
+                                    |
+                                    NOT ExpresionComparacion;
+
+OperadorRelacional              ::= MAYOR 
+                                    |
+                                    MENOR
+                                    |
+                                    MAYORIGUAL
+                                    |
+                                    MENORIGUAL
+                                    |
+                                    IGUAL
+                                    |
+                                    DIFERENTE
+                                    ;
+OperadorComparacion             ::= AND
+                                    |
+                                    OR
+                                    ;
+ExpresionIncDec                 ::= IDENTIFICADOR Incremento
+                                    |
+                                    IDENTIFICADOR Decremento;
+
 Incremento                      ::= SUMA SUMA;
 Decremento                      ::= MENOS MENOS;

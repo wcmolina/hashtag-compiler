@@ -73,7 +73,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "<"              {return symbol(sym.MENOR);}
     ">="             {return symbol(sym.MAYORIGUAL);}
     "<="             {return symbol(sym.MENORIGUAL);}
-    "!"              {return symbol(sym.NOT);}
+    "not"            {return symbol(sym.NOT);}
     "!="             {return symbol(sym.DIFERENTE);}
     "=="             {return symbol(sym.IGUAL);}
     "="              {return symbol(sym.ASIGNACION);}
@@ -83,9 +83,6 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "%"              {return symbol(sym.MOD);}
     ","              {return symbol(sym.COMA);}
     ";"              {return symbol(sym.PUNTOCOMA);}
-    "?"              {return symbol(sym.INTERROGACION);}
-    "["              {return symbol(sym.CORCHETEDER);}
-    "]"              {return symbol(sym.CORCHETEIZQ);}
     ":"              {return symbol(sym.DOSPUNTOS);}
     /*------------------------------TIPOS DE DATOS-----------------------------------------*/
     "int"            {return symbol(sym.INT, yytext());}
