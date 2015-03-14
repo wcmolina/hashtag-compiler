@@ -100,7 +100,6 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "function"       {return symbol(sym.FUNCTION);}
     "mainbegin"      {return symbol(sym.MAINBEGIN);}
     "begin"          {return symbol(sym.BEGIN); }
-    "endmain"        {return symbol(sym.ENDMAIN); }
     "switch"         {return symbol(sym.SWITCH);}
     "case"           {return symbol(sym.CASE);}
     "do"             {return symbol(sym.DO);}

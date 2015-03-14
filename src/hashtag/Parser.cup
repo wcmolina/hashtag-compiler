@@ -32,7 +32,7 @@ public void report_fatal_error(String message, Object info){
 
 terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,IDENTIFICADOR;
 terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
-terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,ENDMAIN,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
+terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
 terminal   NUMERO,REAL,CADENA,CARACTER,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
 terminal Integer   INT;
 terminal Double    DOUBLE;
@@ -59,8 +59,11 @@ precedence left  PARIZQ;
 
 start with Program;
 Program                         ::= BEGIN Body2 Main END;
-Main                            ::= MAINBEGIN Stmts ENDMAIN;
-Stmts                           ::= DO Body END | DO Stmts END;
+Main                            ::= MAINBEGIN Stmts;
+Stmts                           ::= DO Body END
+                                    |
+                                    DO Stmts END;
+
 Body                            ::= Instruccion PUNTOCOMA Body | Bloque Body | Asignacion PUNTOCOMA Body | ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
