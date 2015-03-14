@@ -397,7 +397,6 @@ public class Interfaz extends javax.swing.JFrame {
             } else {
                 this.console.setText("No changes have been made");
                 //this.console.setForeground(Color.decode("#DA4939"));
-
             }
 
         }
