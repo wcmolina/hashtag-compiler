@@ -415,8 +415,17 @@ public class Interfaz extends javax.swing.JFrame {
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
         try {
-            Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
-            p.parse();
+            if (this.codeTextPane.getText().isEmpty()) {
+                this.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
+            } else {
+                //this.codeTextPane.setText(this.codeTextPane.getText().replaceAll("\t", "    "));
+                Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
+                p.parse();
+                Node root;
+                root = new Node("Start");
+                root.setChildren(p.AST);
+                root.print("", true);
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

@@ -7,39 +7,53 @@ package hashtag;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/*
+falta:
+*/
 public class Node {
 
     private List<Node> children;
-    private String label;
+    public String label;
+    private Object type;
 
-    public Node(String name, Object pValue) {
+    public Node(String name, Node child) {
         label = name;
+        children = new ArrayList();
+        children.add(child);
+    }
+    
+    public Node(String name, Node left, Node right) { //mostly for binary operators +,-,*,/
+        label = name;
+        children = new ArrayList();
+        children.add(left);
+        children.add(right);
     }
 
     public Node(String name) {
         label = name;
-        children = new ArrayList<Node>();
+        children = new ArrayList();
+    }
+    
+    public Node(String name, ArrayList<Node> c) {
+        label = name;
+        children = new ArrayList();
+        children.addAll(c);
     }
 
     public List<Node> getChildren() {
         if (children == null) {
-            children = new ArrayList<Node>();
+            children = new ArrayList();
         }
         return children;
     }
 
-    public void addChild(Node pNode) {
-        getChildren().add(pNode);
+    public void addChild(Node child) {
+        getChildren().add(child);
     }
 
     public void setChildren(ArrayList<Node> c) {
         this.children.clear();
         this.children.addAll(c);
-    }
-
-    public String getLabel() {
-        return label;
     }
 
     public void print(String prefix, boolean isTail) {

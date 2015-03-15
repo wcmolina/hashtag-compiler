@@ -7,46 +7,48 @@ import java.util.*;
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
 
-public void report_error(String message, Object info){
-  StringBuilder m = new StringBuilder("Error");
-  if(info instanceof java_cup.runtime.Symbol){
-       java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
-       if(s.left >= 0){
-        m.append(" en la linea " + (s.left+1));
-         if(s.right >=0)
-           m.append(", columna " + (s.right+1));
-      }
-      m.append(" @ symbol: " + s);
-    }
-     m.append(" : " + message);
-     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
-}
+    public ArrayList<Node> AST = new ArrayList();
 
-public void report_fatal_error(String message, Object info){
-   report_error(message, info);
-   //System.exit(1);
-}
+    public void report_error(String message, Object info){
+      StringBuilder m = new StringBuilder("Error");
+      if(info instanceof java_cup.runtime.Symbol){
+           java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
+           if(s.left >= 0){
+            m.append(" en la linea " + (s.left+1));
+             if(s.right >=0)
+               m.append(", columna " + (s.right+1));
+          }
+          m.append(" @ symbol: " + s);
+        }
+         m.append(" : " + message);
+         Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
+    }
+
+    public void report_fatal_error(String message, Object info){
+       report_error(message, info);
+       //System.exit(1);
+    }
 :}
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
 
 terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,IDENTIFICADOR;
 terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
-terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,TRUE,FALSE,FUNCTION,BREAK,RETURN,PRINT;
-terminal   NUMERO,REAL,CADENA,CARACTER,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
-terminal Integer   INT;
-terminal Double    DOUBLE;
-terminal Char      CHAR;
-terminal String    STRING;
-terminal Boolean   BOOLEAN;
+terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,FUNCTION,BREAK,RETURN,PRINT;
+terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
+terminal Integer   NUMERO;
+terminal Double    REAL;
+terminal Char      CARACTER;
+terminal String    CADENA;
+terminal Boolean   FALSE, TRUE;
 
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
-non terminal Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,Body2,Stmts;
-non terminal Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
-non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
-non terminal Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
+non terminal Node Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,Body2,Stmts;
+non terminal Node Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
+non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
+non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
+non terminal Node Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
@@ -58,27 +60,69 @@ precedence left  PARIZQ;
 //------------------------------------------------GRAMATICA-------------------------------------------------------
 
 start with Program;
-Program                         ::= BEGIN Body2 Main END;
-Main                            ::= MAINBEGIN Stmts;
-Stmts                           ::= DO Body END
-                                    |
-                                    DO Stmts END;
+Program                         ::= BEGIN Body2:b2 Main:mn END
+                                    {: 
+                                        RESULT = new Node("Program", b2, mn);
+                                        parser.AST.add(RESULT);
+                                    :}
+                                    ; /*new node ("...", body2, main)...ast.add*/
+Main                            ::= MAINBEGIN Stmts:st
+                                    {: RESULT = new Node("main", st); :}
+                                    ;
 
-Body                            ::= Instruccion PUNTOCOMA Body | Bloque Body | Asignacion PUNTOCOMA Body | ;
+Stmts                           ::= DO Body:bd END
+                                    {: RESULT = new Node("block", bd); :}
+                                    |
+                                    DO Stmts:st END
+                                    {: RESULT = st; :}
+                                    ;
+
+Body                            ::= Instruccion:ins PUNTOCOMA Body
+                                    {: RESULT = ins; :}
+                                    |
+                                    Bloque:bq Body
+                                    {: RESULT = bq; :}
+                                    |
+                                    Asignacion:asig PUNTOCOMA Body
+                                    {: RESULT = asig; :}
+                                    |
+                                    {: RESULT = new Node(""); :}
+                                    ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
-Instruccion                     ::= DeclaracionVariable | Llamado ;
-DeclaracionVariable             ::= Type IDENTIFICADOR Var;
-Var                             ::= DeclaracionSimple | DeclaracionMultiple ;
-DeclaracionSimple               ::= ASIGNACION AsigValor;
-DeclaracionMultiple             ::= COMA IDENTIFICADOR Var| ;
-Valor                           ::= NUMERO 
-                                    |
-                                    IDENTIFICADOR
-                                    |
-                                    REAL;
 
-AsigValor                       ::= Cadena
+Instruccion                     ::= DeclaracionVariable
+                                    |
+                                    Llamado
+                                    ;
+
+DeclaracionVariable             ::= Type IDENTIFICADOR Var;
+
+Var                             ::= DeclaracionSimple
+                                    |
+                                    DeclaracionMultiple
+                                    ;
+
+DeclaracionSimple               ::= ASIGNACION AsigValor:av
+                                    {: RESULT = av; :}
+                                    ;
+
+DeclaracionMultiple             ::= COMA IDENTIFICADOR Var
+                                    |
+                                    ;
+
+Valor                           ::= NUMERO:num
+                                    {: RESULT = new Node(Integer.toString(num)); :}
+                                    |
+                                    IDENTIFICADOR:id
+                                    {: RESULT = new Node("id"); :}
+                                    |
+                                    REAL:r
+                                    {: RESULT = new Node(Double.toString(r)); :}
+                                    ;
+
+AsigValor                       ::= Cadena:c
+                                    {: RESULT = c; :}
                                     |
                                     CARACTER
                                     |
@@ -90,9 +134,12 @@ Booleana                        ::= TRUE
 
 Cadena                          ::= CADENA
                                     |
-                                    ExpresionAritmetica;
+                                    ExpresionAritmetica:ea
+                                    {: RESULT = ea; :}
+                                    ;
                          
-Asignacion                      ::= IDENTIFICADOR DeclaracionSimple
+Asignacion                      ::= IDENTIFICADOR:id DeclaracionSimple:ds
+                                    {: RESULT = new Node("=",new Node("id"), ds); :}
                                     |
                                     ExpresionIncDec;
 
@@ -134,7 +181,9 @@ x                               ::= AsigValor
                                     |  ;
 /*FUNCTION */
 Body2                           ::= FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER DO Body EndFunction END Body2
-                                    | ;
+                                    |
+                                    {: RESULT = new Node(""); :}
+                                    ;
 
 EndFunction                     ::= RETURN Return PUNTOCOMA
                                     | ;
@@ -147,13 +196,16 @@ Return                          ::= LlamadoMetodos
 /*BLOQUE*/
 Bloque                          ::= Loops
                                     |
-                                    Conditional;
+                                    Conditional:cond
+                                    {: RESULT = cond; :}
+                                    ;
 
 Loops                           ::= ForLoop
                                     |
                                     WhileLoop ;
 
-Conditional                     ::= IfConditional
+Conditional                     ::= IfConditional:ic
+                                    {: RESULT = ic; :}
                                     |
                                     SwitchConditional ;
 
@@ -163,11 +215,13 @@ ExprFor                         ::= DeclaracionVariable PUNTOCOMA Expresion PUNT
 
 WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER Stmts;
 
-IfConditional                   ::= IF ConditionGroup Stmts
+IfConditional                   ::= IF ConditionGroup:cg Stmts:st
+                                    {: RESULT = new Node("IF",cg, st); :}
                                     |
-                                    IF ConditionGroup Stmts ELSE Stmts;
+                                    IF ConditionGroup Stmts ELSE Stmts; /*hay que subir este else arriba*/
 
-ConditionGroup                  ::= PARIZQ ExpresionBooleana PARDER;
+ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
+                                    {: RESULT = eb; :};
 
 SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
 
@@ -184,30 +238,40 @@ Expresion                       ::= ExpresionBooleana
                                     |
                                     ExpresionAritmetica;
 
-ExpresionAritmetica             ::= ExpresionAritmetica SUMA Factor
+ExpresionAritmetica             ::= ExpresionAritmetica:ea SUMA Factor:fct
+                                    {: RESULT = new Node("+",ea,fct); :}
                                     |
-                                    ExpresionAritmetica MOD Factor
+                                    ExpresionAritmetica:ea MENOS Factor:fct
+                                    {: RESULT = new Node("-",ea,fct); :}
                                     |
-                                    ExpresionAritmetica MENOS Factor
-                                    |
-                                    Factor
+                                    Factor:fct
+                                    {: RESULT = fct; :}
                                     ;
 
-Factor                          ::= Factor MULT Term
+Factor                          ::= Factor:fct MULT Term:trm
+                                    {: RESULT = new Node("*",fct,trm); :}
                                     |
-                                    Factor DIV Term
+                                    Factor:fct DIV Term:trm
+                                    {: RESULT = new Node("/",fct,trm); :}
                                     |
-                                    Term
+                                    Factor:fct MOD Term:trm
+                                    {: RESULT = new Node("%",fct,trm); :}
+                                    |
+                                    Term:trm
+                                    {: RESULT = trm; :}
                                     ;
 
-Term                            ::= PARIZQ ExpresionAritmetica Term
+Term                            ::= PARIZQ ExpresionAritmetica:ea PARDER
+                                    {: RESULT = ea; :}
                                     |
-                                    Valor
+                                    Valor:vlr
+                                    {: RESULT = vlr; :}
                                     ;
 
 ExpresionBooleana               ::= ExpresionComparacion UnionExpresion
                                     |
-                                    ExpresionComparacion
+                                    ExpresionComparacion:ec
+                                    {: RESULT = ec; :}
                                     |
                                     Booleana
                                     ;
@@ -217,21 +281,28 @@ UnionExpresion                  ::= OperadorComparacion ExpresionComparacion Uni
                                     OperadorComparacion ExpresionComparacion
                                     ;
 
-ExpresionComparacion            ::= AsigValor OperadorRelacional AsigValor
+ExpresionComparacion            ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
+                                    {: RESULT = new Node(oprel.label, av1, av2); :}
                                     |
                                     NOT ExpresionComparacion;
 
-OperadorRelacional              ::= MAYOR 
+OperadorRelacional              ::= MAYOR
+                                    {: RESULT = new Node(">"); :}
                                     |
                                     MENOR
+                                    {: RESULT = new Node("<"); :}
                                     |
                                     MAYORIGUAL
+                                    {: RESULT = new Node(">="); :}
                                     |
                                     MENORIGUAL
+                                    {: RESULT = new Node("<="); :}
                                     |
                                     IGUAL
+                                    {: RESULT = new Node("="); :}
                                     |
                                     DIFERENTE
+                                    {: RESULT = new Node("!="); :}
                                     ;
 OperadorComparacion             ::= AND
                                     |
