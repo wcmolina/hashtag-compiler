@@ -8,8 +8,9 @@ package hashtag;
 import java.util.ArrayList;
 import java.util.List;
 /*
-falta:
-*/
+ falta:
+ */
+
 public class Node {
 
     private List<Node> children;
@@ -21,8 +22,8 @@ public class Node {
         children = new ArrayList();
         children.add(child);
     }
-    
-    public Node(String name, Node left, Node right) { //mostly for binary operators +,-,*,/
+
+    public Node(String name, Node left, Node right) { //mostly for binary operators like +,-,*,/,%....
         label = name;
         children = new ArrayList();
         children.add(left);
@@ -33,7 +34,7 @@ public class Node {
         label = name;
         children = new ArrayList();
     }
-    
+
     public Node(String name, ArrayList<Node> c) {
         label = name;
         children = new ArrayList();
@@ -47,11 +48,15 @@ public class Node {
         return children;
     }
 
-    public void addChild(Node child) {
+    public Node addChild(Node child) {
         getChildren().add(child);
+        return this;
     }
 
     public void setChildren(ArrayList<Node> c) {
+        if (children == null) {
+            children = new ArrayList();
+        }
         this.children.clear();
         this.children.addAll(c);
     }

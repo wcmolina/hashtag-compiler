@@ -114,6 +114,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "readstring"     {return symbol(sym.READSTRING);}
     "readchar"       {return symbol(sym.READCHAR);}
     "print"          {return symbol(sym.PRINT);}
+    "void"           {return symbol(sym.VOID);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
     [^]              {Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn + "\n");}
 }

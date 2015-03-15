@@ -32,14 +32,14 @@ parser code {:
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
 
-terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION,IDENTIFICADOR;
+terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION;
 terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
 terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,FUNCTION,BREAK,RETURN,PRINT;
-terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER;
+terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER,VOID;
 terminal Integer   NUMERO;
 terminal Double    REAL;
 terminal Char      CARACTER;
-terminal String    CADENA;
+terminal String    CADENA, IDENTIFICADOR;
 terminal Boolean   FALSE, TRUE;
 
 
@@ -62,29 +62,29 @@ precedence left  PARIZQ;
 start with Program;
 Program                         ::= BEGIN Body2:b2 Main:mn END
                                     {: 
-                                        RESULT = new Node("Program", b2, mn);
+                                        RESULT = new Node("PROG", b2, mn);
                                         parser.AST.add(RESULT);
                                     :}
                                     ; /*new node ("...", body2, main)...ast.add*/
 Main                            ::= MAINBEGIN Stmts:st
-                                    {: RESULT = new Node("main", st); :}
+                                    {: RESULT = new Node("MAIN", st); :}
                                     ;
 
 Stmts                           ::= DO Body:bd END
-                                    {: RESULT = new Node("block", bd); :}
+                                    {: RESULT = bd; :}
                                     |
                                     DO Stmts:st END
                                     {: RESULT = st; :}
                                     ;
 
-Body                            ::= Instruccion:ins PUNTOCOMA Body
-                                    {: RESULT = ins; :}
+Body                            ::= Instruccion:ins PUNTOCOMA Body:bd
+                                    {: RESULT = ins.addChild(bd); :}
                                     |
-                                    Bloque:bq Body
-                                    {: RESULT = bq; :}
+                                    Bloque:bq Body:bd
+                                    {: RESULT = bq.addChild(bd); :}
                                     |
-                                    Asignacion:asig PUNTOCOMA Body
-                                    {: RESULT = asig; :}
+                                    Asignacion:asig PUNTOCOMA Body:bd
+                                    {: RESULT = asig.addChild(bd); :}
                                     |
                                     {: RESULT = new Node(""); :}
                                     ;
@@ -115,7 +115,7 @@ Valor                           ::= NUMERO:num
                                     {: RESULT = new Node(Integer.toString(num)); :}
                                     |
                                     IDENTIFICADOR:id
-                                    {: RESULT = new Node("id"); :}
+                                    {: RESULT = new Node(id); :}
                                     |
                                     REAL:r
                                     {: RESULT = new Node(Double.toString(r)); :}
@@ -139,7 +139,7 @@ Cadena                          ::= CADENA
                                     ;
                          
 Asignacion                      ::= IDENTIFICADOR:id DeclaracionSimple:ds
-                                    {: RESULT = new Node("=",new Node("id"), ds); :}
+                                    {: RESULT = new Node("=",new Node(id), ds); :}
                                     |
                                     ExpresionIncDec;
 

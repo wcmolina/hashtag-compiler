@@ -421,10 +421,7 @@ public class Interfaz extends javax.swing.JFrame {
                 //this.codeTextPane.setText(this.codeTextPane.getText().replaceAll("\t", "    "));
                 Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 p.parse();
-                Node root;
-                root = new Node("Start");
-                root.setChildren(p.AST);
-                root.print("", true);
+                p.AST.get(0).print("", true);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
