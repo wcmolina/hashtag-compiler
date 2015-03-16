@@ -6,6 +6,7 @@
 package hashtag;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 /*
  falta:
@@ -13,19 +14,36 @@ import java.util.List;
 
 public class Node {
 
-    private List<Node> children;
+    private ArrayList<Node> children;
     public String label;
     private Object type;
 
-    public Node(String name, Node child) {
-        label = name;
+    public Node() {
+        label = "null node";
         children = new ArrayList();
-        children.add(child);
+    }
+
+    public Node(String name, Node child) {
+        if (child == null) {
+            child = new Node("null child");
+            children = new ArrayList();
+            children.add(child);
+        } else {
+            label = name;
+            children = new ArrayList();
+            children.add(child);
+        }
     }
 
     public Node(String name, Node left, Node right) { //mostly for binary operators like +,-,*,/,%....
         label = name;
         children = new ArrayList();
+        if (left == null) {
+            left = new Node();
+        }
+        if (right == null) {
+            right = new Node();
+        }
         children.add(left);
         children.add(right);
     }
@@ -41,7 +59,7 @@ public class Node {
         children.addAll(c);
     }
 
-    public List<Node> getChildren() {
+    public ArrayList<Node> getChildren() {
         if (children == null) {
             children = new ArrayList();
         }

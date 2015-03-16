@@ -38,13 +38,13 @@ terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,FUNCTION,BREAK,RETU
 terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER,VOID;
 terminal Integer   NUMERO;
 terminal Double    REAL;
-terminal Char      CARACTER;
+terminal Character CARACTER;
 terminal String    CADENA, IDENTIFICADOR;
 terminal Boolean   FALSE, TRUE;
 
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
-non terminal Node Main,Body,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,Body2,Stmts;
+non terminal Node Main,BodyList,BodyPart,DeclaracionVariable,DeclaracionSimple,DeclaracionMultiple,Type,Asignacion,AsigValor,Var,Program,FunctionList,FunctionPart,Stmts;
 non terminal Node Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
 non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
@@ -60,55 +60,80 @@ precedence left  PARIZQ;
 //------------------------------------------------GRAMATICA-------------------------------------------------------
 
 start with Program;
-Program                         ::= BEGIN Body2:b2 Main:mn END
+Program                         ::= BEGIN FunctionList:fl Main:mn END
                                     {: 
-                                        RESULT = new Node("PROG", b2, mn);
+                                        RESULT = new Node("PROG", fl, mn);
                                         parser.AST.add(RESULT);
                                     :}
-                                    ; /*new node ("...", body2, main)...ast.add*/
-Main                            ::= MAINBEGIN Stmts:st
-                                    {: RESULT = new Node("MAIN", st); :}
+                                    |
+                                    BEGIN Main:mn END
+                                    {: RESULT = new Node("PROG", mn);
+                                       parser.AST.add(RESULT); :}
                                     ;
 
-Stmts                           ::= DO Body:bd END
-                                    {: RESULT = bd; :}
+Main                            ::= MAINBEGIN Stmts:st
+                                    {: RESULT = new Node("MAIN", st.getChildren()); :}
+                                    ;
+
+Stmts                           ::= DO BodyList:bdl END
+                                    {:
+                                        RESULT = bdl;
+                                    :}
                                     |
                                     DO Stmts:st END
                                     {: RESULT = st; :}
+                                    |
+                                    DO END
+                                    {: RESULT = new Node("λ"); :}
                                     ;
 
-Body                            ::= Instruccion:ins PUNTOCOMA Body:bd
-                                    {: RESULT = ins.addChild(bd); :}
+BodyList                        ::= BodyPart:bp BodyList:bdl
+                                    {:
+                                        RESULT = bdl.addChild(bp);
+                                    :}
                                     |
-                                    Bloque:bq Body:bd
-                                    {: RESULT = bq.addChild(bd); :}
+                                    BodyPart:bp
+                                    {: RESULT = new Node("body", bp); :}
+                                    ;
+
+BodyPart                        ::= Instruccion:ins PUNTOCOMA
+                                    {: RESULT = ins; :}
                                     |
-                                    Asignacion:asig PUNTOCOMA Body:bd
-                                    {: RESULT = asig.addChild(bd); :}
+                                    Bloque:bq
+                                    {: RESULT = bq; :}
                                     |
-                                    {: RESULT = new Node(""); :}
+                                    Asignacion:asig PUNTOCOMA
+                                    {: RESULT = asig; :}
                                     ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
 
-Instruccion                     ::= DeclaracionVariable
+Instruccion                     ::= DeclaracionVariable:dv
+                                    {: RESULT = dv; :}
                                     |
-                                    Llamado
+                                    Llamado:l
+                                    {: RESULT = l; :}
                                     ;
 
-DeclaracionVariable             ::= Type IDENTIFICADOR Var;
+DeclaracionVariable             ::= Type IDENTIFICADOR:id Var:vr
+                                    {: RESULT = new Node("init",new Node(id),vr); :}
+                                    ;
 
-Var                             ::= DeclaracionSimple
+Var                             ::= DeclaracionSimple:ds
+                                    {: RESULT = ds; :}
                                     |
-                                    DeclaracionMultiple
+                                    DeclaracionMultiple:dm
+                                    {: RESULT = dm; :}
                                     ;
 
 DeclaracionSimple               ::= ASIGNACION AsigValor:av
                                     {: RESULT = av; :}
                                     ;
 
-DeclaracionMultiple             ::= COMA IDENTIFICADOR Var
+DeclaracionMultiple             ::= COMA IDENTIFICADOR:id Var:vr
+                                    {: RESULT = new Node("initialize",new Node(id),vr); :}
                                     |
+                                    {: RESULT = new Node(""); :}
                                     ;
 
 Valor                           ::= NUMERO:num
@@ -124,26 +149,33 @@ Valor                           ::= NUMERO:num
 AsigValor                       ::= Cadena:c
                                     {: RESULT = c; :}
                                     |
-                                    CARACTER
+                                    CARACTER:ch
+                                    {: RESULT = new Node(Character.toString(ch)); :}
                                     |
-                                    Booleana
-                                   ;
-Booleana                        ::= TRUE
-                                    |
-                                    FALSE;
+                                    Booleana:bool
+                                    {: RESULT = bool; :}
+                                    ;
 
-Cadena                          ::= CADENA
+Booleana                        ::= TRUE:tr
+                                    {: RESULT = new Node(Boolean.toString(tr)); :}
+                                    |
+                                    FALSE:fls
+                                    {: RESULT = new Node(Boolean.toString(fls)); :}
+                                    ;
+
+Cadena                          ::= CADENA:cad
+                                    {: RESULT = new Node(cad); :}
                                     |
                                     ExpresionAritmetica:ea
                                     {: RESULT = ea; :}
                                     ;
                          
 Asignacion                      ::= IDENTIFICADOR:id DeclaracionSimple:ds
-                                    {: RESULT = new Node("=",new Node(id), ds); :}
+                                    {: RESULT = new Node("asig",new Node(id), ds); :}
                                     |
                                     ExpresionIncDec;
 
-Type                            ::= INT                 
+Type                            ::= INT               
                                     |
                                     DOUBLE              
                                     |
@@ -168,41 +200,66 @@ T                               ::= COMA IDENTIFICADOR  T
                                     | ;
    
 /*PARAMETROD*/                     
-Parametros                      ::= Type IDENTIFICADOR Multiple
+Parametros                      ::= Type IDENTIFICADOR:id Multiple:mult
+                                    {: RESULT = new Node("params", new Node(id), mult); :}
                                     |
-                                    Type IDENTIFICADOR
+                                    Type IDENTIFICADOR:id
+                                    {: RESULT = new Node(id); :}
                                     | ;
 
-Multiple                        ::= COMA Parametros;
-Print                           ::= PRINT PARIZQ x PARDER  ;
+Multiple                        ::= COMA Parametros:param
+                                    {: RESULT = param; :}
+                                    ;
+
+Print                           ::= PRINT PARIZQ x PARDER;
+
 x                               ::= AsigValor
                                     |
                                     LlamadoMetodos
                                     |  ;
 /*FUNCTION */
-Body2                           ::= FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER DO Body EndFunction END Body2
+FunctionList                    ::= FunctionPart:fp FunctionList:fl
+                                    {: RESULT = new Node("FUNCTIONS", fl, fp); :}
                                     |
-                                    {: RESULT = new Node(""); :}
+                                    FunctionPart:fp
+                                    {: RESULT = fp; :}
                                     ;
 
-EndFunction                     ::= RETURN Return PUNTOCOMA
-                                    | ;
-
-Return                          ::= LlamadoMetodos
+FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
+                                    {: RESULT = new Node(id, param, st); :}
                                     |
-                                    AsigValor
-                                    | ;
+                                    FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
+                                    {: RESULT = new Node(id,param,ef); :}
+                                    ;
+
+EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
+                                    {: RESULT = new Node("branch", bdl, rt);  :}
+                                    |
+                                    DO RETURN Return:rt PUNTOCOMA END
+                                    {: RESULT = new Node("return",rt); :}
+                                    ;
+
+Return                          ::= LlamadoMetodos:lm
+                                    {: RESULT = lm; :}
+                                    |
+                                    AsigValor:av
+                                    {: RESULT = av; :}
+                                    ;
 
 /*BLOQUE*/
-Bloque                          ::= Loops
+Bloque                          ::= Loops:lp
+                                    {: RESULT = lp; :}
                                     |
                                     Conditional:cond
                                     {: RESULT = cond; :}
                                     ;
 
-Loops                           ::= ForLoop
+Loops                           ::= ForLoop:flp
+                                    {: RESULT = flp; :}
                                     |
-                                    WhileLoop ;
+                                    WhileLoop:wlp
+                                    {: RESULT = wlp; :}
+                                    ;
 
 Conditional                     ::= IfConditional:ic
                                     {: RESULT = ic; :}
@@ -213,21 +270,23 @@ ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts;
 
 ExprFor                         ::= DeclaracionVariable PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
 
-WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER Stmts;
+WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana:exprb PARDER Stmts:st
+                                    {: RESULT = new Node("WHILE", exprb, st); :}
+                                    ;
 
 IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     {: RESULT = new Node("IF",cg, st); :}
                                     |
-                                    IF ConditionGroup Stmts ELSE Stmts; /*hay que subir este else arriba*/
+                                    IF ConditionGroup Stmts ELSE Stmts;
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
                                     {: RESULT = eb; :};
 
 SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
 
-ExpresionSwitch                 ::= CASE Switch DOSPUNTOS DO Body BREAK PUNTOCOMA END ExpresionSwitch
+ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
                                     |
-                                    OTHER DOSPUNTOS DO Body BREAK PUNTOCOMA END;
+                                    OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
 
 Switch                          ::= NUMERO
                                     |
@@ -268,15 +327,18 @@ Term                            ::= PARIZQ ExpresionAritmetica:ea PARDER
                                     {: RESULT = vlr; :}
                                     ;
 
-ExpresionBooleana               ::= ExpresionComparacion UnionExpresion
+ExpresionBooleana               ::= ExpresionComparacion:exprc UnionExpresion:uexpr
+                                    {: RESULT = new Node("conditions", exprc, uexpr); :}
                                     |
                                     ExpresionComparacion:ec
                                     {: RESULT = ec; :}
                                     |
-                                    Booleana
+                                    Booleana:bool
+                                    {: RESULT = bool; :}
                                     ;
 
-UnionExpresion                  ::= OperadorComparacion ExpresionComparacion UnionExpresion
+UnionExpresion                  ::= OperadorComparacion:opcomp ExpresionComparacion:exprc UnionExpresion:uexpr
+                                    {: RESULT = new Node(opcomp.label, exprc, uexpr); :}
                                     |
                                     OperadorComparacion ExpresionComparacion
                                     ;
@@ -284,7 +346,9 @@ UnionExpresion                  ::= OperadorComparacion ExpresionComparacion Uni
 ExpresionComparacion            ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
                                     {: RESULT = new Node(oprel.label, av1, av2); :}
                                     |
-                                    NOT ExpresionComparacion;
+                                    NOT ExpresionComparacion:exprc
+                                    {: RESULT = new Node("negation", exprc); :}
+                                    ;
 
 OperadorRelacional              ::= MAYOR
                                     {: RESULT = new Node(">"); :}
