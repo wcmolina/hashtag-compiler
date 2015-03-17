@@ -35,6 +35,16 @@ public class Node {
         }
     }
 
+    public Node(String name, Node child, Object obj) {
+        if (child == null) {
+            child = new Node("null child");
+        }
+        label = name;
+        children = new ArrayList();
+        children.add(child);
+        type = obj;
+    }
+
     public Node(String name, Node left, Node right) { //mostly for binary operators like +,-,*,/,%....
         label = name;
         children = new ArrayList();
