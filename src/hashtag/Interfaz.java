@@ -182,8 +182,9 @@ public class Interfaz extends javax.swing.JFrame {
         jsp = new javax.swing.JScrollPane();
         codeTextPane = new javax.swing.JTextPane();
         openButton = new javax.swing.JButton();
+        statusPanel = new javax.swing.JPanel();
         status = new javax.swing.JLabel();
-        filePathLabel = new javax.swing.JLabel();
+        saveAsButton = new javax.swing.JButton();
         menuBar = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -191,11 +192,10 @@ public class Interfaz extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Compilador");
-        setPreferredSize(new java.awt.Dimension(1000, 660));
+        setTitle("Hashtag Compiler");
+        setPreferredSize(new java.awt.Dimension(1000, 700));
 
-        runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/run.png"))); // NOI18N
-        runButton.setBorder(BorderFactory.createEmptyBorder());
+        runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/25px/run.png"))); // NOI18N
         runButton.setFocusPainted(false);
         runButton.setFocusable(false);
         runButton.setPreferredSize(new java.awt.Dimension(33, 33));
@@ -214,8 +214,7 @@ public class Interfaz extends javax.swing.JFrame {
         console.setToolTipText("");
         jScrollPane3.setViewportView(console);
 
-        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/floppy-128.png"))); // NOI18N
-        saveButton.setBorder(BorderFactory.createEmptyBorder());
+        saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/25px/save.png"))); // NOI18N
         saveButton.setFocusPainted(false);
         saveButton.setFocusable(false);
         saveButton.setPreferredSize(new java.awt.Dimension(33, 33));
@@ -229,8 +228,7 @@ public class Interfaz extends javax.swing.JFrame {
         codeTextPane.setFont(new java.awt.Font("Consolas", 0, 13)); // NOI18N
         jsp.setViewportView(codeTextPane);
 
-        openButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/open.png"))); // NOI18N
-        openButton.setBorder(BorderFactory.createEmptyBorder());
+        openButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/25px/open.png"))); // NOI18N
         openButton.setFocusPainted(false);
         openButton.setFocusable(false);
         openButton.setPreferredSize(new java.awt.Dimension(33, 33));
@@ -240,15 +238,36 @@ public class Interfaz extends javax.swing.JFrame {
             }
         });
 
+        statusPanel.setBackground(new java.awt.Color(83, 83, 83));
+        statusPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
         status.setBackground(new java.awt.Color(255, 255, 255));
         status.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        status.setForeground(new java.awt.Color(255, 255, 255));
         status.setText("Linea 1, Columna 1");
-        status.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-        filePathLabel.setBackground(new java.awt.Color(255, 255, 255));
-        filePathLabel.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
-        filePathLabel.setText("File:");
-        filePathLabel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        javax.swing.GroupLayout statusPanelLayout = new javax.swing.GroupLayout(statusPanel);
+        statusPanel.setLayout(statusPanelLayout);
+        statusPanelLayout.setHorizontalGroup(
+            statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        statusPanelLayout.setVerticalGroup(
+            statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(statusPanelLayout.createSequentialGroup()
+                .addComponent(status)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+
+        saveAsButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/25px/save_as.png"))); // NOI18N
+        saveAsButton.setFocusPainted(false);
+        saveAsButton.setFocusable(false);
+        saveAsButton.setPreferredSize(new java.awt.Dimension(33, 33));
+        saveAsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveAsButtonActionPerformed(evt);
+            }
+        });
 
         jMenu1.setText("File");
 
@@ -280,47 +299,39 @@ public class Interfaz extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(387, 387, 387)
-                                .addComponent(jLabel6)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 415, Short.MAX_VALUE)
-                                .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addContainerGap())
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(status, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(filePathLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(2, 2, 2)
+                .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(saveAsButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(366, 366, 366)
+                .addComponent(jLabel6)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 486, Short.MAX_VALUE)
+                .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(2, 2, 2))
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(saveButton, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
-                        .addComponent(runButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(openButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(20, 20, 20)
-                        .addComponent(jLabel6)))
+                        .addComponent(jLabel6))
+                    .addComponent(saveAsButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jsp, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 149, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(filePathLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(statusPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -385,7 +396,7 @@ public class Interfaz extends javax.swing.JFrame {
                 File fileToSave = fc.getSelectedFile();
                 FILE_PATH = fileToSave.getAbsolutePath();
                 save(FILE_PATH, this.codeTextPane.getText());
-                this.filePathLabel.setText("File: " + FILE_PATH);
+                this.setTitle(FILE_PATH+" - Hashtag Compiler");
             }
         } else { //ya hay una referencia de un archivo abierto y quiere guardarlo.
             if (CONTENT_CHANGED) { //si hay cambios, entonces
@@ -457,7 +468,7 @@ public class Interfaz extends javax.swing.JFrame {
                 }
                 str.deleteCharAt(str.length() - 1); //removes empty line at the end.
                 this.codeTextPane.setText(str.toString());
-                this.filePathLabel.setText("File: " + FILE_PATH);
+                this.setTitle(FILE_PATH + " - Hashtag Compiler");
                 CONTENT_CHANGED = false;
             } catch (IOException ex) {
                 Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
@@ -468,6 +479,10 @@ public class Interfaz extends javax.swing.JFrame {
     private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
         this.openMenuItemActionPerformed(evt);
     }//GEN-LAST:event_openButtonActionPerformed
+
+    private void saveAsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveAsButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_saveAsButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -480,7 +495,7 @@ public class Interfaz extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Windows".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
@@ -511,7 +526,6 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JTextPane codeTextPane;
     public static javax.swing.JTextArea console;
     private javax.swing.JMenuItem exitMenuItem;
-    private javax.swing.JLabel filePathLabel;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
@@ -521,7 +535,9 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JButton openButton;
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JButton runButton;
+    private javax.swing.JButton saveAsButton;
     private javax.swing.JButton saveButton;
     private javax.swing.JLabel status;
+    private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables
 }
