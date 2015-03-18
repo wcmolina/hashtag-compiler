@@ -13,12 +13,12 @@ import java_cup.runtime.Symbol;
 %{
     /*para los simbolos generales*/
     private Symbol symbol(int type){
-      return new Symbol(type,yyline,yycolumn);
+      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext());
     }
 
     /*para el tipo de token con su valor*/
     private Symbol symbol (int type, Object value){
-      return new Symbol(type,yyline,yycolumn,value);
+      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext(),value);
     }
 
     StringBuilder string = new StringBuilder();
@@ -85,8 +85,8 @@ COMENTARIOUNALINEA={HASHTAG}.*
     ";"              {return symbol(sym.PUNTOCOMA);}
     ":"              {return symbol(sym.DOSPUNTOS);}
     /*------------------------------TIPOS DE DATOS-----------------------------------------*/
-    "int"            {return symbol(sym.INT, yytext());}
-    "double"         {return symbol(sym.DOUBLE, yytext());}
+    "int"            {return symbol(sym.INT);}
+    "double"         {return symbol(sym.DOUBLE);}
     "char"           {return symbol (sym.CHAR);}
     "string"         {return symbol(sym.STRING);}
     "boolean"        {return symbol(sym.BOOLEAN);}
@@ -116,7 +116,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "print"          {return symbol(sym.PRINT);}
     "void"           {return symbol(sym.VOID);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
-    [^]              {Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn + "\n");}
+    [^]              {int l = yyline+1; int c = yycolumn+1;Interfaz.console.setText("Lexical error: unknown character " + yytext() + " in line: " + l + ", column: " + c + "\n");}
 }
 
 <COMMENT> {

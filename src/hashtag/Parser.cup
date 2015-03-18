@@ -45,10 +45,10 @@ terminal Boolean   FALSE, TRUE;
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionList,FunctionPart,Stmts;
-non terminal Node Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
-non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
-non terminal Node Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
+non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
+non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
+non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
+non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Multiple,Valor,EndFunction,Cadena,Return;
 non terminal Node VarDeclare, VarInit, VarDeclarationList, VarDeclarationPart,Functions;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -95,7 +95,7 @@ Stmts                           ::= DO BodyList:bdl END
 
 BodyList                        ::= BodyPart:bp BodyList:bdl
                                     {:
-                                        RESULT = bdl.addChild(bp);
+                                        RESULT = bdl.add(bp);
                                     :}
                                     |
                                     BodyPart:bp
@@ -127,11 +127,11 @@ Instruccion                     ::= VarDeclare:vd
 VarDeclare                      ::= Type VarDeclarationList:vdl
                                     {:
                                         Node node = new Node(vdl.label);
-                                        RESULT = new Node("declare",vdl.getChildren()).addChild(node);
+                                        RESULT = new Node("declare",vdl.getChildren()).add(node);
                                     :};
 
 VarDeclarationList              ::= VarDeclarationPart:vdp COMA VarDeclarationList:vdl
-                                    {: RESULT = vdl.addChild(vdp); :}
+                                    {: RESULT = vdl.add(vdp); :}
                                     |
                                     VarDeclarationPart:vdp
                                     {: RESULT = vdp; :};
@@ -156,21 +156,21 @@ AsigValor                       ::= Cadena:c
                                     {: RESULT = c; :}
                                     |
                                     CARACTER:ch
-                                    {: RESULT = new Node(Character.toString(ch)); :}
+                                    {: RESULT = new Node("'"+Character.toString(ch)+"'"); :}
                                     |
                                     Booleana:bool
                                     {: RESULT = bool; :}
                                     ;
 
-Booleana                        ::= TRUE:tr
-                                    {: RESULT = new Node(Boolean.toString(tr)); :}
+Booleana                        ::= TRUE
+                                    {: RESULT = new Node("true"); :}
                                     |
-                                    FALSE:fls
-                                    {: RESULT = new Node(Boolean.toString(fls)); :}
+                                    FALSE
+                                    {: RESULT = new Node("false"); :}
                                     ;
 
 Cadena                          ::= CADENA:cad
-                                    {: RESULT = new Node(cad); :}
+                                    {: RESULT = new Node("\""+cad+"\""); :}
                                     |
                                     ExpresionAritmetica:ea
                                     {: RESULT = ea; :}
@@ -179,7 +179,8 @@ Cadena                          ::= CADENA:cad
 Asignacion                      ::= IDENTIFICADOR:id ASIGNACION AsigValor:av
                                     {: RESULT = new Node("assign",new Node(id), av); :}
                                     |
-                                    ExpresionIncDec;
+                                    ExpresionIncDec:update
+                                    {: RESULT = update; :};
 
 Type                            ::= INT               
                                     |
@@ -192,20 +193,26 @@ Type                            ::= INT
                                     STRING ; 
 
 /*LLAMADOS*/
-Llamado                         ::= Print
+Llamado                         ::= Print:pr
+                                    {: RESULT = pr; :}
                                     |
-                                    LlamadoMetodos
+                                    LlamadoMetodos:lm
+                                    {: RESULT = lm; :}
                                     ;
 
-LlamadoMetodos                  ::= IDENTIFICADOR Contenido ;
-Contenido                       ::= PARIZQ  SubContenido PARDER;
-SubContenido                    ::= IDENTIFICADOR T
-                                    | ;
+LlamadoMetodos                  ::= IDENTIFICADOR:id PARIZQ Contenido:cont PARDER
+                                    {: RESULT = new Node("function_call",new Node(id),cont); :}
+                                    |
+                                    IDENTIFICADOR:id PARIZQ PARDER
+                                    {: RESULT = new Node("function_call", new Node(id), new Node("params",new Node("λ"))); :};
 
-T                               ::= COMA IDENTIFICADOR  T
-                                    | ;
+Contenido                       ::= AsigValor:av COMA Contenido:cont
+                                    {: RESULT = cont.add(av); :}
+                                    |
+                                    AsigValor:av
+                                    {: RESULT = new Node("params",av); :};
    
-/*PARAMETROD*/                     
+/*PARAMETROS*/                     
 Parametros                      ::= Type IDENTIFICADOR:id Multiple:mult
                                     {: RESULT = new Node("params", new Node(id), mult); :}
                                     |
@@ -219,15 +226,21 @@ Multiple                        ::= COMA Parametros:param
                                     {: RESULT = param; :}
                                     ;
 
-Print                           ::= PRINT PARIZQ x PARDER;
+Print                           ::= PRINT PARIZQ PrintParam:pp PARDER
+                                    {: RESULT = new Node("PRINT", pp); :};
 
-x                               ::= AsigValor
+PrintParam                      ::= IDENTIFICADOR:id
+                                    {: RESULT = new Node(id); :}
                                     |
-                                    LlamadoMetodos
+                                    CADENA:cad
+                                    {: RESULT = new Node("\""+cad+"\""); :}
+                                    |
+                                    LlamadoMetodos:lm
                                     |  ;
+
 /*FUNCTION */
 FunctionList                    ::= FunctionPart:fp FunctionList:fl
-                                    {: RESULT = fl.addChild(fp); :}
+                                    {: RESULT = fl.add(fp); :}
                                     |
                                     FunctionPart:fp
                                     {: RESULT = new Node("body",fp); :}
@@ -272,11 +285,14 @@ Loops                           ::= ForLoop:flp
 Conditional                     ::= IfConditional:ic
                                     {: RESULT = ic; :}
                                     |
-                                    SwitchConditional ;
+                                    SwitchConditional:swc
+                                    {: RESULT = swc; :};
 
-ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts;
+ForLoop                         ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
+                                    {: RESULT = new Node("FOR", expr, st); :};
 
-ExprFor                         ::= INT Asignacion PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
+ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
+                                    {: RESULT = new Node("structure",asig,exprb,update); :};
 
 WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana:exprb PARDER Stmts:st
                                     {: RESULT = new Node("WHILE", exprb, st); :}
@@ -285,25 +301,41 @@ WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana:exprb PARDER 
 IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     {: RESULT = new Node("IF",cg, st); :}
                                     |
-                                    IF ConditionGroup Stmts ELSE Stmts;
+                                    IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
+                                    {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :};
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
-                                    {: RESULT = eb; :};
-
-SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
-
-ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
+                                    {: RESULT = eb; :}
                                     |
-                                    OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
+                                    PARIZQ IDENTIFICADOR:id PARDER
+                                    {: RESULT = new Node(id); :};
 
-Switch                          ::= NUMERO
+SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
+                                    {: RESULT = new Node("SWITCH", new Node(id), exprl); :}
                                     |
-                                    CARACTER;
+                                    SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
+                                    {: RESULT = new Node("SWITCH", sw, exprl); :}
+                                    ;
+
+ExprSwitchList                  ::= ExprSwitchPart:exprp ExprSwitchList:exprl
+                                    {: RESULT = exprl.add(exprp); :}
+                                    |
+                                    ExprSwitchPart:exprp
+                                    {: RESULT = new Node("body",exprp); :};
+
+ExprSwitchPart                  ::= CASE Switch:sw DOSPUNTOS Stmts:st BREAK PUNTOCOMA
+                                    {: RESULT = new Node("CASE", sw, st); :}
+                                    |
+                                    OTHER DOSPUNTOS Stmts:st BREAK PUNTOCOMA
+                                    {: RESULT = new Node("OTHER", st); :};
+
+Switch                          ::= NUMERO:n
+                                    {: RESULT = new Node(Integer.toString(n)); :}
+                                    |
+                                    CARACTER:c
+                                    {: RESULT = new Node(Character.toString(c)); :};
 
 /*EXPRESIONES*/
-Expresion                       ::= ExpresionBooleana
-                                    |
-                                    ExpresionAritmetica;
 
 ExpresionAritmetica             ::= ExpresionAritmetica:ea SUMA Factor:fct
                                     {: RESULT = new Node("+",ea,fct); :}
@@ -336,7 +368,7 @@ Term                            ::= PARIZQ ExpresionAritmetica:ea PARDER
                                     ;
 
 ExpresionBooleana               ::= ExpresionComparacion:exprc UnionExpresion:uexpr
-                                    {: RESULT = new Node("conditions", exprc, uexpr); :}
+                                    {: RESULT = new Node("conditions",exprc,uexpr); :}
                                     |
                                     ExpresionComparacion:ec
                                     {: RESULT = ec; :}
@@ -346,9 +378,10 @@ ExpresionBooleana               ::= ExpresionComparacion:exprc UnionExpresion:ue
                                     ;
 
 UnionExpresion                  ::= OperadorComparacion:opcomp ExpresionComparacion:exprc UnionExpresion:uexpr
-                                    {: RESULT = new Node(opcomp.label, exprc, uexpr); :}
+                                    {: RESULT = uexpr.add(opcomp,exprc); :}
                                     |
-                                    OperadorComparacion ExpresionComparacion
+                                    OperadorComparacion:opcomp ExpresionComparacion:ec
+                                    {: RESULT =  opcomp.add(ec);:}
                                     ;
 
 ExpresionComparacion            ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
@@ -377,12 +410,16 @@ OperadorRelacional              ::= MAYOR
                                     {: RESULT = new Node("!="); :}
                                     ;
 OperadorComparacion             ::= AND
+                                    {: RESULT = new Node("AND"); :}
                                     |
                                     OR
+                                    {: RESULT = new Node("OR"); :}
                                     ;
-ExpresionIncDec                 ::= IDENTIFICADOR Incremento
+ExpresionIncDec                 ::= IDENTIFICADOR:id Incremento
+                                    {: RESULT = new Node("update ++", new Node(id)); :}
                                     |
-                                    IDENTIFICADOR Decremento;
+                                    IDENTIFICADOR:id Decremento
+                                    {: RESULT = new Node("update --", new Node(id)); :};
 
 Incremento                      ::= SUMA SUMA;
 Decremento                      ::= MENOS MENOS;

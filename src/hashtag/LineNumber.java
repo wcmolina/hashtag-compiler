@@ -63,7 +63,7 @@ public class LineNumber extends JPanel
      * @param component the related text component
      */
     public LineNumber(JTextComponent component) {
-        this(component, 4);
+        this(component, 3);
     }
 
     /**

@@ -23,44 +23,22 @@ public class Node {
         children = new ArrayList();
     }
 
-    public Node(String name, Node child) {
-        if (child == null) {
-            child = new Node("null child");
-            children = new ArrayList();
-            children.add(child);
-        } else {
-            label = name;
-            children = new ArrayList();
-            children.add(child);
+    public Node(String name, Node... nodes) {
+        label = name;
+        children = new ArrayList();
+        for (Node node : nodes) {
+            if (node == null) {
+                children.add(new Node("null child"));
+            } else {
+                children.add(node);
+            }
         }
     }
 
-    public Node(String name, Node child, Object obj) {
-        if (child == null) {
-            child = new Node("null child");
-        }
+    public Node(Object obj, String name) {
         label = name;
         children = new ArrayList();
-        children.add(child);
         type = obj;
-    }
-
-    public Node(String name, Node left, Node right) { //mostly for binary operators like +,-,*,/,%....
-        label = name;
-        children = new ArrayList();
-        if (left == null) {
-            left = new Node();
-        }
-        if (right == null) {
-            right = new Node();
-        }
-        children.add(left);
-        children.add(right);
-    }
-
-    public Node(String name) {
-        label = name;
-        children = new ArrayList();
     }
 
     public Node(String name, ArrayList<Node> c) {
@@ -76,8 +54,10 @@ public class Node {
         return children;
     }
 
-    public Node addChild(Node child) {
-        getChildren().add(child);
+    public Node add(Node... children) {
+        for (Node child : children) {
+            getChildren().add(child);
+        }
         return this;
     }
 

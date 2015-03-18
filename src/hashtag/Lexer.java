@@ -371,12 +371,12 @@ class Lexer implements java_cup.runtime.Scanner {
   /* user code: */
     /*para los simbolos generales*/
     private Symbol symbol(int type){
-      return new Symbol(type,yyline,yycolumn);
+      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext());
     }
 
     /*para el tipo de token con su valor*/
     private Symbol symbol (int type, Object value){
-      return new Symbol(type,yyline,yycolumn,value);
+      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext(),value);
     }
 
     StringBuilder string = new StringBuilder();
@@ -764,7 +764,7 @@ class Lexer implements java_cup.runtime.Scanner {
           }
         case 60: break;
         case 2: 
-          { Interfaz.console.setText("Error lexico, caracter <" + yytext() + "> ilegal, en la linea: " + yyline + ", columna: " + yycolumn + "\n");
+          { int l = yyline+1; int c = yycolumn+1;Interfaz.console.setText("Lexical error: unknown character " + yytext() + " in line: " + l + ", column: " + c + "\n");
           }
         case 61: break;
         case 3: 

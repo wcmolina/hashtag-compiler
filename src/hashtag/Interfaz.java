@@ -132,7 +132,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
-        LinePainter lp = new LinePainter(codeTextPane, Color.decode("#DDE6F3"));
+        LinePainter lp = new LinePainter(codeTextPane, Color.decode("#E0E0E0"));
         jsp.setViewportView(codeTextPane);
         LineNumber tln = new LineNumber(codeTextPane);
         tln.setBackground(Color.decode("#E0E0E0"));
@@ -372,7 +372,7 @@ public class Interfaz extends javax.swing.JFrame {
                 rn++;
             }
         } catch (BadLocationException e) {
-            console.setText("Error: " + e.getMessage());
+            Interfaz.console.setText("Error: " + e.getMessage());
         }
         return rn;
     }
@@ -381,7 +381,7 @@ public class Interfaz extends javax.swing.JFrame {
         try {
             return pos - Utilities.getRowStart(editor, pos) + 1;
         } catch (BadLocationException e) {
-            console.setText("Error: " + e.getMessage());
+            Interfaz.console.setText("Error: " + e.getMessage());
         }
         return -1;
     }
@@ -396,7 +396,7 @@ public class Interfaz extends javax.swing.JFrame {
                 File fileToSave = fc.getSelectedFile();
                 FILE_PATH = fileToSave.getAbsolutePath();
                 save(FILE_PATH, this.codeTextPane.getText());
-                this.setTitle(FILE_PATH+" - Hashtag Compiler");
+                this.setTitle(FILE_PATH + " - Hashtag Compiler");
             }
         } else { //ya hay una referencia de un archivo abierto y quiere guardarlo.
             if (CONTENT_CHANGED) { //si hay cambios, entonces
@@ -406,7 +406,7 @@ public class Interfaz extends javax.swing.JFrame {
                     CONTENT_CHANGED = false;
                 }
             } else {
-                this.console.setText("No changes have been made");
+                Interfaz.console.setText("No changes have been made");
                 //this.console.setForeground(Color.decode("#DA4939"));
             }
 
@@ -420,30 +420,31 @@ public class Interfaz extends javax.swing.JFrame {
             writer.write(content);
             writer.close();
         } catch (IOException ex) {
-            this.console.setText("Error: " + ex.getMessage());
+            Interfaz.console.setText("Error: " + ex.getMessage());
         }
     }
     private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
         resetComponents();
         try {
             if (this.codeTextPane.getText().isEmpty()) {
-                this.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
+                Interfaz.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
             } else {
                 //this.codeTextPane.setText(this.codeTextPane.getText().replaceAll("\t", "    "));
                 Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 p.parse();
                 p.AST.get(0).print("", true);
+                //Interfaz.console.setText(Interfaz.console.getText()+"Number of errors: "+p.errors);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
-
     }//GEN-LAST:event_runButtonActionPerformed
 
     private void resetComponents() {
-        this.console.setText("");
+        Interfaz.console.setText("");
     }
+
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_exitMenuItemActionPerformed
@@ -457,7 +458,7 @@ public class Interfaz extends javax.swing.JFrame {
             try {
                 fr = new FileReader(FILE_PATH);
             } catch (FileNotFoundException ex) {
-                this.console.setText("Error: " + ex.getMessage());
+                Interfaz.console.setText("Error: " + ex.getMessage());
             }
             BufferedReader br = new BufferedReader(fr);
             StringBuilder str = new StringBuilder();
@@ -481,7 +482,15 @@ public class Interfaz extends javax.swing.JFrame {
     }//GEN-LAST:event_openButtonActionPerformed
 
     private void saveAsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveAsButtonActionPerformed
-        // TODO add your handling code here:
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Save As");
+        int userSelection = fc.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fc.getSelectedFile();
+            FILE_PATH = fileToSave.getAbsolutePath();
+            save(FILE_PATH, this.codeTextPane.getText());
+            this.setTitle(FILE_PATH + " - Hashtag Compiler");
+        }
     }//GEN-LAST:event_saveAsButtonActionPerformed
 
     /**
@@ -516,6 +525,7 @@ public class Interfaz extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new Interfaz().setVisible(true);
             }

@@ -1,31 +1,52 @@
 package hashtag;
 import java_cup.runtime.*;
 import java.util.*;
+import java.io.FileReader;
 
 
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
+public ArrayList<String> syntax_errors = new ArrayList();
+//public static int errors = 0;
+  public static Lexer s;
+  public static int errors = 0;
 
-public void report_error(String message, Object info){
-  StringBuilder m = new StringBuilder("Error: ");
-  if(info instanceof java_cup.runtime.Symbol){
-       java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
-       if(s.left >= 0){
-        m.append(" en la linea " + (s.left+1));
-         if(s.right >=0)
-           m.append(", columna " + (s.right+1));
+  public static void main(String argv[]) {
+
+    for (int i = 0; i < argv.length; i++) {
+      try {
+        System.out.println("Parsing ["+argv[i]+"]");
+        s = new Lexer(new FileReader(argv[i]));
+        Parser p = new Parser(s);
+        p.parse();
+        System.out.println("Number of errors = " + errors + ".");
       }
-      m.append(" @ symbol: " + s);
+      catch (Exception e) {
+        e.printStackTrace(System.out);
+        System.exit(1);
+      }
     }
-     m.append(" : " + message);
-     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
-}
-
-public void report_fatal_error(String message, Object info){
-   report_error(message, info);
-   //System.exit(1);
-}
+  }
+public void report_error(String message, Object info) {
+    if (info instanceof String){
+	errors++; 
+      System.err.println("  "+ errors + "==> " + info + " "+ message + 
+					"\n       Parsing resumed from 2nd token before" + s.current_lexeme()+"\n");
+    }
+    else {
+    	StringBuffer m = new StringBuffer("Error ");
+    	if (info instanceof java_cup.runtime.Symbol) 
+     	   m.append( "("+info.toString()+")" );     
+    	m.append(" : "+message);   
+    	System.err.println(m);
+    }
+  }
+   
+  public void report_fatal_error(String message, Object info) {
+    report_error(message, info);
+    throw new RuntimeException("Fatal Syntax Error");
+  }
 :}
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
@@ -43,10 +64,10 @@ terminal Boolean   BOOLEAN;
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
 non terminal Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionList,FunctionPart,Stmts;
-non terminal Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
-non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido;
-non terminal Print,LlamadoMetodos,Booleana,Parametros,PrintParam,Multiple,Valor,EndFunction,Cadena,Return;
+non terminal Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
+non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
+non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
+non terminal Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
 non terminal VarDeclare, VarInit, VarDeclarationList, VarDeclarationPart,Functions;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -74,7 +95,7 @@ Stmts                           ::= DO BodyList END
                                     |
                                     DO END
                                     ;
-
+0
 BodyList                        ::= BodyPart BodyList
                                     |
                                     BodyPart;
@@ -83,7 +104,9 @@ BodyPart                        ::= Instruccion PUNTOCOMA
                                     |
                                     Bloque
                                     |
-                                    Asignacion PUNTOCOMA;
+                                    Asignacion PUNTOCOMA
+                                    |
+                                    ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
 Instruccion                     ::= VarDeclare
@@ -143,22 +166,14 @@ Llamado                         ::= Print
                                     LlamadoMetodos
                                     ;
 
-LlamadoMetodos                  ::= IDENTIFICADOR PARIZQ Contenido PARDER
-                                    |
-                                    IDENTIFICADOR PARIZQ PARDER;
-
-Contenido                       ::= AsigValor COMA Contenido
-                                    |
-                                    AsigValor;
-/*
-Contenido                       ::= SubContenido;
-
-SubContenido                    ::= AsigValor T
+LlamadoMetodos                  ::= IDENTIFICADOR Contenido ;
+Contenido                       ::= PARIZQ  SubContenido PARDER;
+SubContenido                    ::= IDENTIFICADOR T
                                     | ;
 
-T                               ::= COMA AsigValor  T
+T                               ::= COMA IDENTIFICADOR  T
                                     | ;
-*/   
+   
 /*PARAMETROD*/                     
 Parametros                      ::= Type IDENTIFICADOR Multiple
                                     |
@@ -167,19 +182,18 @@ Parametros                      ::= Type IDENTIFICADOR Multiple
 
 Multiple                        ::= COMA Parametros;
 
-Print                           ::= PRINT PARIZQ PrintParam PARDER;
+Print                           ::= PRINT PARIZQ x PARDER;
 
-PrintParam                      ::= IDENTIFICADOR
-                                    |
-                                    CADENA
+x                               ::= AsigValor
                                     |
                                     LlamadoMetodos
                                     |  ;
-
 /*FUNCTION */
 FunctionList                    ::= FunctionPart FunctionList
                                     |
-                                    FunctionPart;
+                                    FunctionPart
+                                    |
+                                    error {: parser.report_error("function_list", "WRONG"); :}  FunctionPart;
 
 FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR PARIZQ Parametros PARDER Stmts
                                     |
@@ -208,7 +222,7 @@ Conditional                     ::= IfConditional
 
 ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts;
 
-ExprFor                         ::= INT Asignacion PUNTOCOMA ExpresionBooleana PUNTOCOMA ExpresionIncDec ;
+ExprFor                         ::= INT Asignacion PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
 
 WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER Stmts;
 
@@ -219,30 +233,20 @@ IfConditional                   ::= IF ConditionGroup Stmts
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana PARDER;
 
-SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExprSwitchList END
-                                    |
-                                    SWITCH PARIZQ Switch PARDER DO ExprSwitchList END
-                                    ;
+SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
 
-ExprSwitchList                  ::= ExprSwitchPart ExprSwitchList
-                                    |
-                                    ExprSwitchPart;
-
-ExprSwitchPart                  ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA
+ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
                                     |
                                     OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
 
 Switch                          ::= NUMERO
                                     |
                                     CARACTER;
-/*
-ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
-                                    |
-                                    OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
-
-*/
 
 /*EXPRESIONES*/
+Expresion                       ::= ExpresionBooleana
+                                    |
+                                    ExpresionAritmetica;
 
 ExpresionAritmetica             ::= ExpresionAritmetica SUMA Factor
                                     |
