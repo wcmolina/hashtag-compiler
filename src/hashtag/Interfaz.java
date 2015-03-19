@@ -299,7 +299,6 @@ public class Interfaz extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(2, 2, 2)
@@ -313,7 +312,8 @@ public class Interfaz extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 486, Short.MAX_VALUE)
                 .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(2, 2, 2))
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
+            .addComponent(jScrollPane3)
+            .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -327,11 +327,11 @@ public class Interfaz extends javax.swing.JFrame {
                     .addComponent(openButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE)
+                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 467, Short.MAX_VALUE)
                 .addGap(0, 0, 0)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(statusPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -432,8 +432,14 @@ public class Interfaz extends javax.swing.JFrame {
                 //this.codeTextPane.setText(this.codeTextPane.getText().replaceAll("\t", "    "));
                 Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 p.parse();
-                p.AST.get(0).print("", true);
-                //Interfaz.console.setText(Interfaz.console.getText()+"Number of errors: "+p.errors);
+                if (p.errors == 0 && Interfaz.console.getText().isEmpty()) {
+                    Interfaz.console.setText("Number of errors: 0\n"
+                            + "Finished parsing successfully\n"
+                            + "Generating AST...");
+                    System.out.println(p.AST.get(0).print("", true));
+                } else {
+                    Interfaz.console.setText(Interfaz.console.getText() + "Number of errors: " + p.errors);
+                }
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());

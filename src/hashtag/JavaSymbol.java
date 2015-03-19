@@ -49,6 +49,6 @@ public class JavaSymbol extends java_cup.runtime.Symbol {
     }
 
     public String toString() {
-        return "line: " + line + " , column: " + column + " , lexeme: '" + text + "'" + " , sym: " + getTokenName(sym) + (value == null ? "" : (" , value: '" + value + "'"));
+        return "(line: " + line + ", column: " + column + ". Unexpected symbol " + getTokenName(sym) + (value == null ? ")" : (" , value: '" + value + "')"));
     }
 }

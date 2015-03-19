@@ -1,52 +1,32 @@
 package hashtag;
 import java_cup.runtime.*;
 import java.util.*;
-import java.io.FileReader;
 
 
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-public ArrayList<String> syntax_errors = new ArrayList();
-//public static int errors = 0;
-  public static Lexer s;
-  public static int errors = 0;
+public int errors = 0;
+public void report_error(String message, Object info){
+  StringBuilder m = new StringBuilder("");
+  if(info instanceof java_cup.runtime.Symbol){
+        m.append("Error: ");
+        m.append(info);
+        m.append(" : " + message);
+    } else {
+        if (info instanceof String) {
+            errors++;
+            m.append("    "+ errors + "==> " + info + " "+ message+"\n");
+        }
+}
+     
+     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
+}
 
-  public static void main(String argv[]) {
-
-    for (int i = 0; i < argv.length; i++) {
-      try {
-        System.out.println("Parsing ["+argv[i]+"]");
-        s = new Lexer(new FileReader(argv[i]));
-        Parser p = new Parser(s);
-        p.parse();
-        System.out.println("Number of errors = " + errors + ".");
-      }
-      catch (Exception e) {
-        e.printStackTrace(System.out);
-        System.exit(1);
-      }
-    }
-  }
-public void report_error(String message, Object info) {
-    if (info instanceof String){
-	errors++; 
-      System.err.println("  "+ errors + "==> " + info + " "+ message + 
-					"\n       Parsing resumed from 2nd token before" + s.current_lexeme()+"\n");
-    }
-    else {
-    	StringBuffer m = new StringBuffer("Error ");
-    	if (info instanceof java_cup.runtime.Symbol) 
-     	   m.append( "("+info.toString()+")" );     
-    	m.append(" : "+message);   
-    	System.err.println(m);
-    }
-  }
-   
-  public void report_fatal_error(String message, Object info) {
-    report_error(message, info);
-    throw new RuntimeException("Fatal Syntax Error");
-  }
+public void report_fatal_error(String message, Object info){
+   report_error(message, info);
+   //System.exit(1);
+}
 :}
 
 //------------------------------------------------TERMINALES-------------------------------------------------------
@@ -64,10 +44,10 @@ terminal Boolean   BOOLEAN;
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
 non terminal Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionList,FunctionPart,Stmts;
-non terminal Instruccion,Llamado,Expresion,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,ExpresionSwitch,Switch;
-non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,T,SubContenido,Contenido;
-non terminal Print,LlamadoMetodos,Booleana,Parametros,x,Multiple,Valor,EndFunction,Cadena,Return;
+non terminal Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
+non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
+non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido;
+non terminal Print,LlamadoMetodos,Booleana,Parametros,PrintParam,Multiple,Valor,EndFunction,Cadena,Return;
 non terminal VarDeclare, VarInit, VarDeclarationList, VarDeclarationPart,Functions;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -94,8 +74,10 @@ Stmts                           ::= DO BodyList END
                                     DO Stmts END
                                     |
                                     DO END
+                                    |
+                                    DO error {: parser.report_error("block declaration, possible unmatched DO...END","WRONG"); :} END
                                     ;
-0
+
 BodyList                        ::= BodyPart BodyList
                                     |
                                     BodyPart;
@@ -106,7 +88,7 @@ BodyPart                        ::= Instruccion PUNTOCOMA
                                     |
                                     Asignacion PUNTOCOMA
                                     |
-                                    ;
+                                    error {: parser.report_error("statement or variable declaration, assignment or initialization","WRONG"); :} BodyPart;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
 Instruccion                     ::= VarDeclare
@@ -114,6 +96,8 @@ Instruccion                     ::= VarDeclare
                                     VarInit
                                     |
                                     Llamado
+                                    |
+                                    error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
                                     ;
 
 VarDeclare                      ::= Type VarDeclarationList;
@@ -166,14 +150,22 @@ Llamado                         ::= Print
                                     LlamadoMetodos
                                     ;
 
-LlamadoMetodos                  ::= IDENTIFICADOR Contenido ;
-Contenido                       ::= PARIZQ  SubContenido PARDER;
-SubContenido                    ::= IDENTIFICADOR T
+LlamadoMetodos                  ::= IDENTIFICADOR PARIZQ Contenido PARDER
+                                    |
+                                    IDENTIFICADOR PARIZQ PARDER;
+
+Contenido                       ::= AsigValor COMA Contenido
+                                    |
+                                    AsigValor;
+/*
+Contenido                       ::= SubContenido;
+
+SubContenido                    ::= AsigValor T
                                     | ;
 
-T                               ::= COMA IDENTIFICADOR  T
+T                               ::= COMA AsigValor  T
                                     | ;
-   
+*/   
 /*PARAMETROD*/                     
 Parametros                      ::= Type IDENTIFICADOR Multiple
                                     |
@@ -182,18 +174,19 @@ Parametros                      ::= Type IDENTIFICADOR Multiple
 
 Multiple                        ::= COMA Parametros;
 
-Print                           ::= PRINT PARIZQ x PARDER;
+Print                           ::= PRINT PARIZQ PrintParam PARDER;
 
-x                               ::= AsigValor
+PrintParam                      ::= IDENTIFICADOR
+                                    |
+                                    CADENA
                                     |
                                     LlamadoMetodos
                                     |  ;
+
 /*FUNCTION */
 FunctionList                    ::= FunctionPart FunctionList
                                     |
-                                    FunctionPart
-                                    |
-                                    error {: parser.report_error("function_list", "WRONG"); :}  FunctionPart;
+                                    FunctionPart;
 
 FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR PARIZQ Parametros PARDER Stmts
                                     |
@@ -220,33 +213,49 @@ Conditional                     ::= IfConditional
                                     |
                                     SwitchConditional ;
 
-ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts;
+ForLoop                         ::= FOR PARIZQ ExprFor PARDER Stmts
+                                    |
+                                    FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Stmts;
 
-ExprFor                         ::= INT Asignacion PUNTOCOMA Expresion PUNTOCOMA ExpresionIncDec ;
+ExprFor                         ::= INT Asignacion PUNTOCOMA ExpresionBooleana PUNTOCOMA ExpresionIncDec ;
 
 WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana PARDER Stmts;
 
 IfConditional                   ::= IF ConditionGroup Stmts
                                     |
                                     IF ConditionGroup Stmts ELSE Stmts
+                                    |
+                                    IF error {: parser.report_error("IF statement declaration", "WRONG"); :} Stmts
                                     ;
 
-ConditionGroup                  ::= PARIZQ ExpresionBooleana PARDER;
+ConditionGroup                  ::= PARIZQ ExpresionBooleana PARDER
+                                    |
+                                    PARIZQ PARDER error {: parser.report_error("IF statement, no boolean expresion found","WRONG"); :} Stmts;
 
-SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExpresionSwitch END;
+SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR PARDER DO ExprSwitchList END
+                                    |
+                                    SWITCH PARIZQ Switch PARDER DO ExprSwitchList END
+                                    ;
 
-ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
+ExprSwitchList                  ::= ExprSwitchPart ExprSwitchList
+                                    |
+                                    ExprSwitchPart;
+
+ExprSwitchPart                  ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA
                                     |
                                     OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
 
 Switch                          ::= NUMERO
                                     |
                                     CARACTER;
+/*
+ExpresionSwitch                 ::= CASE Switch DOSPUNTOS Stmts BREAK PUNTOCOMA ExpresionSwitch
+                                    |
+                                    OTHER DOSPUNTOS Stmts BREAK PUNTOCOMA;
+
+*/
 
 /*EXPRESIONES*/
-Expresion                       ::= ExpresionBooleana
-                                    |
-                                    ExpresionAritmetica;
 
 ExpresionAritmetica             ::= ExpresionAritmetica SUMA Factor
                                     |

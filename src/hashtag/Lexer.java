@@ -892,7 +892,7 @@ class Lexer implements java_cup.runtime.Scanner {
           }
         case 92: break;
         case 34: 
-          { return symbol(sym.INT, yytext());
+          { return symbol(sym.INT);
           }
         case 93: break;
         case 35: 
@@ -952,7 +952,7 @@ class Lexer implements java_cup.runtime.Scanner {
           }
         case 107: break;
         case 49: 
-          { return symbol(sym.DOUBLE, yytext());
+          { return symbol(sym.DOUBLE);
           }
         case 108: break;
         case 50: 

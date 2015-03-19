@@ -6,22 +6,23 @@ import java.util.*;
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-
+    
     public ArrayList<Node> AST = new ArrayList();
-
+    public int errors = 0;
     public void report_error(String message, Object info){
-      StringBuilder m = new StringBuilder("Error");
-      if(info instanceof java_cup.runtime.Symbol){
-           java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol)info);
-           if(s.left >= 0){
-            m.append(" en la linea " + (s.left+1));
-             if(s.right >=0)
-               m.append(", columna " + (s.right+1));
-          }
-          m.append(" @ symbol: " + s);
+        StringBuilder m = new StringBuilder("");
+        if(info instanceof java_cup.runtime.Symbol){
+            m.append("Error: ");
+            m.append(info);
+            m.append(" : " + message);
+        } else {
+            if (info instanceof String) {
+                errors++;
+                m.append("    "+ errors + "==> " + info + " "+ message+"\n");
+            }
         }
-         m.append(" : " + message);
-         Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
+
+        Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
     }
 
     public void report_fatal_error(String message, Object info){
@@ -91,6 +92,8 @@ Stmts                           ::= DO BodyList:bdl END
                                     |
                                     DO END
                                     {: RESULT = new Node("λ"); :}
+                                    |
+                                    DO error {: parser.report_error("block declaration, possible unmatched DO...END","WRONG"); :} END
                                     ;
 
 BodyList                        ::= BodyPart:bp BodyList:bdl
@@ -110,6 +113,8 @@ BodyPart                        ::= Instruccion:ins PUNTOCOMA
                                     |
                                     Asignacion:asig PUNTOCOMA
                                     {: RESULT = asig; :}
+                                    |
+                                    error {: parser.report_error("statement or variable declaration, assignment or initialization","WRONG"); :} BodyPart
                                     ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
@@ -122,6 +127,8 @@ Instruccion                     ::= VarDeclare:vd
                                     |
                                     Llamado:l
                                     {: RESULT = l; :}
+                                    |
+                                    error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
                                     ;
 
 VarDeclare                      ::= Type VarDeclarationList:vdl
@@ -289,7 +296,9 @@ Conditional                     ::= IfConditional:ic
                                     {: RESULT = swc; :};
 
 ForLoop                         ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
-                                    {: RESULT = new Node("FOR", expr, st); :};
+                                    {: RESULT = new Node("FOR", expr, st); :}
+                                    |
+                                    FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Stmts;
 
 ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
                                     {: RESULT = new Node("structure",asig,exprb,update); :};
@@ -302,13 +311,17 @@ IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     {: RESULT = new Node("IF",cg, st); :}
                                     |
                                     IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
-                                    {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :};
+                                    {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
+                                    |
+                                    IF error {: parser.report_error("IF statement declaration", "WRONG"); :} Stmts;
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
                                     {: RESULT = eb; :}
                                     |
                                     PARIZQ IDENTIFICADOR:id PARDER
-                                    {: RESULT = new Node(id); :};
+                                    {: RESULT = new Node(id); :}
+                                    |
+                                    PARIZQ PARDER error {: parser.report_error("IF statement, no boolean expresion found","WRONG"); :} Stmts;
 
 SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
                                     {: RESULT = new Node("SWITCH", new Node(id), exprl); :}

@@ -17,13 +17,16 @@ public class Node {
     private ArrayList<Node> children;
     public String label;
     private Object type;
+    public String print;
 
     public Node() {
+        print = "";
         label = "null node";
         children = new ArrayList();
     }
 
     public Node(String name, Node... nodes) {
+        print = "";
         label = name;
         children = new ArrayList();
         for (Node node : nodes) {
@@ -36,12 +39,14 @@ public class Node {
     }
 
     public Node(Object obj, String name) {
+        print = "";
         label = name;
         children = new ArrayList();
         type = obj;
     }
 
     public Node(String name, ArrayList<Node> c) {
+        print = "";
         label = name;
         children = new ArrayList();
         children.addAll(c);
@@ -69,15 +74,16 @@ public class Node {
         this.children.addAll(c);
     }
 
-    public void print(String prefix, boolean isTail) {
-        System.out.println(prefix + (isTail ? "└── " : "├── ") + label);
+    public String print(String prefix, boolean isTail) {
+        print = print.concat(prefix + (isTail ? "└── " : "├── ") + label) + "\n";
         if (!children.isEmpty()) {
             for (int i = 0; i < children.size() - 1; i++) {
-                children.get(i).print(prefix + (isTail ? "    " : "│   "), false);
+                print = print.concat(children.get(i).print(prefix + (isTail ? "    " : "│   "), false));
             }
         }
         if (children.size() > 0) {
-            children.get(children.size() - 1).print(prefix + (isTail ? "    " : "│   "), true);
+            print = print.concat(children.get(children.size() - 1).print(prefix + (isTail ? "    " : "│   "), true));
         }
+        return print;
     }
 }
