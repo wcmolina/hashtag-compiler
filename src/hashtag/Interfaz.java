@@ -6,20 +6,29 @@
 package hashtag;
 
 import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -45,7 +54,9 @@ public class Interfaz extends javax.swing.JFrame {
      * Creates new form Interfaz
      */
     String FILE_PATH;
+    JFrame ASTFrame;
     boolean CONTENT_CHANGED; //bandera para ver si hay cambios en el textpane
+    final String[] KEYWORDS = {"int", "double", "char","string"};
 
     public Interfaz() {
         initComponents();
@@ -190,10 +201,14 @@ public class Interfaz extends javax.swing.JFrame {
         openMenuItem = new javax.swing.JMenuItem();
         exitMenuItem = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
+        clearTextMenuItem = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        showASTMenuItem = new javax.swing.JMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        docMenuItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Hashtag Compiler");
-        setPreferredSize(new java.awt.Dimension(1000, 700));
 
         runButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/gui/icons/25px/run.png"))); // NOI18N
         runButton.setFocusPainted(false);
@@ -291,7 +306,41 @@ public class Interfaz extends javax.swing.JFrame {
         menuBar.add(jMenu1);
 
         jMenu2.setText("Edit");
+
+        clearTextMenuItem.setText("Clear Text");
+        clearTextMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clearTextMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu2.add(clearTextMenuItem);
+
         menuBar.add(jMenu2);
+
+        jMenu3.setText("View");
+
+        showASTMenuItem.setText("Show AST");
+        showASTMenuItem.setEnabled(false);
+        showASTMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                showASTMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu3.add(showASTMenuItem);
+
+        menuBar.add(jMenu3);
+
+        jMenu4.setText("About");
+
+        docMenuItem.setText("Manual");
+        docMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                docMenuItemActionPerformed(evt);
+            }
+        });
+        jMenu4.add(docMenuItem);
+
+        menuBar.add(jMenu4);
 
         setJMenuBar(menuBar);
 
@@ -436,7 +485,28 @@ public class Interfaz extends javax.swing.JFrame {
                     Interfaz.console.setText("Number of errors: 0\n"
                             + "Finished parsing successfully\n"
                             + "Generating AST...");
-                    System.out.println(p.AST.get(0).print("", true));
+                    if (this.ASTFrame == null) {
+                        String tree = p.AST.get(0).print("", true);
+                        this.showASTMenuItem.setEnabled(true);
+                        JTextArea info = new JTextArea(tree);
+                        info.setFont(new Font("Consolas", Font.PLAIN, 12));
+                        info.setEditable(false);
+                        JScrollPane scroll = new JScrollPane(info);
+                        ASTFrame = new JFrame();
+                        ASTFrame.setSize(new Dimension(650, 800));
+                        ASTFrame.setResizable(true);
+                        ASTFrame.add(new JPanel() {
+
+                            {
+                                setBackground(Color.WHITE);
+                            }
+                        });
+                        ASTFrame.getContentPane().add(scroll);
+                        this.showASTMenuItem.setEnabled(true);
+                        //ASTFrame.setVisible(true);
+                        Interfaz.console.setText(Interfaz.console.getText()+" Completed. Go to View > Show AST for visualization.");
+                    }
+
                 } else {
                     Interfaz.console.setText(Interfaz.console.getText() + "Number of errors: " + p.errors);
                 }
@@ -444,15 +514,23 @@ public class Interfaz extends javax.swing.JFrame {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
     }//GEN-LAST:event_runButtonActionPerformed
 
     private void resetComponents() {
         Interfaz.console.setText("");
+        ASTFrame = null;
+        this.showASTMenuItem.setEnabled(false);
     }
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-        // TODO add your handling code here:
+        if (CONTENT_CHANGED) {
+            int dialogResult = JOptionPane.showConfirmDialog(null, "Close without saving?", "Warning", JOptionPane.YES_NO_CANCEL_OPTION);
+            if (dialogResult == JOptionPane.YES_OPTION) {
+                System.exit(1);
+            }
+        } else {
+            System.exit(1);
+        }
     }//GEN-LAST:event_exitMenuItemActionPerformed
 
     private void openMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openMenuItemActionPerformed
@@ -477,6 +555,7 @@ public class Interfaz extends javax.swing.JFrame {
                 this.codeTextPane.setText(str.toString());
                 this.setTitle(FILE_PATH + " - Hashtag Compiler");
                 CONTENT_CHANGED = false;
+                this.showASTMenuItem.setEnabled(false);
             } catch (IOException ex) {
                 Logger.getLogger(Interfaz.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -498,6 +577,43 @@ public class Interfaz extends javax.swing.JFrame {
             this.setTitle(FILE_PATH + " - Hashtag Compiler");
         }
     }//GEN-LAST:event_saveAsButtonActionPerformed
+
+    private void docMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_docMenuItemActionPerformed
+        try {
+            File document = new File("doc/manual.pdf");
+            if (document.exists()) {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(document);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Not supported");
+                }
+
+            } else {
+                JOptionPane.showMessageDialog(null, "File not found");
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
+        }
+    }//GEN-LAST:event_docMenuItemActionPerformed
+
+    private void clearTextMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearTextMenuItemActionPerformed
+        if (!this.codeTextPane.getText().isEmpty()) {
+            int dialogResult = JOptionPane.showConfirmDialog(null, "This will clear all text. Are you sure?", "Warning", JOptionPane.YES_NO_CANCEL_OPTION);
+            if (dialogResult == JOptionPane.YES_OPTION) {
+                this.codeTextPane.setText("");
+            }
+        }
+
+    }//GEN-LAST:event_clearTextMenuItemActionPerformed
+
+    private void showASTMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showASTMenuItemActionPerformed
+        if (this.ASTFrame == null) {
+            JOptionPane.showMessageDialog(rootPane, "Error. Null JFrame");
+        } else {
+            this.ASTFrame.setVisible(true);
+        }
+    }//GEN-LAST:event_showASTMenuItemActionPerformed
 
     /**
      * @param args the command line arguments
@@ -539,12 +655,16 @@ public class Interfaz extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem clearTextMenuItem;
     private javax.swing.JTextPane codeTextPane;
     public static javax.swing.JTextArea console;
+    private javax.swing.JMenuItem docMenuItem;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jsp;
     private javax.swing.JMenuBar menuBar;
@@ -553,6 +673,7 @@ public class Interfaz extends javax.swing.JFrame {
     private javax.swing.JButton runButton;
     private javax.swing.JButton saveAsButton;
     private javax.swing.JButton saveButton;
+    private javax.swing.JMenuItem showASTMenuItem;
     private javax.swing.JLabel status;
     private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables

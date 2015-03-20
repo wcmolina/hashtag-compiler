@@ -6,27 +6,40 @@ import java.util.*;
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-public int errors = 0;
-public void report_error(String message, Object info){
-  StringBuilder m = new StringBuilder("");
-  if(info instanceof java_cup.runtime.Symbol){
-        m.append("Error: ");
-        m.append(info);
-        m.append(" : " + message);
-    } else {
-        if (info instanceof String) {
-            errors++;
-            m.append("    "+ errors + "==> " + info + " "+ message+"\n");
-        }
-}
-     
-     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
-}
+  public static Lexer s;
+  public static int errors = 0;
 
-public void report_fatal_error(String message, Object info){
-   report_error(message, info);
-   //System.exit(1);
-}
+  public static void main(String argv[]) {
+
+    for (int i = 0; i < argv.length; i++) {
+      try {
+        System.out.println("Parsing ["+argv[i]+"]");
+        s = new Scanner(new FileReader(argv[i]));
+        Parser p = new Parser(s);
+        p.parse();
+        System.out.println("Number of errors = " + errors + ".");
+      }
+      catch (Exception e) {
+        e.printStackTrace(System.out);
+        System.exit(1);
+      }
+    }
+  }
+  
+  public void report_error(String message, Object info) {
+    if (info instanceof String){
+	errors++; 
+      System.err.println("  "+ errors + "==> " + info + " "+ message + 
+					"\n       Parsing resumed from 2nd token before" + s.current_lexeme()+"\n");
+    }
+    else {
+    	StringBuffer m = new StringBuffer("Error ");
+    	if (info instanceof java_cup.runtime.Symbol) 
+     	   m.append( "("+info.toString()+")" );     
+    	m.append(" : "+message);   
+    	System.err.println(m);
+    }
+  }
 :}
 
 //------------------------------------------------TERMINALES-------------------------------------------------------

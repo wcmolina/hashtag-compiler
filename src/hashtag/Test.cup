@@ -6,7 +6,8 @@ import java.util.*;
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-
+    public ArrayList<Node> AST = new ArrayList();
+    public int errors = 4;
 public void report_error(String message, Object info){
   StringBuilder m = new StringBuilder("Error: ");
   if(info instanceof java_cup.runtime.Symbol){

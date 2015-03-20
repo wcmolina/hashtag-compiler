@@ -1,12 +1,12 @@
 package hashtag;
 import java_cup.runtime.*;
 import java.util.*;
+import java.io.FileReader;
 
 
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-    
     public ArrayList<Node> AST = new ArrayList();
     public int errors = 0;
     public void report_error(String message, Object info){
@@ -71,7 +71,7 @@ Program                         ::= BEGIN Functions:f Main:mn END
                                     BEGIN Main:mn END
                                     {: RESULT = new Node("PROG", mn);
                                        parser.AST.add(RESULT); :}
-                                    ;
+                                    | BEGIN END error {: parser.report_error("syntax, missing 'main' function.","WRONG"); :} Stmts;
 
 Functions                       ::= FunctionList:fl
                                     {:
@@ -79,8 +79,7 @@ Functions                       ::= FunctionList:fl
                                     :};
 
 Main                            ::= MAINBEGIN Stmts:st
-                                    {: RESULT = new Node("MAIN",st); :}
-                                    ;
+                                    {: RESULT = new Node("MAIN",st); :};
 
 Stmts                           ::= DO BodyList:bdl END
                                     {:
@@ -93,7 +92,7 @@ Stmts                           ::= DO BodyList:bdl END
                                     DO END
                                     {: RESULT = new Node("λ"); :}
                                     |
-                                    DO error {: parser.report_error("block declaration, possible unmatched DO...END","WRONG"); :} END
+                                    DO error {: parser.report_error("block declaration. Possible unmatched 'do ... end'","WRONG"); :} END
                                     ;
 
 BodyList                        ::= BodyPart:bp BodyList:bdl
@@ -114,7 +113,7 @@ BodyPart                        ::= Instruccion:ins PUNTOCOMA
                                     Asignacion:asig PUNTOCOMA
                                     {: RESULT = asig; :}
                                     |
-                                    error {: parser.report_error("statement or variable declaration, assignment or initialization","WRONG"); :} BodyPart
+                                    error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
                                     ;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
@@ -258,6 +257,8 @@ FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parame
                                     |
                                     FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
                                     {: RESULT = new Node(id,param,ef); :}
+                                    |
+                                    error {: parser.report_error("function declaration.","WRONG"); :} FunctionList Main
                                     ;
 
 EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
@@ -305,6 +306,10 @@ ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBoole
 
 WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana:exprb PARDER Stmts:st
                                     {: RESULT = new Node("WHILE", exprb, st); :}
+                                    |
+                                    WHILE PARIZQ error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} PARDER BodyPart
+                                    |
+                                    WHILE error {: parser.report_error("WHILE statement declaration.","WRONG"); :} BodyPart
                                     ;
 
 IfConditional                   ::= IF ConditionGroup:cg Stmts:st
@@ -313,21 +318,21 @@ IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
                                     {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
                                     |
-                                    IF error {: parser.report_error("IF statement declaration", "WRONG"); :} Stmts;
+                                    IF error {: parser.report_error("IF statement declaration.", "WRONG"); :} Stmts;
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
                                     {: RESULT = eb; :}
                                     |
                                     PARIZQ IDENTIFICADOR:id PARDER
-                                    {: RESULT = new Node(id); :}
-                                    |
-                                    PARIZQ PARDER error {: parser.report_error("IF statement, no boolean expresion found","WRONG"); :} Stmts;
+                                    {: RESULT = new Node(id); :};
 
 SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
                                     {: RESULT = new Node("SWITCH", new Node(id), exprl); :}
                                     |
                                     SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
                                     {: RESULT = new Node("SWITCH", sw, exprl); :}
+                                    |
+                                    SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Stmts
                                     ;
 
 ExprSwitchList                  ::= ExprSwitchPart:exprp ExprSwitchList:exprl
@@ -340,7 +345,9 @@ ExprSwitchPart                  ::= CASE Switch:sw DOSPUNTOS Stmts:st BREAK PUNT
                                     {: RESULT = new Node("CASE", sw, st); :}
                                     |
                                     OTHER DOSPUNTOS Stmts:st BREAK PUNTOCOMA
-                                    {: RESULT = new Node("OTHER", st); :};
+                                    {: RESULT = new Node("OTHER", st); :}
+                                    |
+                                    CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} BREAK PUNTOCOMA;
 
 Switch                          ::= NUMERO:n
                                     {: RESULT = new Node(Integer.toString(n)); :}
