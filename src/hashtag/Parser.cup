@@ -226,6 +226,8 @@ Parametros                      ::= Type IDENTIFICADOR:id Multiple:mult
                                     {: RESULT = new Node("params", new Node(id)); :}
                                     |
                                     {: RESULT = new Node("params", new Node("λ")); :}
+                                    |
+                                    error {: parser.report_error("function arguments.","WRONG"); :}Stmts
                                     ;
 
 Multiple                        ::= COMA Parametros:param
@@ -258,7 +260,7 @@ FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parame
                                     FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
                                     {: RESULT = new Node(id,param,ef); :}
                                     |
-                                    error {: parser.report_error("function declaration.","WRONG"); :} FunctionList Main
+                                    error {: parser.report_error("function declaration.","WRONG"); :} Stmts FunctionList Main
                                     ;
 
 EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
@@ -332,7 +334,7 @@ SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO Exp
                                     SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
                                     {: RESULT = new Node("SWITCH", sw, exprl); :}
                                     |
-                                    SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Stmts
+                                    SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} ExprSwitchList
                                     ;
 
 ExprSwitchList                  ::= ExprSwitchPart:exprp ExprSwitchList:exprl
@@ -347,7 +349,7 @@ ExprSwitchPart                  ::= CASE Switch:sw DOSPUNTOS Stmts:st BREAK PUNT
                                     OTHER DOSPUNTOS Stmts:st BREAK PUNTOCOMA
                                     {: RESULT = new Node("OTHER", st); :}
                                     |
-                                    CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} BREAK PUNTOCOMA;
+                                    CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} Stmts;
 
 Switch                          ::= NUMERO:n
                                     {: RESULT = new Node(Integer.toString(n)); :}
