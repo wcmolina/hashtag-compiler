@@ -22,7 +22,7 @@ parser code {:
             }
         }
 
-        Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
+        GUI.console.setText(GUI.console.getText() + m.toString() + "\n");
     }
 
     public void report_fatal_error(String message, Object info){

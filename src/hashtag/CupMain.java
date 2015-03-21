@@ -19,7 +19,7 @@ public class CupMain {
         opts[1] = "src\\hashtag\\";
         opts[2] = "-parser";
         opts[3] = "Parser";
-        opts[4] = "src\\hashtag\\Parser.cup";
+        opts[4] = "src\\hashtag\\parser.cup";
         //opts[4] = "src\\hashtag\\Test.cup";
         //opts[4] = "src\\hashtag\\Errors.cup";
 
