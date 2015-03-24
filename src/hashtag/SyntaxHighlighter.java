@@ -694,7 +694,7 @@ class SyntaxHighlighter {
           }
         case 12: break;
         case 3: 
-          { 
+          { return token(TokenType.PLAIN);
           }
         case 13: break;
         case 4: 

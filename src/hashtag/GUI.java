@@ -68,12 +68,12 @@ public class GUI extends javax.swing.JFrame {
         final StyleContext cont = StyleContext.getDefaultStyleContext();
 
         final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#6ac9c8"));
-        final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.WHITE);
-        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#5e5e5e"));
+        final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#CCCCCC"));
+        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
         final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#e4944b"));
         final AttributeSet function = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#b4be5a"));
         final AttributeSet number = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#c46563"));
-        final AttributeSet operator = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#cc99cc"));
+        //final AttributeSet operator = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#cc99cc"));
         DefaultStyledDocument doc = new DefaultStyledDocument() {
             @Override
             public void insertString(int offset, String str, AttributeSet a) throws BadLocationException { //cuando se insertan caracteres.
@@ -101,7 +101,7 @@ public class GUI extends javax.swing.JFrame {
                                 setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, true);
+                                setCharacterAttributes(val.start, val.length, plain, true);
                                 break;
                             case TokenType.READ:
                                 setCharacterAttributes(val.start, val.length, number, true);
@@ -142,7 +142,7 @@ public class GUI extends javax.swing.JFrame {
                                 setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, true);
+                                setCharacterAttributes(val.start, val.length, plain, true);
                                 break;
                             case TokenType.READ:
                                 setCharacterAttributes(val.start, val.length, number, true);
@@ -155,7 +155,6 @@ public class GUI extends javax.swing.JFrame {
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered");
                 }
-
             }
         };
 
@@ -227,11 +226,12 @@ public class GUI extends javax.swing.JFrame {
         exitMU = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         clearTextMU = new javax.swing.JMenuItem();
-        jMenu5 = new javax.swing.JMenu();
-        parseMU = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         showAstMU = new javax.swing.JMenuItem();
         toggleConsoleMU = new javax.swing.JMenuItem();
+        ToolsMU = new javax.swing.JMenu();
+        parseMU = new javax.swing.JMenuItem();
+        jMenu5 = new javax.swing.JMenu();
         jMenu4 = new javax.swing.JMenu();
         docMenuItem = new javax.swing.JMenuItem();
 
@@ -251,7 +251,7 @@ public class GUI extends javax.swing.JFrame {
         codeTextPane.setBackground(new java.awt.Color(43, 48, 59));
         codeTextPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         codeTextPane.setFont(new java.awt.Font("Menlo", 0, 11)); // NOI18N
-        codeTextPane.setForeground(new java.awt.Color(255, 255, 255));
+        codeTextPane.setForeground(new java.awt.Color(204, 204, 204));
         codeTextPane.setCaretColor(new java.awt.Color(255, 255, 255));
         codeTextPane.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
@@ -334,18 +334,6 @@ public class GUI extends javax.swing.JFrame {
 
         menuBar.add(jMenu2);
 
-        jMenu5.setText("Analyze");
-
-        parseMU.setText("Parse source code");
-        parseMU.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                parseMUActionPerformed(evt);
-            }
-        });
-        jMenu5.add(parseMU);
-
-        menuBar.add(jMenu5);
-
         jMenu3.setText("View");
 
         showAstMU.setText("Show AST");
@@ -368,7 +356,22 @@ public class GUI extends javax.swing.JFrame {
 
         menuBar.add(jMenu3);
 
-        jMenu4.setText("About");
+        ToolsMU.setText("Tools");
+
+        parseMU.setText("Parse");
+        parseMU.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                parseMUActionPerformed(evt);
+            }
+        });
+        ToolsMU.add(parseMU);
+
+        menuBar.add(ToolsMU);
+
+        jMenu5.setText("Preferences");
+        menuBar.add(jMenu5);
+
+        jMenu4.setText("Help");
 
         docMenuItem.setText("Manual");
         docMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -454,6 +457,7 @@ public class GUI extends javax.swing.JFrame {
         GUI.console.setText("");
         ASTFrame = null;
         this.showAstMU.setEnabled(false);
+        this.codeTextPane.setCaretPosition(0);
     }
 
     void toggleConsole() {
@@ -681,6 +685,7 @@ public class GUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu ToolsMU;
     private javax.swing.JMenuItem clearTextMU;
     private javax.swing.JTextPane codeTextPane;
     public static javax.swing.JTextArea console;

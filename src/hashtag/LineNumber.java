@@ -77,7 +77,7 @@ public class LineNumber extends JPanel
         this.component = component;
 
         setFont(component.getFont());
-        setForeground(Color.WHITE);
+        setForeground(Color.decode("#BDBDBD"));
         setBorderGap(5);
         setCurrentLineForeground(Color.decode("#aa6164"));
         setDigitAlignment(CENTER);

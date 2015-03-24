@@ -686,7 +686,7 @@ class SyntaxHighlighter {
 
       switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
         case 1: 
-          { return token (TokenTyple.PLAIN);
+          { return token (TokenType.PLAIN);
           }
         case 11: break;
         case 2: 
