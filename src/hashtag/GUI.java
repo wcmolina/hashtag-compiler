@@ -86,28 +86,28 @@ public class GUI extends javax.swing.JFrame {
                     while ((val = PARSER.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
-                                setCharacterAttributes(val.start, val.length, keyword, false);
+                                setCharacterAttributes(val.start, val.length, keyword, true);
                                 break;
                             case TokenType.COMMENT:
-                                setCharacterAttributes(val.start, val.length, comment, false);
+                                setCharacterAttributes(val.start, val.length, comment, true);
                                 break;
                             case TokenType.CADENA:
-                                setCharacterAttributes(val.start, val.length, string, false);
+                                setCharacterAttributes(val.start, val.length, string, true);
                                 break;
                             case TokenType.FUNCTION:
-                                setCharacterAttributes(val.start, val.length, function, false);
+                                setCharacterAttributes(val.start, val.length, function, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, number, false);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, false);
+                                setCharacterAttributes(val.start, val.length, operator, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, number, false);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             default:
-                                setCharacterAttributes(val.start, val.length, plain, false);
+                                setCharacterAttributes(val.start, val.length, plain, true);
                                 break;
                         }
                     }
@@ -127,28 +127,28 @@ public class GUI extends javax.swing.JFrame {
                     while ((val = PARSER.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
-                                setCharacterAttributes(val.start, val.length, keyword, false);
+                                setCharacterAttributes(val.start, val.length, keyword, true);
                                 break;
                             case TokenType.COMMENT:
-                                setCharacterAttributes(val.start, val.length, comment, false);
+                                setCharacterAttributes(val.start, val.length, comment, true);
                                 break;
                             case TokenType.CADENA:
-                                setCharacterAttributes(val.start, val.length, string, false);
+                                setCharacterAttributes(val.start, val.length, string, true);
                                 break;
                             case TokenType.FUNCTION:
-                                setCharacterAttributes(val.start, val.length, function, false);
+                                setCharacterAttributes(val.start, val.length, function, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, number, false);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, false);
+                                setCharacterAttributes(val.start, val.length, operator, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, number, false);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             default:
-                                setCharacterAttributes(val.start, val.length, plain, false);
+                                setCharacterAttributes(val.start, val.length, plain, true);
                                 break;
                         }
                     }
