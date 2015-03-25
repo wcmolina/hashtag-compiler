@@ -9,6 +9,7 @@ import java.io.FileReader;
 parser code {:
     public ArrayList<Node> AST = new ArrayList();
     public int errors = 0;
+    public int fatal = 0;
     public void report_error(String message, Object info){
         StringBuilder m = new StringBuilder("");
         if(info instanceof java_cup.runtime.Symbol){
@@ -26,8 +27,8 @@ parser code {:
     }
 
     public void report_fatal_error(String message, Object info){
-       report_error(message, info);
-       //System.exit(1);
+        fatal++;
+        report_error(message, info);
     }
 :}
 
@@ -40,8 +41,8 @@ terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE
 terminal Integer   NUMERO;
 terminal Double    REAL;
 terminal Character CARACTER;
-terminal String    CADENA, IDENTIFICADOR;
-terminal Boolean   FALSE, TRUE;
+terminal String    CADENA,IDENTIFICADOR;
+terminal Boolean   FALSE,TRUE;
 
 
 //------------------------------------------------NO-TERMINALES----------------------------------------------------
@@ -49,8 +50,8 @@ non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,Funct
 non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
 non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Multiple,Valor,EndFunction,Cadena,Return;
-non terminal Node VarDeclare, VarInit, VarDeclarationList, VarDeclarationPart,Functions;
+non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Multiple,Valor,EndFunction,Cadena,Return,Condicion;
+non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura,Lec;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
@@ -67,24 +68,26 @@ Program                         ::= BEGIN Functions:f Main:mn END
                                         RESULT = new Node("PROG", f, mn);
                                         parser.AST.add(RESULT);
                                     :}
+
                                     |
                                     BEGIN Main:mn END
-                                    {: RESULT = new Node("PROG", mn);
-                                       parser.AST.add(RESULT); :}
-                                    | BEGIN END error {: parser.report_error("syntax, missing 'main' function.","WRONG"); :} Stmts;
+                                    {: 
+                                        RESULT = new Node("PROG", mn);
+                                        parser.AST.add(RESULT);
+                                    :}
+                                    |
+                                    Main error {: parser.report_error("syntax, missing token 'begin'.","WRONG"); :}
+                                    |
+                                    BEGIN END error {: parser.report_error("syntax, missing token 'main' function.","WRONG"); :} Stmts;
 
 Functions                       ::= FunctionList:fl
-                                    {:
-                                        RESULT = new Node("FUNCTIONS",fl);
-                                    :};
+                                    {: RESULT = new Node("FUNCTIONS",fl); :};
 
 Main                            ::= MAINBEGIN Stmts:st
                                     {: RESULT = new Node("MAIN",st); :};
 
 Stmts                           ::= DO BodyList:bdl END
-                                    {:
-                                        RESULT = bdl;
-                                    :}
+                                    {: RESULT = bdl; :}
                                     |
                                     DO Stmts:st END
                                     {: RESULT = st; :}
@@ -96,9 +99,7 @@ Stmts                           ::= DO BodyList:bdl END
                                     ;
 
 BodyList                        ::= BodyPart:bp BodyList:bdl
-                                    {:
-                                        RESULT = bdl.add(bp);
-                                    :}
+                                    {: RESULT = bdl.add(bp); :}
                                     |
                                     BodyPart:bp
                                     {: RESULT = new Node("body", bp); :}
@@ -127,7 +128,20 @@ Instruccion                     ::= VarDeclare:vd
                                     Llamado:l
                                     {: RESULT = l; :}
                                     |
+                                    Lectura :l2
+                                    {:RESULT = l2; :}
+                                    |
                                     error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
+                                    ;
+Lectura                         ::= IDENTIFICADOR ASIGNACION Lec;
+
+Lec                             ::= READINT
+                                    |
+                                    READDOUBLE
+                                    |
+                                    READSTRING
+                                    |
+                                    READCHAR
                                     ;
 
 VarDeclare                      ::= Type VarDeclarationList:vdl
@@ -244,7 +258,10 @@ PrintParam                      ::= IDENTIFICADOR:id
                                     {: RESULT = new Node("\""+cad+"\""); :}
                                     |
                                     LlamadoMetodos:lm
-                                    |  ;
+                                    {: RESULT = lm; :}
+                                    |
+                                    {: RESULT = new Node("λ"); :}
+                                    ;
 
 /*FUNCTION */
 FunctionList                    ::= FunctionPart:fp FunctionList:fl
@@ -260,7 +277,7 @@ FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parame
                                     FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
                                     {: RESULT = new Node(id,param,ef); :}
                                     |
-                                    error {: parser.report_error("function declaration.","WRONG"); :} Stmts FunctionList Main
+                                    error {: parser.report_error("function declaration.Example <Function int Suma()...>","WRONG"); :} Stmts FunctionList Main
                                     ;
 
 EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
@@ -306,13 +323,19 @@ ForLoop                         ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
 ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
                                     {: RESULT = new Node("structure",asig,exprb,update); :};
 
-WhileLoop                       ::= WHILE PARIZQ ExpresionBooleana:exprb PARDER Stmts:st
-                                    {: RESULT = new Node("WHILE", exprb, st); :}
+WhileLoop                       ::= WHILE PARIZQ Condicion:condw PARDER Stmts:st
+                                    {: RESULT = new Node("WHILE", condw, st); :}
                                     |
                                     WHILE PARIZQ error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} PARDER BodyPart
                                     |
-                                    WHILE error {: parser.report_error("WHILE statement declaration.","WRONG"); :} BodyPart
+                                    WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} BodyPart
                                     ;
+Condicion                      ::= ExpresionBooleana:exprb
+                                    {: RESULT = exprb; :}
+                                    |
+                                    Cadena:cad
+                                    {: RESULT = cad; :}
+                                   ;
 
 IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     {: RESULT = new Node("IF",cg, st); :}
@@ -320,7 +343,7 @@ IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
                                     {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
                                     |
-                                    IF error {: parser.report_error("IF statement declaration.", "WRONG"); :} Stmts;
+                                    IF error {: parser.report_error("IF statement declaration. Example <if(a>10)...> ", "WRONG"); :} Stmts;
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
                                     {: RESULT = eb; :}
