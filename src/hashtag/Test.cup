@@ -20,7 +20,7 @@ public void report_error(String message, Object info){
       m.append(" @ symbol: " + s);
     }
      m.append(" : " + message);
-     Interfaz.console.setText(Interfaz.console.getText() + m.toString() + "\n");
+     GUI.console.setText(GUI.console.getText() + m.toString() + "\n");
 }
 
 public void report_fatal_error(String message, Object info){
@@ -47,7 +47,7 @@ non terminal Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionLi
 non terminal Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
 non terminal ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido;
-non terminal Print,LlamadoMetodos,Booleana,Parametros,PrintParam,Multiple,Valor,EndFunction,Cadena,Return;
+non terminal Print,LlamadoMetodos,Booleana,Parametros,PrintParam,Param,Valor,EndFunction,Cadena,Return;
 non terminal VarDeclare, VarInit, VarDeclarationList, VarDeclarationPart,Functions;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -161,12 +161,12 @@ T                               ::= COMA AsigValor  T
                                     | ;
 */   
 /*PARAMETROD*/                     
-Parametros                      ::= Type IDENTIFICADOR Multiple
+Parametros                      ::= Parametros COMA Param
                                     |
-                                    Type IDENTIFICADOR
+                                    Param
                                     | ;
 
-Multiple                        ::= COMA Parametros;
+Param                           ::= Type IDENTIFICADOR:id;
 
 Print                           ::= PRINT PARIZQ PrintParam PARDER;
 

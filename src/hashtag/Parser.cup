@@ -50,8 +50,8 @@ non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,Funct
 non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
 non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Multiple,Valor,EndFunction,Cadena,Return,Condicion;
-non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura,Lec;
+non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,EndFunction,Cadena,Return,Condicion;
+non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
@@ -68,7 +68,6 @@ Program                         ::= BEGIN Functions:f Main:mn END
                                         RESULT = new Node("PROG", f, mn);
                                         parser.AST.add(RESULT);
                                     :}
-
                                     |
                                     BEGIN Main:mn END
                                     {: 
@@ -76,26 +75,23 @@ Program                         ::= BEGIN Functions:f Main:mn END
                                         parser.AST.add(RESULT);
                                     :}
                                     |
-                                    Main error {: parser.report_error("syntax, missing token 'begin'.","WRONG"); :}
-                                    |
-                                    BEGIN END error {: parser.report_error("syntax, missing token 'main' function.","WRONG"); :} Stmts;
+                                    error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END;
 
 Functions                       ::= FunctionList:fl
                                     {: RESULT = new Node("FUNCTIONS",fl); :};
 
 Main                            ::= MAINBEGIN Stmts:st
-                                    {: RESULT = new Node("MAIN",st); :};
+                                    {: RESULT = new Node("MAIN",st); :}
+                                    |
+                                    error {: parser.report_error("token 'mainbegin'.","MISSING"); :} Stmts;
 
 Stmts                           ::= DO BodyList:bdl END
                                     {: RESULT = bdl; :}
                                     |
-                                    DO Stmts:st END
-                                    {: RESULT = st; :}
-                                    |
                                     DO END
                                     {: RESULT = new Node("λ"); :}
                                     |
-                                    DO error {: parser.report_error("block declaration. Possible unmatched 'do ... end'","WRONG"); :} END
+                                    error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END
                                     ;
 
 BodyList                        ::= BodyPart:bp BodyList:bdl
@@ -128,20 +124,20 @@ Instruccion                     ::= VarDeclare:vd
                                     Llamado:l
                                     {: RESULT = l; :}
                                     |
-                                    Lectura :l2
-                                    {:RESULT = l2; :}
-                                    |
                                     error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
                                     ;
-Lectura                         ::= IDENTIFICADOR ASIGNACION Lec;
 
-Lec                             ::= READINT
+Lectura                         ::= READINT PARIZQ PARDER
+                                    {: RESULT = new Node("READINT"); :}
                                     |
-                                    READDOUBLE
+                                    READDOUBLE PARIZQ PARDER
+                                    {: RESULT = new Node("READDOUBLE"); :}
                                     |
-                                    READSTRING
+                                    READSTRING PARIZQ PARDER
+                                    {: RESULT = new Node("READSTRING"); :}
                                     |
-                                    READCHAR
+                                    READCHAR PARIZQ PARDER
+                                    {: RESULT = new Node("READCHAR"); :}
                                     ;
 
 VarDeclare                      ::= Type VarDeclarationList:vdl
@@ -160,7 +156,11 @@ VarDeclarationPart              ::= IDENTIFICADOR:id
                                     {: RESULT = new Node(id); :};
 
 VarInit                         ::= VarDeclare:vd ASIGNACION AsigValor:av
-                                    {: RESULT = new Node("assign",vd,av); :};
+                                    {: RESULT = new Node("assign",vd,av); :}
+                                    |
+                                    VarDeclare:vd ASIGNACION Lectura:lec
+                                    {: RESULT = new Node("assign",vd,lec); :}
+                                    ;
 
 Valor                           ::= NUMERO:num
                                     {: RESULT = new Node(Integer.toString(num)); :}
@@ -199,6 +199,9 @@ Cadena                          ::= CADENA:cad
 Asignacion                      ::= IDENTIFICADOR:id ASIGNACION AsigValor:av
                                     {: RESULT = new Node("assign",new Node(id), av); :}
                                     |
+                                    IDENTIFICADOR:id ASIGNACION Lectura:lec
+                                    {: RESULT = new Node("assign",new Node(id), lec); :}
+                                    |
                                     ExpresionIncDec:update
                                     {: RESULT = update; :};
 
@@ -233,19 +236,17 @@ Contenido                       ::= AsigValor:av COMA Contenido:cont
                                     {: RESULT = new Node("params",av); :};
    
 /*PARAMETROS*/                     
-Parametros                      ::= Type IDENTIFICADOR:id Multiple:mult
-                                    {: RESULT = new Node("params", new Node(id), mult); :}
+Parametros                      ::= Parametros:ps COMA Param:p
+                                    {: RESULT = ps.add(p); :}
                                     |
-                                    Type IDENTIFICADOR:id
-                                    {: RESULT = new Node("params", new Node(id)); :}
+                                    Param:p
+                                    {: RESULT = new Node("parameters",p); :}
                                     |
-                                    {: RESULT = new Node("params", new Node("λ")); :}
-                                    |
-                                    error {: parser.report_error("function arguments.","WRONG"); :}Stmts
+                                    {: RESULT = new Node("λ"); :}
                                     ;
 
-Multiple                        ::= COMA Parametros:param
-                                    {: RESULT = param; :}
+Param                           ::= Type IDENTIFICADOR:id
+                                    {: RESULT = new Node(id); :}
                                     ;
 
 Print                           ::= PRINT PARIZQ PrintParam:pp PARDER
@@ -268,16 +269,15 @@ FunctionList                    ::= FunctionPart:fp FunctionList:fl
                                     {: RESULT = fl.add(fp); :}
                                     |
                                     FunctionPart:fp
-                                    {: RESULT = new Node("body",fp); :}
-                                    ;
+                                    {: RESULT = new Node("body",fp); :};
 
 FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
                                     {: RESULT = new Node(id, param, st); :}
                                     |
                                     FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
-                                    {: RESULT = new Node(id,param,ef); :}
+                                    {: RESULT = new Node(id, param ,ef); :}
                                     |
-                                    error {: parser.report_error("function declaration.Example <Function int Suma()...>","WRONG"); :} Stmts FunctionList Main
+                                    FUNCTION error {: parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG"); :} Stmts
                                     ;
 
 EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
@@ -326,9 +326,9 @@ ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBoole
 WhileLoop                       ::= WHILE PARIZQ Condicion:condw PARDER Stmts:st
                                     {: RESULT = new Node("WHILE", condw, st); :}
                                     |
-                                    WHILE PARIZQ error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} PARDER BodyPart
+                                    WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Stmts
                                     |
-                                    WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} BodyPart
+                                    WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} Stmts
                                     ;
 Condicion                      ::= ExpresionBooleana:exprb
                                     {: RESULT = exprb; :}
@@ -343,7 +343,7 @@ IfConditional                   ::= IF ConditionGroup:cg Stmts:st
                                     IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
                                     {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
                                     |
-                                    IF error {: parser.report_error("IF statement declaration. Example <if(a>10)...> ", "WRONG"); :} Stmts;
+                                    IF error {: parser.report_error("IF statement declaration. Usage example: if (<boolean expression>) do ... end", "WRONG"); :} Stmts;
 
 ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
                                     {: RESULT = eb; :}

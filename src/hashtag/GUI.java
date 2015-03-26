@@ -104,7 +104,7 @@ public class GUI extends javax.swing.JFrame {
                         }
                     }
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered");
+                    JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered\n" + ex.getMessage());
                 }
             }
 
@@ -145,7 +145,7 @@ public class GUI extends javax.swing.JFrame {
                         }
                     }
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered");
+                    JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered\n" + ex.getMessage());
                 }
             }
         };
@@ -223,7 +223,6 @@ public class GUI extends javax.swing.JFrame {
         toggleConsoleMU = new javax.swing.JMenuItem();
         ToolsMU = new javax.swing.JMenu();
         parseMU = new javax.swing.JMenuItem();
-        jMenu5 = new javax.swing.JMenu();
         jMenu4 = new javax.swing.JMenu();
         docMenuItem = new javax.swing.JMenuItem();
 
@@ -242,7 +241,7 @@ public class GUI extends javax.swing.JFrame {
 
         codeTextPane.setBackground(new java.awt.Color(43, 48, 59));
         codeTextPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        codeTextPane.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
+        codeTextPane.setFont(new java.awt.Font("Menlo", 0, 11)); // NOI18N
         codeTextPane.setForeground(new java.awt.Color(204, 204, 204));
         codeTextPane.setCaretColor(new java.awt.Color(255, 255, 255));
         codeTextPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -360,9 +359,6 @@ public class GUI extends javax.swing.JFrame {
 
         menuBar.add(ToolsMU);
 
-        jMenu5.setText("Preferences");
-        menuBar.add(jMenu5);
-
         jMenu4.setText("Help");
 
         docMenuItem.setText("Manual");
@@ -449,7 +445,6 @@ public class GUI extends javax.swing.JFrame {
         GUI.console.setText("");
         ASTFrame = null;
         this.showAstMU.setEnabled(false);
-        this.codeTextPane.setCaretPosition(0);
     }
 
     void toggleConsole() {
@@ -485,6 +480,7 @@ public class GUI extends javax.swing.JFrame {
                 this.setTitle(FILE_PATH + " - Hashtag Compiler");
                 CONTENT_CHANGED = false;
                 resetComponents();
+                this.codeTextPane.setCaretPosition(0);
             } catch (IOException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -512,7 +508,7 @@ public class GUI extends javax.swing.JFrame {
 
     private void clearTextMUActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearTextMUActionPerformed
         if (!this.codeTextPane.getText().isEmpty()) {
-            int dialogResult = JOptionPane.showConfirmDialog(null, "This will clear all text. Are you sure?", "Warning", JOptionPane.YES_NO_CANCEL_OPTION);
+            int dialogResult = JOptionPane.showConfirmDialog(null, "This will clear all text. Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
             if (dialogResult == JOptionPane.YES_OPTION) {
                 this.codeTextPane.setText("");
                 console.setText("");
@@ -523,7 +519,7 @@ public class GUI extends javax.swing.JFrame {
 
     private void showAstMUActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showAstMUActionPerformed
         if (this.ASTFrame == null) {
-            JOptionPane.showMessageDialog(rootPane, "Error. Null JFrame");
+            JOptionPane.showMessageDialog(rootPane, "Unexpected error. JFrame is null");
         } else {
             this.ASTFrame.setVisible(true);
         }
@@ -590,17 +586,23 @@ public class GUI extends javax.swing.JFrame {
         try {
             if (this.codeTextPane.getText().isEmpty()) {
                 GUI.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
-                consolePane.setVisible(true);
-                this.setVisible(true);
+                if (!consolePane.isVisible()) {
+                    consolePane.setVisible(true);
+                    this.setVisible(true);
+                }
             } else {
                 Parser p = new Parser(new Lexer(new java.io.StringReader(this.codeTextPane.getText()))); //asi no depende del archivo.
                 p.parse();
-                if (p.errors == 0 && GUI.console.getText().isEmpty()) {
+                if (p.errors == 0 && p.fatal == 0 && GUI.console.getText().isEmpty()) {
                     GUI.console.setText("Number of errors: 0\n"
                             + "Finished parsing successfully\n"
                             + "Generating AST...");
-                    consolePane.setVisible(true);
-                    this.setVisible(true);
+
+                    if (!consolePane.isVisible()) {
+                        consolePane.setVisible(true);
+                        this.setVisible(true);
+                    }
+
                     if (this.ASTFrame == null) {
                         String tree = p.AST.get(0).print("", true);
                         this.showAstMU.setEnabled(true);
@@ -624,13 +626,16 @@ public class GUI extends javax.swing.JFrame {
                     }
 
                 } else {
-                    GUI.console.setText(GUI.console.getText() + "Number of errors: " + p.errors);
-                    consolePane.setVisible(true);
-                    this.setVisible(true);
+                    GUI.console.setText(GUI.console.getText() + "\nNumber of syntax errors found: " + p.errors);
+                    GUI.console.setText(GUI.console.getText() + "\nNumber of unexpected errors: " + p.fatal);
+                    if (!consolePane.isVisible()) {
+                        consolePane.setVisible(true);
+                        this.setVisible(true);
+                    }
                 }
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered");
+            JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered\n" + e.getMessage());
         }
     }//GEN-LAST:event_parseMUActionPerformed
 
@@ -690,7 +695,6 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
-    private javax.swing.JMenu jMenu5;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JScrollPane jsp;
     private javax.swing.JMenuBar menuBar;

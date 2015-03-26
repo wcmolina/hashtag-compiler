@@ -20,7 +20,7 @@ public class CupMain {
         opts[2] = "-parser";
         opts[3] = "Parser";
         opts[4] = "src\\hashtag\\parser.cup";
-        //opts[4] = "src\\hashtag\\Test.cup";
+        //opts[4] = "src\\hashtag\\test.cup";
         //opts[4] = "src\\hashtag\\Errors.cup";
 
         try {
