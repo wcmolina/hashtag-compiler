@@ -7,7 +7,8 @@ import java.util.*;
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
     public ArrayList<Node> AST = new ArrayList();
-    public int errors = 4;
+    public int errors = 999;
+    public int fatal = 111;
 public void report_error(String message, Object info){
   StringBuilder m = new StringBuilder("Error: ");
   if(info instanceof java_cup.runtime.Symbol){
@@ -84,7 +85,9 @@ BodyPart                        ::= Instruccion PUNTOCOMA
                                     |
                                     Bloque
                                     |
-                                    Asignacion PUNTOCOMA;
+                                    Asignacion PUNTOCOMA
+                                    |
+                                    Return PUNTOCOMA;
 
 /*DECLARACION VARIABLES ASIGNACION VARIABLES */
 Instruccion                     ::= VarDeclare
@@ -184,15 +187,15 @@ FunctionList                    ::= FunctionPart FunctionList
 
 FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR PARIZQ Parametros PARDER Stmts
                                     |
-                                    FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER EndFunction;
+                                    FUNCTION Type IDENTIFICADOR PARIZQ Parametros PARDER Stmts;
 
 EndFunction                     ::= DO BodyList RETURN Return PUNTOCOMA END
                                     |
                                     DO RETURN Return PUNTOCOMA END;
 
-Return                          ::= LlamadoMetodos
+Return                          ::= RETURN LlamadoMetodos
                                     |
-                                    AsigValor;
+                                    RETURN AsigValor;
 
 /*BLOQUE*/
 Bloque                          ::= Loops

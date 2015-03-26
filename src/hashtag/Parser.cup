@@ -50,7 +50,7 @@ non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,Funct
 non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
 non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,EndFunction,Cadena,Return,Condicion;
+non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,Cadena,Return,Condicion;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura;
 
 //------------------------------------------------PRECEDENCIA--------------------------------------------------------
@@ -109,6 +109,9 @@ BodyPart                        ::= Instruccion:ins PUNTOCOMA
                                     |
                                     Asignacion:asig PUNTOCOMA
                                     {: RESULT = asig; :}
+                                    |
+                                    Return:ret PUNTOCOMA
+                                    {: RESULT = ret; :}
                                     |
                                     error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
                                     ;
@@ -252,11 +255,8 @@ Param                           ::= Type IDENTIFICADOR:id
 Print                           ::= PRINT PARIZQ PrintParam:pp PARDER
                                     {: RESULT = new Node("PRINT", pp); :};
 
-PrintParam                      ::= IDENTIFICADOR:id
-                                    {: RESULT = new Node(id); :}
-                                    |
-                                    CADENA:cad
-                                    {: RESULT = new Node("\""+cad+"\""); :}
+PrintParam                      ::= Cadena:cad
+                                    {: RESULT = cad; :}
                                     |
                                     LlamadoMetodos:lm
                                     {: RESULT = lm; :}
@@ -274,23 +274,16 @@ FunctionList                    ::= FunctionPart:fp FunctionList:fl
 FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
                                     {: RESULT = new Node(id, param, st); :}
                                     |
-                                    FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER EndFunction:ef
-                                    {: RESULT = new Node(id, param ,ef); :}
+                                    FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
+                                    {: RESULT = new Node(id, param, st); :}
                                     |
                                     FUNCTION error {: parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG"); :} Stmts
                                     ;
 
-EndFunction                     ::= DO BodyList:bdl RETURN Return:rt PUNTOCOMA END
-                                    {: RESULT = new Node("branch", bdl, rt);  :}
-                                    |
-                                    DO RETURN Return:rt PUNTOCOMA END
-                                    {: RESULT = rt; :}
-                                    ;
-
-Return                          ::= LlamadoMetodos:lm
+Return                          ::= RETURN LlamadoMetodos:lm
                                     {: RESULT = new Node("RETURN",lm); :}
                                     |
-                                    AsigValor:av
+                                    RETURN AsigValor:av
                                     {: RESULT = new Node("RETURN", av); :}
                                     ;
 
