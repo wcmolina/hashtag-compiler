@@ -241,7 +241,7 @@ public class GUI extends javax.swing.JFrame {
 
         codeTextPane.setBackground(new java.awt.Color(43, 48, 59));
         codeTextPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        codeTextPane.setFont(new java.awt.Font("Menlo", 0, 11)); // NOI18N
+        codeTextPane.setFont(new java.awt.Font("Menlo", 0, 12)); // NOI18N
         codeTextPane.setForeground(new java.awt.Color(204, 204, 204));
         codeTextPane.setCaretColor(new java.awt.Color(255, 255, 255));
         codeTextPane.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -349,6 +349,7 @@ public class GUI extends javax.swing.JFrame {
 
         ToolsMU.setText("Tools");
 
+        parseMU.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
         parseMU.setText("Parse");
         parseMU.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -513,6 +514,8 @@ public class GUI extends javax.swing.JFrame {
                 this.codeTextPane.setText("");
                 console.setText("");
             }
+        } else {
+            console.setText("");
         }
 
     }//GEN-LAST:event_clearTextMUActionPerformed
