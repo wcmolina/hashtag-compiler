@@ -537,7 +537,7 @@ public class Parser extends java_cup.runtime.lr_parser {
             }
         }
 
-        GUI.console.setText(GUI.console.getText() + m.toString() + "\n");
+        Editor.console.setText(Editor.console.getText() + m.toString() + "\n");
     }
 
     public void report_fatal_error(String message, Object info){

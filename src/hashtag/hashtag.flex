@@ -117,7 +117,7 @@ COMENTARIOUNALINEA={HASHTAG}.*
     "void"           {return symbol(sym.VOID);}
     {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
     [^]              {int l = yyline+1; int c = yycolumn+1;
-                        GUI.console.setText(GUI.console.getText()+"Error: (line: " + l + ", column: " + c + "). Unrecognized token " + yytext() + " : Lexical error\n");
+                        Editor.console.setText(Editor.console.getText()+"Error: (line: " + l + ", column: " + c + "). Unrecognized token " + yytext() + " : Lexical error\n");
                     }
 }
 

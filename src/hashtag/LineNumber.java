@@ -34,7 +34,7 @@ public class LineNumber extends JPanel
     public final static float CENTER = 0.5f;
     public final static float RIGHT = 1.0f;
 
-    private final static Border OUTER = new MatteBorder(0, 0, 0, 1, Color.decode("#454b50"));
+    private final static Border OUTER = new MatteBorder(0, 0, 0, 2, Color.decode("#435a5f"));
 
     private final static int HEIGHT = Integer.MAX_VALUE - 1000000;
 
