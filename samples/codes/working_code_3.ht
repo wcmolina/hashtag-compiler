@@ -1,0 +1,113 @@
+begin
+
+    #program with no functions
+    
+    #single line comment!
+
+    {
+        multiline
+        comment
+        yeah
+    }
+
+    mainbegin do
+        int var1 = 8;
+        int var2 = 11;
+        int var3 = 21;
+        boolean b1 = false;
+        int s1 = 3 + 5 + 1 - 5 * 3;
+        string str = "Hola mundo";
+        double db = 0.32;
+
+        #ifception!
+        if (var == 0) do
+            if (var1 == 9) do
+                result = var1+var2/var3-var2;
+            end else do
+                result = var1-var2*var3;
+                if (result == 0) do
+                    if (var == 0) do
+                        if (var1 == 9) do
+                            result = var1+var2/var3-var2;
+                        end else do
+                            result = var1-var2*var3;
+                            if (result == 0) do
+                                print("Dio 0!");
+                            end
+                        end
+                    end
+                    print("Dio 0!");
+                end
+            end
+        end
+
+        print (suma(var1,var3));
+        print (str);
+        suma (8+9+6,b,"hola");
+
+        double mult = db * var2;
+        int a,b,c = 0;
+
+		#lectura de los tipos
+        contador = readint();
+		string hola = readstring();
+		char caracter = readchar();
+		boolean bool = false;
+
+        #operaciones aritmeticas:
+        int x = 5+9*6+(5*8-3+6)-87;
+        int y = a+b+c-z*(a/8);
+
+        switch (contador) do
+
+            case 1: do
+                print("Encontro 1.");
+            end #end_case
+            break ; #break a fuerza en todo case
+
+            case 2: do
+                print ("Encontro 2.");
+            end #end_case
+            break ;
+            case 3: do
+                        if (var == 0) do
+                            if (var1 == 9) do
+                                result = var1+var2/var3-var2;
+                            end else do
+                                result = var1 - var2 * var3;
+                                if (result == 0) do
+                                    if (var == 0) do
+                                        if (var1 == 9) do
+                                            result = var1+var2/var3-var2;
+                                        end else do
+                                            result = var1 - var2 * var3;
+                                            if (result == 0) do
+                                                print ( "Dio 0!" );
+                                            end
+                                        end
+                                    end
+                                    print ("Dio 0!");
+                                end
+                            end
+                        end
+                print("Encontro 3.");
+            end
+            break ;
+
+            case 4: do
+                print("Encontro 4.");
+            end
+            break ;
+
+            other: do
+                while (true) do
+                    if (true) do #creo que aqui podria ir un ID tambien
+                        print("infinite loop!");
+                    end
+                end
+            end
+            break ;
+
+        end
+    end
+end

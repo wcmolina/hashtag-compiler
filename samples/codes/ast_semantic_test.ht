@@ -1,0 +1,23 @@
+begin
+
+    mainbegin do     # mainbegin do...end
+        int var1 = 8;
+        int var2 = 11;
+        int var3 = 21;
+        boolean b1 = false;
+        int s1 = 3 + 5 + 1 - 5 * 3;
+        string str = "Hola mundo";
+        double db = 0.32;
+
+        double mult = db * var2;
+        int a,b,c = 0;
+
+        if (var1 == var2) do
+            var2 = var1 + i;
+        end
+        int test = 0;
+        if (a < java) do
+            int test = 7; #deberia tirar error ya que test ya se declaro
+        end
+    end
+end

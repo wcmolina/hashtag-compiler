@@ -1,0 +1,86 @@
+
+	#ERROR: talta token 'begin'
+
+    function int suma(int a, int b) do
+        return a + b;
+    end
+
+    function string saludo () do
+        return "Hola mundo";
+    end
+
+    mainbegin do
+        int var1 = 8;
+        int var2 = 11;
+        int var3 = 21;
+        boolean b1 = false;
+        int s1 = 3 + 5 + 1 - 5 * 3 #ERROR: falta token ';'
+        string str = "Hola_mundo" ;
+        double db = 0.32;
+
+        double mult = db * var2;
+        int a,b,c = 0 #ERROR: falta token ';'
+
+        contador = 0;
+
+        while (contador != 5) do
+
+            for int i = 0; i < 100; i++) do #ERROR: falta token '(' en los argumentos del for.
+                if (i % 7 == 0) do
+                    contador++;
+                end
+            end
+        end
+
+        switch () do #ERROR: el argumento de un switch no puede ser vacio
+
+            case 1: do
+                print ( "Encontro_solo_1." );
+            end
+            break ;
+
+            case 2: do
+                print ( "Encontro_2." );
+            end
+            break ;
+            case 3: do
+                        if () do #ERROR: argumento del if no puede ser vacio
+                            if (var1 == 9) do
+                                result = var1+var2/var3-var2;
+                            end else do
+                                result = var1 - var2 * var3;
+                                if (result == 0) do
+                                    if (var == 0) do
+                                        if (var1 == 9) do
+                                            result = var1+var2/var3-var2;
+                                        end else do
+                                            result = var1 - var2 * var3;
+                                            if (result == 0) do
+                                                print ( "Dio_0!" );
+                                            end
+                                        end
+                                    end
+                                    print ( "Dio_0!" );
+                                end
+                            end
+                        end
+                print ( "Encontro_3." );
+            end
+            break ;
+
+            case 4: do
+                print ( "Encontro_4." );
+            end
+            break ;
+
+            other : do
+                while ( true ) do
+                    if ( true ) do
+                    end
+                end
+            end
+            break ;
+
+        end
+    end
+end #ERROR: error aqui porque hay un desbalance de 'begin' y 'end'.
