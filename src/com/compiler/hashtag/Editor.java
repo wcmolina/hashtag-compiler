@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.compiler.hashtag;
 
 import com.compiler.syntaxhighlight.*;
@@ -731,7 +726,7 @@ public class Editor extends javax.swing.JFrame {
                         this.setVisible(true);
                     }
                     if (this.ASTFrame == null) {
-                        String tree = p.AST.get(0).treeToString("", true);
+                        String tree = p.root.treeToString("", true);
                         this.showTreeMenuItem.setEnabled(true);
                         JTextArea info = new JTextArea(tree);
                         info.setFont(new Font("Consolas", Font.PLAIN, 12));
@@ -751,7 +746,7 @@ public class Editor extends javax.swing.JFrame {
                         this.showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + " Completed. Go to View > Show AST for visualization.");
                     }
-                    TreeAnalyzer analyzer = new TreeAnalyzer(p.AST); //aqui se le manda el AST...
+                    TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
 
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + p.errors);

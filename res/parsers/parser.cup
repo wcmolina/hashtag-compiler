@@ -8,7 +8,7 @@ import java.io.FileReader;
 
 //------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
-    public ArrayList<Node> AST = new ArrayList();
+    public Node root = null;
     public int errors = 0;
     public int fatal = 0;
     Lexer lexer = (Lexer) this.getScanner();
@@ -73,13 +73,13 @@ start with Program;
 Program                         ::= BEGIN Functions:f Main:mn END
                                     {:
                                         RESULT = new Node("PROG", f, mn);
-                                        parser.AST.add(RESULT);
+                                        parser.root = RESULT;
                                     :}
                                     |
                                     BEGIN Main:mn END
                                     {:
                                         RESULT = new Node("PROG", mn);
-                                        parser.AST.add(RESULT);
+                                        parser.root = RESULT;
                                     :}
                                     |
                                     error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END;

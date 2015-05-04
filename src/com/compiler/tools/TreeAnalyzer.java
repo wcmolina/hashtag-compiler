@@ -8,9 +8,9 @@ import java.util.ArrayList;
  * Created by Wilmer Carranza on 01/05/2015.
  */
 public class TreeAnalyzer {
-    private ArrayList<Node> tree = null;
+    private Node root = null;
 
-    public TreeAnalyzer(ArrayList<Node> AST) {
-        tree = AST;
+    public TreeAnalyzer(Node root) {
+        this.root = root;
     }
 }
