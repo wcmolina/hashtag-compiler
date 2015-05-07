@@ -75,4 +75,8 @@ public class Data {
                 ", assign_value=" + assign_value +
                 '}';
     }
+
+    public String tabularData(){ //for CSV saving purposes (makes it easier I think)
+        return ""+lexeme+","+token+","+declared+","+type+","+assign_value+","+line+","+column;
+    }
 }

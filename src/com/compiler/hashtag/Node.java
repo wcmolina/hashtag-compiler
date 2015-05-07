@@ -61,6 +61,10 @@ public class Node {
         return this;
     }
 
+    public boolean isLeaf() {
+        return children.isEmpty();
+    }
+
     public String treeToString(String prefix, boolean isTail) {
         //if (!this.label.equalsIgnoreCase("prog")) inverse();
         inverse();

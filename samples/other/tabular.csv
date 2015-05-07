@@ -1,0 +1,14 @@
+lexeme,token,declared,type,assign_value,line,column
+var1,IDENTIFICADOR,true,int,null,4,13
+var2,IDENTIFICADOR,true,int,null,5,13
+var3,IDENTIFICADOR,true,int,null,6,13
+b1,IDENTIFICADOR,true,boolean,null,7,17
+s1,IDENTIFICADOR,true,int,null,8,13
+str,IDENTIFICADOR,true,string,null,9,16
+db,IDENTIFICADOR,true,double,null,10,16
+mult,IDENTIFICADOR,true,double,null,12,16
+c,IDENTIFICADOR,true,,null,13,17
+b,IDENTIFICADOR,true,,null,13,15
+a,IDENTIFICADOR,true,int,null,13,13
+test,IDENTIFICADOR,true,int,null,18,13
+test,IDENTIFICADOR,true,int,null,20,17

@@ -165,7 +165,7 @@ S-Atribuida ejemplo:
     P = VarDeclarationPart
     T = Type
 
-    VarDeclarationPart not necessary anymore!
+    VarDeclarationPart not necessary anymore?
 ------------------------------------------------
 */
 VarDeclare                      ::= VarDeclarationList:vdl
@@ -178,7 +178,7 @@ VarDeclarationList              ::= VarDeclarationList:vdl COMA VarDeclarationPa
                                     |
                                     Type:tp VarDeclarationPart:vdp
                                     {:
-                                        vdp.getData().setType(tp.label);
+                                        vdp.getData().setType(tp.label); //habria que hacer clase Tipo propia?
                                         RESULT = new Node("declare", vdp);
                                     :};
 
