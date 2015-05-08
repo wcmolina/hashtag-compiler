@@ -746,7 +746,7 @@ public class Editor extends javax.swing.JFrame {
                         this.showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + " Completed. Go to View > Show AST for visualization.");
                     }
-                    TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
+                    //TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
 
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + p.errors);

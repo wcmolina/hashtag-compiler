@@ -174,23 +174,31 @@ VarDeclare                      ::= VarDeclarationList:vdl
                                     :};
 
 VarDeclarationList              ::= VarDeclarationList:vdl COMA VarDeclarationPart:vdp
-                                    {: RESULT = vdl.add(vdp); :}
+                                    {:
+                                        vdp.getData().setType(vdl.getData().getType());
+                                        RESULT = vdl.add(vdp);
+                                    :}
                                     |
                                     Type:tp VarDeclarationPart:vdp
                                     {:
                                         vdp.getData().setType(tp.label); //habria que hacer clase Tipo propia?
                                         RESULT = new Node("declare", vdp);
+                                        RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
                                     :};
 
 VarDeclarationPart              ::= IDENTIFICADOR:id
                                     {:
                                         JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                        //dat = lexeme, token, assignval, declared, line, column
                                         Data dat = new Data(symbol.getLexeme(), symbol.getTokenName(symbol.sym), null, true, symbol.getLine(), symbol.getColumn());
                                         RESULT = new Node(dat, id);
                                     :};
 
 VarInit                         ::= VarDeclare:vd ASIGNACION AsigValor:av
                                     {:
+                                        for (Node declared: vd.getChildren()){
+                                            declared.getData().setAssignValue(av.getData().getAssignValue());
+                                        }
                                         RESULT = new Node("assign",vd,av);
                                     :}
                                     |
@@ -199,7 +207,10 @@ VarInit                         ::= VarDeclare:vd ASIGNACION AsigValor:av
                                     ;
 
 Valor                           ::= NUMERO:num
-                                    {: RESULT = new Node(Integer.toString(num)); :}
+                                    {:
+                                        RESULT = new Node(Integer.toString(num));
+                                        RESULT.getData().setAssignValue(num);
+                                    :}
                                     |
                                     IDENTIFICADOR:id
                                     {:
@@ -207,28 +218,45 @@ Valor                           ::= NUMERO:num
                                     :}
                                     |
                                     REAL:r
-                                    {: RESULT = new Node(Double.toString(r)); :}
+                                    {:
+                                        RESULT = new Node(Double.toString(r));
+                                        RESULT.getData().setAssignValue(r);
+                                    :}
                                     ;
 
 AsigValor                       ::= Cadena:c
                                     {: RESULT = c; :}
                                     |
                                     CARACTER:ch
-                                    {: RESULT = new Node("'"+Character.toString(ch)+"'"); :}
+                                    {:
+                                        RESULT = new Node("'".concat(Character.toString(ch)).concat("'"));
+                                        RESULT.getData().setAssignValue(new Character(ch));
+                                    :}
                                     |
                                     Booleana:bool
-                                    {: RESULT = bool; :}
+                                    {:
+                                        RESULT = bool;
+                                    :}
                                     ;
 
 Booleana                        ::= TRUE
-                                    {: RESULT = new Node("true"); :}
+                                    {:
+                                        RESULT = new Node("true");
+                                        RESULT.getData().setAssignValue(new Boolean(true));
+                                    :}
                                     |
                                     FALSE
-                                    {: RESULT = new Node("false"); :}
+                                    {:
+                                        RESULT = new Node("false");
+                                        RESULT.getData().setAssignValue(new Boolean(false));
+                                    :}
                                     ;
 
 Cadena                          ::= CADENA:cad
-                                    {: RESULT = new Node("\""+cad+"\""); :}
+                                    {:
+                                        RESULT = new Node("\""+cad+"\"");
+                                        RESULT.getData().setAssignValue(cad);
+                                    :}
                                     |
                                     ExpresionAritmetica:ea
                                     {: RESULT = ea; :}

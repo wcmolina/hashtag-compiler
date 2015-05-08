@@ -10,21 +10,54 @@ public class Data {
     private String token;
     private int line;
     private int column;
-
-    //other useful information
     private String type;
     private boolean declared;
-    private Object assign_value;
+    private Object assigned_value;
 
-    //for Identifiers, mostly for init and declare
+    /*
+    Constructor for IDs, mostly for assign and declare
+        * lex: the current lexeme of the symbol sent
+        * tok: the type of token the lexeme is part of
+        * val: the assigned value to the identifier. null if none
+        * decl: true if the variable has been declared, false if not
+        * l: line
+        * col: column
+    * */
     public Data(String lex, String tok, Object val, boolean decl, int l, int col) {
         lexeme = lex;
         token = tok;
-        type = "";
-        assign_value = val;
         line = l;
         column = col;
         declared = decl;
+        type = "";
+        assigned_value = null;
+
+        //get the type from val
+        if (val != null) {
+            if (val instanceof String) {
+                type = "string";
+                assigned_value = val;
+            } else if (val instanceof Integer) {
+                type = "int";
+                assigned_value = ((Integer) val).intValue();
+            } else if (val instanceof Boolean) {
+                type = "boolean";
+                assigned_value = ((Boolean) val).booleanValue();
+            } else if (val instanceof Character) {
+                type = "char";
+                assigned_value = ((Character) val).charValue();
+            } else if (val instanceof Double) {
+                type = "double";
+                assigned_value = ((Double) val).doubleValue();
+            }
+        }
+    }
+
+    public Data() { //used only for non-relevant tokens, where their type is all I need
+        lexeme = token = type = "";
+        line = column = -1;
+        declared = false;
+        assigned_value = null;
     }
 
     public String getLexeme() {
@@ -44,7 +77,28 @@ public class Data {
     }
 
     public Object getAssignValue() {
-        return assign_value;
+        return assigned_value;
+    }
+
+    public void setAssignValue(Object obj) {
+        if (obj != null) {
+            if (obj instanceof String) {
+                type = "string";
+                assigned_value = obj;
+            } else if (obj instanceof Integer) {
+                type = "int";
+                assigned_value = ((Integer) obj).intValue();
+            } else if (obj instanceof Boolean) {
+                type = "boolean";
+                assigned_value = ((Boolean) obj).booleanValue();
+            } else if (obj instanceof Character) {
+                type = "char";
+                assigned_value = ((Character) obj).charValue();
+            } else if (obj instanceof Double) {
+                type = "double";
+                assigned_value = ((Double) obj).doubleValue();
+            }
+        }
     }
 
     public String getType() {
@@ -72,11 +126,11 @@ public class Data {
                 ", column=" + column +
                 ", type='" + type + '\'' +
                 ", declared=" + declared +
-                ", assign_value=" + assign_value +
+                ", assigned_value=" + assigned_value +
                 '}';
     }
 
-    public String tabularData(){ //for CSV saving purposes (makes it easier I think)
-        return ""+lexeme+","+token+","+declared+","+type+","+assign_value+","+line+","+column;
+    public String tabularData() { //for CSV saving purposes (makes it easier I think)
+        return "" + lexeme + "," + token + "," + declared + "," + type + "," + assigned_value + "," + line + "," + column;
     }
 }

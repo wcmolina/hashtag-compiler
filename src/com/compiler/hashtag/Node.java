@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Node {
-
+    /*
+    todo: implement parent node (each node should know its parent)
+    todo: in parser.cup, I think IDENTIFICADOR has to be a Node...
+    * */
     private ArrayList<Node> children;
+    private Node parent;
     public String label;
     private Data data;
     public String print = "";
@@ -14,7 +18,7 @@ public class Node {
     public Node(String name, Node... nodes) {
         label = name;
         children = new ArrayList();
-        data = null;
+        data = new Data();
         for (Node node : nodes) {
             if (node == null) {
                 children.add(new Node("null child"));
@@ -46,6 +50,9 @@ public class Node {
     }
 
     public Data getData() {
+        if (data == null) {
+            data = new Data();
+        }
         return this.data;
     }
 
