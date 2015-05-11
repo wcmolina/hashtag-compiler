@@ -190,7 +190,7 @@ VarDeclarationPart              ::= IDENTIFICADOR:id
                                     {:
                                         JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                         //dat = lexeme, token, assignval, declared, line, column
-                                        Data dat = new Data(symbol.getLexeme(), symbol.getTokenName(symbol.sym), null, true, symbol.getLine(), symbol.getColumn());
+                                        Data dat = new Data(symbol.getLexeme(), symbol.getTokenName(symbol.sym), null, symbol.getLine(), symbol.getColumn());
                                         RESULT = new Node(dat, id);
                                     :};
 

@@ -51,7 +51,7 @@ public class Editor extends javax.swing.JFrame {
     private JFrame ASTFrame;
     private JPopupMenu popup;
     private SyntaxHighlighter syntax;
-    private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane
+    private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane :)
 
     public Editor() {
         initComponents();
@@ -563,7 +563,6 @@ public class Editor extends javax.swing.JFrame {
         } else {
             JOptionPane.showMessageDialog(getRootPane(), "File type not supported", "Error", JOptionPane.ERROR_MESSAGE);
         }
-
     }
 
     void save(String path, String content) {
@@ -746,7 +745,7 @@ public class Editor extends javax.swing.JFrame {
                         this.showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + " Completed. Go to View > Show AST for visualization.");
                     }
-                    //TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
+                    TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
 
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + p.errors);

@@ -11,8 +11,8 @@ public class Data {
     private int line;
     private int column;
     private String type;
-    private boolean declared;
     private Object assigned_value;
+    private Scope scope;
 
     /*
     Constructor for IDs, mostly for assign and declare
@@ -23,12 +23,11 @@ public class Data {
         * l: line
         * col: column
     * */
-    public Data(String lex, String tok, Object val, boolean decl, int l, int col) {
+    public Data(String lex, String tok, Object val, int l, int col) {
         lexeme = lex;
         token = tok;
         line = l;
         column = col;
-        declared = decl;
         type = "";
         assigned_value = null;
 
@@ -56,7 +55,6 @@ public class Data {
     public Data() { //used only for non-relevant tokens, where their type is all I need
         lexeme = token = type = "";
         line = column = -1;
-        declared = false;
         assigned_value = null;
     }
 
@@ -105,14 +103,6 @@ public class Data {
         return type;
     }
 
-    public boolean isDeclared() {
-        return declared;
-    }
-
-    public void setDeclared(boolean decl) {
-        declared = decl;
-    }
-
     public void setType(String t) {
         this.type = t;
     }
@@ -125,12 +115,11 @@ public class Data {
                 ", line=" + line +
                 ", column=" + column +
                 ", type='" + type + '\'' +
-                ", declared=" + declared +
                 ", assigned_value=" + assigned_value +
                 '}';
     }
 
     public String tabularData() { //for CSV saving purposes (makes it easier I think)
-        return "" + lexeme + "," + token + "," + declared + "," + type + "," + assigned_value + "," + line + "," + column;
+        return "" + lexeme + "," + token + "," + type + "," + assigned_value + "," + line + "," + column;
     }
 }
