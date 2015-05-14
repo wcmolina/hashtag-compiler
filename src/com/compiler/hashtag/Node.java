@@ -28,7 +28,7 @@ public class Node {
         }
     }
 
-    //constructor with data (lexeme, token, line, column, etc.)
+    //constructor with data
     public Node(Data dat, String name, Node... nodes) {
         label = name;
         children = new ArrayList();

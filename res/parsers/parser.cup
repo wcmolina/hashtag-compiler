@@ -4,9 +4,6 @@ import java_cup.runtime.*;
 import java.util.*;
 import java.io.FileReader;
 
-
-
-//------------------------------------------------PARSER CODE-------------------------------------------------------
 parser code {:
     public Node root = null;
     public int errors = 0;
@@ -14,8 +11,8 @@ parser code {:
     Lexer lexer = (Lexer) this.getScanner();
 
     public JavaSymbol getCurrentSymbol() {
-            return (JavaSymbol) this.cur_token;
-        }
+        return (JavaSymbol) this.cur_token;
+    }
 
     public void report_error(String message, Object info){
         StringBuilder m = new StringBuilder("");
@@ -29,7 +26,6 @@ parser code {:
                 m.append("    "+ errors + "==> " + info + " "+ message+"\n");
             }
         }
-
         Editor.console.setText(Editor.console.getText() + m.toString() + "\n");
     }
 
@@ -39,12 +35,13 @@ parser code {:
     }
 :}
 
-//------------------------------------------------TERMINALES-------------------------------------------------------
+//-----------------------------------------Terminals and non terminals---------------------------------------
 
-terminal   SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION;
-terminal   PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
-terminal   AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,FUNCTION,BREAK,RETURN,PRINT;
-terminal   INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER,VOID;
+terminal SUMA,MENOS,DIV,MULT,MAYOR,MENOR,MAYORIGUAL,MENORIGUAL,NOT,DIFERENTE,IGUAL,ASIGNACION;
+terminal PARDER,PARIZQ,MOD,COMA,PUNTOCOMA,MAINBEGIN,DOSPUNTOS;
+terminal AND,OR,FOR,IF,ELSE,WHILE,BEGIN,END,SWITCH,CASE,DO,FUNCTION,BREAK,RETURN,PRINT;
+terminal INT,DOUBLE,CHAR,STRING,BOOLEAN,READSTRING,READCHAR,READINT,READDOUBLE,OTHER,VOID;
+
 terminal Integer   NUMERO;
 terminal Double    REAL;
 terminal Character CARACTER;
@@ -52,7 +49,6 @@ terminal String    CADENA,IDENTIFICADOR;
 terminal Boolean   FALSE,TRUE;
 
 
-//------------------------------------------------NO-TERMINALES----------------------------------------------------
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionList,FunctionPart,Stmts;
 non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
@@ -60,473 +56,508 @@ non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGro
 non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,Cadena,Return,Condicion;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura;
 
-//------------------------------------------------PRECEDENCIA--------------------------------------------------------
 
 precedence left  SUMA,MENOS;
 precedence left  MULT,DIV,MOD;
 precedence left  PARIZQ;
-//leer usuario , llamado metodos
 
-//------------------------------------------------GRAMATICA-------------------------------------------------------
+//--------------------------------------BNF Grammar------------------------------------------
 
 start with Program;
-Program                         ::= BEGIN Functions:f Main:mn END
-                                    {:
-                                        RESULT = new Node("PROG", f, mn);
-                                        parser.root = RESULT;
-                                    :}
-                                    |
-                                    BEGIN Main:mn END
-                                    {:
-                                        RESULT = new Node("PROG", mn);
-                                        parser.root = RESULT;
-                                    :}
-                                    |
-                                    error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END;
 
-Functions                       ::= FunctionList:fl
-                                    {: RESULT = new Node("FUNCTIONS",fl); :};
+Program                     ::= BEGIN Functions:f Main:mn END
+                                {:
+                                    RESULT = new Node("PROG", f, mn);
+                                    parser.root = RESULT;
+                                :}
+                                |
+                                BEGIN Main:mn END
+                                {:
+                                    RESULT = new Node("PROG", mn);
+                                    parser.root = RESULT;
+                                :}
+                                |
+                                error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END
+                                ;
 
-Main                            ::= MAINBEGIN Stmts:st
-                                    {: RESULT = new Node("MAIN",st); :}
-                                    |
-                                    error {: parser.report_error("token 'mainbegin'.","MISSING"); :} Stmts;
+Functions                   ::= FunctionList:fl
+                                {: RESULT = new Node("FUNCTIONS",fl); :}
+                                ;
 
-Stmts                           ::= DO BodyList:bdl END
-                                    {: RESULT = bdl; :}
-                                    |
-                                    DO END
-                                    {: RESULT = new Node("?"); :}
-                                    |
-                                    error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END
-                                    ;
+Main                        ::= MAINBEGIN Stmts:st
+                                {: RESULT = new Node("MAIN",st); :}
+                                |
+                                error {: parser.report_error("token 'mainbegin'.","MISSING"); :} Stmts;
 
-BodyList                        ::= BodyPart:bp BodyList:bdl
-                                    {: RESULT = bdl.add(bp); :}
-                                    |
-                                    BodyPart:bp
-                                    {: RESULT = new Node("body", bp); :}
-                                    ;
+Stmts                       ::= DO BodyList:bdl END
+                                {: RESULT = bdl; :}
+                                |
+                                DO END
+                                {: RESULT = new Node("?"); :}
+                                |
+                                error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END
+                                ;
 
-BodyPart                        ::= Instruccion:ins PUNTOCOMA
-                                    {: RESULT = ins; :}
-                                    |
-                                    Bloque:bq
-                                    {: RESULT = bq; :}
-                                    |
-                                    Asignacion:asig PUNTOCOMA
-                                    {: RESULT = asig; :}
-                                    |
-                                    Return:ret PUNTOCOMA
-                                    {: RESULT = ret; :}
-                                    |
-                                    error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
-                                    ;
+BodyList                    ::= BodyPart:bp BodyList:bdl
+                                {: RESULT = bdl.add(bp); :}
+                                |
+                                BodyPart:bp
+                                {: RESULT = new Node("body", bp); :}
+                                ;
 
-/*DECLARACION VARIABLES ASIGNACION VARIABLES */
+BodyPart                    ::= Instruccion:ins PUNTOCOMA
+                                {: RESULT = ins; :}
+                                |
+                                Bloque:bq
+                                {: RESULT = bq; :}
+                                |
+                                Asignacion:asig PUNTOCOMA
+                                {: RESULT = asig; :}
+                                |
+                                Return:ret PUNTOCOMA
+                                {: RESULT = ret; :}
+                                |
+                                error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
+                                ;
 
-Instruccion                     ::= VarDeclare:vd
-                                    {: RESULT = vd; :}
-                                    |
-                                    VarInit:vi
-                                    {: RESULT = vi; :}
-                                    |
-                                    Llamado:l
-                                    {: RESULT = l; :}
-                                    |
-                                    error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
-                                    ;
 
-Lectura                         ::= READINT PARIZQ PARDER
-                                    {: RESULT = new Node("READINT"); :}
-                                    |
-                                    READDOUBLE PARIZQ PARDER
-                                    {: RESULT = new Node("READDOUBLE"); :}
-                                    |
-                                    READSTRING PARIZQ PARDER
-                                    {: RESULT = new Node("READSTRING"); :}
-                                    |
-                                    READCHAR PARIZQ PARDER
-                                    {: RESULT = new Node("READCHAR"); :}
-                                    ;
+Instruccion                 ::= VarDeclare:vd
+                                {: RESULT = vd; :}
+                                |
+                                VarInit:vi
+                                {: RESULT = vi; :}
+                                |
+                                Llamado:l
+                                {: RESULT = l; :}
+                                |
+                                error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
+                                ;
 
-/*
-------------------------------------------------
-S-Atribuida ejemplo:
-    V -> L
-    T -> int | double | char | string | boolean
-    L -> L,P
-    L -> TP
-    P -> id
+Lectura                     ::= READINT PARIZQ PARDER
+                                {: RESULT = new Node("READINT"); :}
+                                |
+                                READDOUBLE PARIZQ PARDER
+                                {: RESULT = new Node("READDOUBLE"); :}
+                                |
+                                READSTRING PARIZQ PARDER
+                                {: RESULT = new Node("READSTRING"); :}
+                                |
+                                READCHAR PARIZQ PARDER
+                                {: RESULT = new Node("READCHAR"); :}
+                                ;
 
-    donde:
-    V = VarDeclare
-    L = VarDeclarationList
-    P = VarDeclarationPart
-    T = Type
+                /*
+--------------------------------------------------------------------------------
+                S-Atribuida ejemplo (como debería de ser):
+                    V -> L
+                    T -> int | double | char | string | boolean
+                    L -> L,P
+                    L -> TP
+                    P -> id
 
-    VarDeclarationPart not necessary anymore?
-------------------------------------------------
-*/
-VarDeclare                      ::= VarDeclarationList:vdl
-                                    {:
-                                        RESULT = vdl;
-                                    :};
+                    donde:
+                    V = VarDeclare
+                    L = VarDeclarationList
+                    P = VarDeclarationPart
+                    T = Type
 
-VarDeclarationList              ::= VarDeclarationList:vdl COMA VarDeclarationPart:vdp
-                                    {:
-                                        vdp.getData().setType(vdl.getData().getType());
-                                        RESULT = vdl.add(vdp);
-                                    :}
-                                    |
-                                    Type:tp VarDeclarationPart:vdp
-                                    {:
-                                        vdp.getData().setType(tp.label); //habria que hacer clase Tipo propia?
-                                        RESULT = new Node("declare", vdp);
-                                        RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
-                                    :};
+                    VarDeclarationPart not necessary anymore?
+--------------------------------------------------------------------------------
+                */
 
-VarDeclarationPart              ::= IDENTIFICADOR:id
-                                    {:
-                                        JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                        //dat = lexeme, token, assignval, declared, line, column
-                                        Data dat = new Data(symbol.getLexeme(), symbol.getTokenName(symbol.sym), null, symbol.getLine(), symbol.getColumn());
-                                        RESULT = new Node(dat, id);
-                                    :};
+VarDeclare                  ::= VarDeclarationList:vdl
+                                {:
+                                    RESULT = vdl;
+                                :}
+                                ;
 
-VarInit                         ::= VarDeclare:vd ASIGNACION AsigValor:av
-                                    {:
-                                        for (Node declared: vd.getChildren()){
-                                            declared.getData().setAssignValue(av.getData().getAssignValue());
-                                        }
-                                        RESULT = new Node("assign",vd,av);
-                                    :}
-                                    |
-                                    VarDeclare:vd ASIGNACION Lectura:lec
-                                    {: RESULT = new Node("assign",vd,lec); :}
-                                    ;
+VarDeclarationList          ::= VarDeclarationList:vdl COMA VarDeclarationPart:vdp
+                                {:
+                                    vdp.getData().setType(vdl.getData().getType());
+                                    RESULT = vdl.add(vdp);
+                                :}
+                                |
+                                Type:tp VarDeclarationPart:vdp
+                                {:
+                                    vdp.getData().setType(tp.label); //habria que hacer clase Tipo propia?
+                                    RESULT = new Node("declare", vdp);
+                                    RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
+                                :}
+                                ;
 
-Valor                           ::= NUMERO:num
-                                    {:
-                                        RESULT = new Node(Integer.toString(num));
-                                        RESULT.getData().setAssignValue(num);
-                                    :}
-                                    |
-                                    IDENTIFICADOR:id
-                                    {:
-                                        RESULT = new Node(id);
-                                    :}
-                                    |
-                                    REAL:r
-                                    {:
-                                        RESULT = new Node(Double.toString(r));
-                                        RESULT.getData().setAssignValue(r);
-                                    :}
-                                    ;
+VarDeclarationPart          ::= IDENTIFICADOR:id
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    //dat = lexeme, token, assignval, declared, line, column
+                                    Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, id);
+                                :}
+                                ;
 
-AsigValor                       ::= Cadena:c
-                                    {: RESULT = c; :}
-                                    |
-                                    CARACTER:ch
-                                    {:
-                                        RESULT = new Node("'".concat(Character.toString(ch)).concat("'"));
-                                        RESULT.getData().setAssignValue(new Character(ch));
-                                    :}
-                                    |
-                                    Booleana:bool
-                                    {:
-                                        RESULT = bool;
-                                    :}
-                                    ;
+VarInit                     ::= VarDeclare:vd ASIGNACION AsigValor:av
+                                {:
+                                    for (Node declared: vd.getChildren()) {
+                                        declared.getData().setValue(av.getData().getValue());
+                                    }
+                                    RESULT = new Node("init",vd,av);
+                                :}
+                                |
+                                VarDeclare:vd ASIGNACION Lectura:lec
+                                {: RESULT = new Node("init",vd,lec); :}
+                                ;
 
-Booleana                        ::= TRUE
-                                    {:
-                                        RESULT = new Node("true");
-                                        RESULT.getData().setAssignValue(new Boolean(true));
-                                    :}
-                                    |
-                                    FALSE
-                                    {:
-                                        RESULT = new Node("false");
-                                        RESULT.getData().setAssignValue(new Boolean(false));
-                                    :}
-                                    ;
+Valor                       ::= NUMERO:num
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-Cadena                          ::= CADENA:cad
-                                    {:
-                                        RESULT = new Node("\""+cad+"\"");
-                                        RESULT.getData().setAssignValue(cad);
-                                    :}
-                                    |
-                                    ExpresionAritmetica:ea
-                                    {: RESULT = ea; :}
-                                    ;
+                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Integer.toString(num));
+                                    RESULT.getData().setValue(num);
+                                :}
+                                |
+                                IDENTIFICADOR:id
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-Asignacion                      ::= IDENTIFICADOR:id ASIGNACION AsigValor:av
-                                    {: RESULT = new Node("assign",new Node(id), av); :}
-                                    |
-                                    IDENTIFICADOR:id ASIGNACION Lectura:lec
-                                    {: RESULT = new Node("assign",new Node(id), lec); :}
-                                    |
-                                    ExpresionIncDec:update
-                                    {: RESULT = update; :};
+                                    Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat,"ID",new Node(id));
+                                :}
+                                |
+                                REAL:r
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-Type                            ::= INT
-                                    {: RESULT = new Node("int"); :}
-                                    |
-                                    DOUBLE
-                                    {: RESULT = new Node("double"); :}
-                                    |
-                                    CHAR
-                                    {: RESULT = new Node("char"); :}
-                                    |
-                                    BOOLEAN
-                                    {: RESULT = new Node("boolean"); :}
-                                    |
-                                    STRING
-                                    {: RESULT = new Node("string"); :}
-                                    ;
+                                    Data dat = new Data(symbol.getLexeme(), "REAL", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Double.toString(r));
+                                    RESULT.getData().setValue(r);
+                                :}
+                                ;
 
-/*LLAMADOS*/
-Llamado                         ::= Print:pr
-                                    {: RESULT = pr; :}
-                                    |
-                                    LlamadoMetodos:lm
-                                    {: RESULT = lm; :}
-                                    ;
+AsigValor                   ::= Cadena:c
+                                {: RESULT = c; :}
+                                |
+                                CARACTER:ch
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-LlamadoMetodos                  ::= IDENTIFICADOR:id PARIZQ Contenido:cont PARDER
-                                    {: RESULT = new Node("function_call",new Node(id),cont); :}
-                                    |
-                                    IDENTIFICADOR:id PARIZQ PARDER
-                                    {: RESULT = new Node("function_call", new Node(id), new Node("params",new Node("?"))); :};
+                                    Data dat = new Data(symbol.getLexeme(), "CHARACTER", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, ("'").concat(Character.toString(ch)).concat("'"));
+                                    RESULT.getData().setValue(ch);
+                                :}
+                                |
+                                Booleana:bool
+                                {:
+                                    RESULT = bool;
+                                :}
+                                ;
 
-Contenido                       ::= AsigValor:av COMA Contenido:cont
-                                    {: RESULT = cont.add(av); :}
-                                    |
-                                    AsigValor:av
-                                    {: RESULT = new Node("params",av); :};
+Booleana                    ::= TRUE
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-/*PARAMETROS*/
-Parametros                      ::= Parametros:ps COMA Param:p
-                                    {: RESULT = ps.add(p); :}
-                                    |
-                                    Param:p
-                                    {: RESULT = new Node("parameters",p); :}
-                                    |
-                                    {: RESULT = new Node("?"); :}
-                                    ;
+                                    Data dat = new Data(symbol.getLexeme(), "TRUE", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, "true");
+                                    RESULT.getData().setValue(new Boolean(true));
+                                :}
+                                |
+                                FALSE
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-Param                           ::= Type IDENTIFICADOR:id
-                                    {: RESULT = new Node(id); :}
-                                    ;
+                                    Data dat = new Data(symbol.getLexeme(), "FALSE", null, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, "false");
+                                    RESULT.getData().setValue(new Boolean(false));
+                                :}
+                                ;
 
-Print                           ::= PRINT PARIZQ PrintParam:pp PARDER
-                                    {: RESULT = new Node("PRINT", pp); :};
+Cadena                      ::= CADENA:cad
+                                {:
+                                    RESULT = new Node("\""+cad+"\"");
+                                    RESULT.getData().setValue(cad);
+                                :}
+                                |
+                                ExpresionAritmetica:ea
+                                {: RESULT = ea; :}
+                                ;
 
-PrintParam                      ::= Cadena:cad
-                                    {: RESULT = cad; :}
-                                    |
-                                    LlamadoMetodos:lm
-                                    {: RESULT = lm; :}
-                                    |
-                                    {: RESULT = new Node("?"); :}
-                                    ;
+Asignacion                  ::= IDENTIFICADOR:id ASIGNACION AsigValor:av
+                                {: RESULT = new Node("assign",new Node("ID", new Node(id)), av); :}
+                                |
+                                IDENTIFICADOR:id ASIGNACION Lectura:lec
+                                {: RESULT = new Node("assign",new Node("ID", new Node(id)), lec); :}
+                                |
+                                ExpresionIncDec:update
+                                {: RESULT = update; :}
+                                ;
 
-/*FUNCTION */
-FunctionList                    ::= FunctionPart:fp FunctionList:fl
-                                    {: RESULT = fl.add(fp); :}
-                                    |
-                                    FunctionPart:fp
-                                    {: RESULT = new Node("body",fp); :};
+Type                        ::= INT
+                                {: RESULT = new Node("int"); :}
+                                |
+                                DOUBLE
+                                {: RESULT = new Node("double"); :}
+                                |
+                                CHAR
+                                {: RESULT = new Node("char"); :}
+                                |
+                                BOOLEAN
+                                {: RESULT = new Node("boolean"); :}
+                                |
+                                STRING
+                                {: RESULT = new Node("string"); :}
+                                ;
 
-FunctionPart                    ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
-                                    {: RESULT = new Node(id, param, st); :}
-                                    |
-                                    FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
-                                    {: RESULT = new Node(id, param, st); :}
-                                    |
-                                    FUNCTION error {: parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG"); :} Stmts
-                                    ;
+//--------------------------Method calls-------------------------------
 
-Return                          ::= RETURN LlamadoMetodos:lm
-                                    {: RESULT = new Node("RETURN",lm); :}
-                                    |
-                                    RETURN AsigValor:av
-                                    {: RESULT = new Node("RETURN", av); :}
-                                    ;
+Llamado                     ::= Print:pr
+                                {: RESULT = pr; :}
+                                |
+                                LlamadoMetodos:lm
+                                {: RESULT = lm; :}
+                                ;
 
-/*BLOQUE*/
-Bloque                          ::= Loops:lp
-                                    {: RESULT = lp; :}
-                                    |
-                                    Conditional:cond
-                                    {: RESULT = cond; :}
-                                    ;
+LlamadoMetodos              ::= IDENTIFICADOR:id PARIZQ Contenido:cont PARDER
+                                {: RESULT = new Node("function_call",new Node("ID", new Node(id)),cont); :}
+                                |
+                                IDENTIFICADOR:id PARIZQ PARDER
+                                {: RESULT = new Node("function_call", new Node("ID", new Node(id)), new Node("params",new Node("?"))); :}
+                                ;
 
-Loops                           ::= ForLoop:flp
-                                    {: RESULT = flp; :}
-                                    |
-                                    WhileLoop:wlp
-                                    {: RESULT = wlp; :}
-                                    ;
+Contenido                   ::= AsigValor:av COMA Contenido:cont
+                                {: RESULT = cont.add(av); :}
+                                |
+                                AsigValor:av
+                                {: RESULT = new Node("params",av); :};
 
-Conditional                     ::= IfConditional:ic
-                                    {: RESULT = ic; :}
-                                    |
-                                    SwitchConditional:swc
-                                    {: RESULT = swc; :};
+//--------------------------Parameters-------------------------------
 
-ForLoop                         ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
-                                    {: RESULT = new Node("FOR", expr, st); :}
-                                    |
-                                    FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Stmts;
+Parametros                  ::= Parametros:ps COMA Param:p
+                                {: RESULT = ps.add(p); :}
+                                |
+                                Param:p
+                                {: RESULT = new Node("parameters",p); :}
+                                |
+                                {: RESULT = new Node("?"); :}
+                                ;
 
-ExprFor                         ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
-                                    {: RESULT = new Node("structure",asig,exprb,update); :};
+Param                       ::= Type IDENTIFICADOR:id
+                                {: RESULT = new Node("ID", new Node(id)); :}
+                                ;
 
-WhileLoop                       ::= WHILE PARIZQ Condicion:condw PARDER Stmts:st
-                                    {: RESULT = new Node("WHILE", condw, st); :}
-                                    |
-                                    WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Stmts
-                                    |
-                                    WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} Stmts
-                                    ;
-Condicion                      ::= ExpresionBooleana:exprb
-                                    {: RESULT = exprb; :}
-                                    |
-                                    Cadena:cad
-                                    {: RESULT = cad; :}
-                                   ;
+Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
+                                {: RESULT = new Node("PRINT", pp); :};
 
-IfConditional                   ::= IF ConditionGroup:cg Stmts:st
-                                    {: RESULT = new Node("IF",cg, st); :}
-                                    |
-                                    IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
-                                    {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
-                                    |
-                                    IF error {: parser.report_error("IF statement declaration. Usage example: if (<boolean expression>) do ... end", "WRONG"); :} Stmts;
+PrintParam                  ::= Cadena:cad
+                                {: RESULT = cad; :}
+                                |
+                                LlamadoMetodos:lm
+                                {: RESULT = lm; :}
+                                |
+                                {: RESULT = new Node("?"); :}
+                                ;
 
-ConditionGroup                  ::= PARIZQ ExpresionBooleana:eb PARDER
-                                    {: RESULT = eb; :}
-                                    |
-                                    PARIZQ IDENTIFICADOR:id PARDER
-                                    {: RESULT = new Node(id); :};
+//--------------------------Functions-------------------------------
 
-SwitchConditional               ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
-                                    {: RESULT = new Node("SWITCH", new Node(id), exprl); :}
-                                    |
-                                    SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
-                                    {: RESULT = new Node("SWITCH", sw, exprl); :}
-                                    |
-                                    SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} ExprSwitchList
-                                    ;
+FunctionList                ::= FunctionPart:fp FunctionList:fl
+                                {: RESULT = fl.add(fp); :}
+                                |
+                                FunctionPart:fp
+                                {: RESULT = new Node("body",fp); :};
 
-ExprSwitchList                  ::= ExprSwitchPart:exprp ExprSwitchList:exprl
-                                    {: RESULT = exprl.add(exprp); :}
-                                    |
-                                    ExprSwitchPart:exprp
-                                    {: RESULT = new Node("body",exprp); :};
+FunctionPart                ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
+                                {: RESULT = new Node(id, param, st); :}
+                                |
+                                FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER Stmts:st
+                                {: RESULT = new Node(id, param, st); :}
+                                |
+                                FUNCTION error {:
+                                            parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG");
+                                        :} Stmts
+                                ;
 
-ExprSwitchPart                  ::= CASE Switch:sw DOSPUNTOS Stmts:st BREAK PUNTOCOMA
-                                    {: RESULT = new Node("CASE", sw, st); :}
-                                    |
-                                    OTHER DOSPUNTOS Stmts:st BREAK PUNTOCOMA
-                                    {: RESULT = new Node("OTHER", st); :}
-                                    |
-                                    CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} Stmts;
+Return                      ::= RETURN LlamadoMetodos:lm
+                                {: RESULT = new Node("RETURN",lm); :}
+                                |
+                                RETURN AsigValor:av
+                                {: RESULT = new Node("RETURN", av); :}
+                                ;
 
-Switch                          ::= NUMERO:n
-                                    {: RESULT = new Node(Integer.toString(n)); :}
-                                    |
-                                    CARACTER:c
-                                    {: RESULT = new Node(Character.toString(c)); :};
+//--------------------------blocks (if, switch, while, for)-------------------------------
 
-/*EXPRESIONES*/
+Bloque                      ::= Loops:lp
+                                {: RESULT = lp; :}
+                                |
+                                Conditional:cond
+                                {: RESULT = cond; :}
+                                ;
 
-ExpresionAritmetica             ::= ExpresionAritmetica:ea SUMA Factor:fct
-                                    {: RESULT = new Node("+",ea,fct); :}
-                                    |
-                                    ExpresionAritmetica:ea MENOS Factor:fct
-                                    {: RESULT = new Node("-",ea,fct); :}
-                                    |
-                                    Factor:fct
-                                    {: RESULT = fct; :}
-                                    ;
+Loops                       ::= ForLoop:flp
+                                {: RESULT = flp; :}
+                                |
+                                WhileLoop:wlp
+                                {: RESULT = wlp; :}
+                                ;
 
-Factor                          ::= Factor:fct MULT Term:trm
-                                    {: RESULT = new Node("*",fct,trm); :}
-                                    |
-                                    Factor:fct DIV Term:trm
-                                    {: RESULT = new Node("/",fct,trm); :}
-                                    |
-                                    Factor:fct MOD Term:trm
-                                    {: RESULT = new Node("%",fct,trm); :}
-                                    |
-                                    Term:trm
-                                    {: RESULT = trm; :}
-                                    ;
+Conditional                 ::= IfConditional:ic
+                                {: RESULT = ic; :}
+                                |
+                                SwitchConditional:swc
+                                {: RESULT = swc; :};
 
-Term                            ::= PARIZQ ExpresionAritmetica:ea PARDER
-                                    {: RESULT = ea; :}
-                                    |
-                                    Valor:vlr
-                                    {: RESULT = vlr; :}
-                                    ;
+ForLoop                     ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
+                                {: RESULT = new Node("FOR", expr, st); :}
+                                |
+                                FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Stmts;
 
-ExpresionBooleana               ::= ExpresionComparacion:exprc UnionExpresion:uexpr
-                                    {: RESULT = new Node("conditions",exprc,uexpr); :}
-                                    |
-                                    ExpresionComparacion:ec
-                                    {: RESULT = ec; :}
-                                    |
-                                    Booleana:bool
-                                    {: RESULT = bool; :}
-                                    ;
+ExprFor                     ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
+                                {: RESULT = new Node("structure",asig,exprb,update); :};
 
-UnionExpresion                  ::= OperadorComparacion:opcomp ExpresionComparacion:exprc UnionExpresion:uexpr
-                                    {: RESULT = uexpr.add(opcomp,exprc); :}
-                                    |
-                                    OperadorComparacion:opcomp ExpresionComparacion:ec
-                                    {: RESULT =  opcomp.add(ec);:}
-                                    ;
+WhileLoop                   ::= WHILE PARIZQ Condicion:condw PARDER Stmts:st
+                                {: RESULT = new Node("WHILE", condw, st); :}
+                                |
+                                WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Stmts
+                                |
+                                WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} Stmts
+                                ;
 
-ExpresionComparacion            ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
-                                    {: RESULT = new Node(oprel.label, av1, av2); :}
-                                    |
-                                    NOT ExpresionComparacion:exprc
-                                    {: RESULT = new Node("negation", exprc); :}
-                                    ;
+Condicion                   ::= ExpresionBooleana:exprb
+                                {: RESULT = exprb; :}
+                                |
+                                Cadena:cad
+                                {: RESULT = cad; :}
+                                ;
 
-OperadorRelacional              ::= MAYOR
-                                    {: RESULT = new Node(">"); :}
-                                    |
-                                    MENOR
-                                    {: RESULT = new Node("<"); :}
-                                    |
-                                    MAYORIGUAL
-                                    {: RESULT = new Node(">="); :}
-                                    |
-                                    MENORIGUAL
-                                    {: RESULT = new Node("<="); :}
-                                    |
-                                    IGUAL
-                                    {: RESULT = new Node("="); :}
-                                    |
-                                    DIFERENTE
-                                    {: RESULT = new Node("!="); :}
-                                    ;
-OperadorComparacion             ::= AND
-                                    {: RESULT = new Node("AND"); :}
-                                    |
-                                    OR
-                                    {: RESULT = new Node("OR"); :}
-                                    ;
-ExpresionIncDec                 ::= IDENTIFICADOR:id Incremento
-                                    {: RESULT = new Node("update ++", new Node(id)); :}
-                                    |
-                                    IDENTIFICADOR:id Decremento
-                                    {: RESULT = new Node("update --", new Node(id)); :};
+IfConditional               ::= IF ConditionGroup:cg Stmts:st
+                                {: RESULT = new Node("IF",cg, st); :}
+                                |
+                                IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
+                                {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
+                                |
+                                IF error {: parser.report_error("IF statement declaration. Usage example: if (<boolean expression>) do ... end", "WRONG"); :} Stmts;
 
-Incremento                      ::= SUMA SUMA;
-Decremento                      ::= MENOS MENOS;
+ConditionGroup              ::= PARIZQ ExpresionBooleana:eb PARDER
+                                {: RESULT = eb; :}
+                                |
+                                PARIZQ IDENTIFICADOR:id PARDER
+                                {: RESULT = new Node("ID", new Node(id)); :};
+
+SwitchConditional           ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
+                                {: RESULT = new Node("SWITCH", new Node("ID", new Node(id)), exprl); :}
+                                |
+                                SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
+                                {: RESULT = new Node("SWITCH", sw, exprl); :}
+                                |
+                                SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} ExprSwitchList
+                                ;
+
+ExprSwitchList              ::= ExprSwitchPart:exprp ExprSwitchList:exprl
+                                {: RESULT = exprl.add(exprp); :}
+                                |
+                                ExprSwitchPart:exprp
+                                {: RESULT = new Node("body",exprp); :};
+
+ExprSwitchPart              ::= CASE Switch:sw DOSPUNTOS Stmts:st BREAK PUNTOCOMA
+                                {: RESULT = new Node("CASE", sw, st); :}
+                                |
+                                OTHER DOSPUNTOS Stmts:st BREAK PUNTOCOMA
+                                {: RESULT = new Node("OTHER", st); :}
+                                |
+                                CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} Stmts;
+
+Switch                      ::= NUMERO:n
+                                {: RESULT = new Node(Integer.toString(n)); :}
+                                |
+                                CARACTER:c
+                                {: RESULT = new Node(Character.toString(c)); :};
+
+//--------------------------Arithmetic expressions-------------------------------
+
+ExpresionAritmetica         ::= ExpresionAritmetica:ea SUMA Factor:fct
+                                {: RESULT = new Node("+",ea,fct); :}
+                                |
+                                ExpresionAritmetica:ea MENOS Factor:fct
+                                {: RESULT = new Node("-",ea,fct); :}
+                                |
+                                Factor:fct
+                                {: RESULT = fct; :}
+                                ;
+
+Factor                      ::= Factor:fct MULT Term:trm
+                                {: RESULT = new Node("*",fct,trm); :}
+                                |
+                                Factor:fct DIV Term:trm
+                                {: RESULT = new Node("/",fct,trm); :}
+                                |
+                                Factor:fct MOD Term:trm
+                                {: RESULT = new Node("%",fct,trm); :}
+                                |
+                                Term:trm
+                                {: RESULT = trm; :}
+                                ;
+
+Term                        ::= PARIZQ ExpresionAritmetica:ea PARDER
+                                {: RESULT = ea; :}
+                                |
+                                Valor:vlr
+                                {: RESULT = vlr; :}
+                                ;
+
+//--------------------------Boolean expressions-------------------------------
+
+ExpresionBooleana           ::= ExpresionComparacion:exprc UnionExpresion:uexpr
+                                {: RESULT = new Node("conditions",exprc,uexpr); :}
+                                |
+                                ExpresionComparacion:ec
+                                {: RESULT = ec; :}
+                                |
+                                Booleana:bool
+                                {: RESULT = bool; :}
+                                ;
+
+UnionExpresion              ::= OperadorComparacion:opcomp ExpresionComparacion:exprc UnionExpresion:uexpr
+                                {: RESULT = uexpr.add(opcomp,exprc); :}
+                                |
+                                OperadorComparacion:opcomp ExpresionComparacion:ec
+                                {: RESULT =  opcomp.add(ec);:}
+                                ;
+
+ExpresionComparacion        ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
+                                {: RESULT = new Node(oprel.label, av1, av2); :}
+                                |
+                                NOT ExpresionComparacion:exprc
+                                {: RESULT = new Node("negation", exprc); :}
+                                ;
+
+OperadorRelacional          ::= MAYOR
+                                {: RESULT = new Node(">"); :}
+                                |
+                                MENOR
+                                {: RESULT = new Node("<"); :}
+                                |
+                                MAYORIGUAL
+                                {: RESULT = new Node(">="); :}
+                                |
+                                MENORIGUAL
+                                {: RESULT = new Node("<="); :}
+                                |
+                                IGUAL
+                                {: RESULT = new Node("="); :}
+                                |
+                                DIFERENTE
+                                {: RESULT = new Node("!="); :}
+                                ;
+
+OperadorComparacion         ::= AND
+                                {: RESULT = new Node("AND"); :}
+                                |
+                                OR
+                                {: RESULT = new Node("OR"); :}
+                                ;
+
+ExpresionIncDec             ::= IDENTIFICADOR:id Incremento
+                                {: RESULT = new Node("update ++", new Node("ID", new Node(id))); :}
+                                |
+                                IDENTIFICADOR:id Decremento
+                                {: RESULT = new Node("update --", new Node("ID", new Node(id))); :};
+
+Incremento                  ::= SUMA SUMA;
+Decremento                  ::= MENOS MENOS;

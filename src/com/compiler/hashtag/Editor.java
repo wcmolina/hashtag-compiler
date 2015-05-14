@@ -51,7 +51,7 @@ public class Editor extends javax.swing.JFrame {
     private JFrame ASTFrame;
     private JPopupMenu popup;
     private SyntaxHighlighter syntax;
-    private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane :)
+    private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane
 
     public Editor() {
         initComponents();
@@ -78,7 +78,6 @@ public class Editor extends javax.swing.JFrame {
                 syntax = new SyntaxHighlighter(new java.io.StringReader(text));
                 Token val;
                 try {
-
                     while ((val = syntax.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
@@ -101,6 +100,9 @@ public class Editor extends javax.swing.JFrame {
                                 break;
                             case TokenType.READ:
                                 setCharacterAttributes(val.start, val.length, number, true);
+                                break;
+                            case TokenType.CARACTER:
+                                setCharacterAttributes(val.start, val.length, string, true);
                                 break;
                             default:
                                 setCharacterAttributes(val.start, val.length, plain, true);
@@ -119,7 +121,6 @@ public class Editor extends javax.swing.JFrame {
                 syntax = new SyntaxHighlighter(new java.io.StringReader(text));
                 Token val;
                 try {
-
                     while ((val = syntax.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
@@ -142,6 +143,9 @@ public class Editor extends javax.swing.JFrame {
                                 break;
                             case TokenType.READ:
                                 setCharacterAttributes(val.start, val.length, number, true);
+                                break;
+                            case TokenType.CARACTER:
+                                setCharacterAttributes(val.start, val.length, string, true);
                                 break;
                             default:
                                 setCharacterAttributes(val.start, val.length, plain, true);
@@ -571,6 +575,8 @@ public class Editor extends javax.swing.JFrame {
             writer = new BufferedWriter(new FileWriter(path));
             writer.write(content);
             writer.close();
+            Editor.console.setText("File saved successfully.");
+            toggleConsole();
         } catch (IOException ex) {
             Editor.console.setText("Error: " + ex.getMessage());
         }
@@ -718,7 +724,7 @@ public class Editor extends javax.swing.JFrame {
                 if (p.errors == 0 && p.fatal == 0 && Editor.console.getText().isEmpty()) {
                     Editor.console.setText("Number of errors: 0\n"
                             + "Finished parsing successfully\n"
-                            + "Generating AST...");
+                            + "\n> Generating the AST...");
 
                     if (!consolePane.isVisible()) {
                         consolePane.setVisible(true);
@@ -743,7 +749,8 @@ public class Editor extends javax.swing.JFrame {
                         ASTFrame.getContentPane().add(scroll);
                         ASTFrame.setTitle("[AST] - " + FILE_PATH);
                         this.showTreeMenuItem.setEnabled(true);
-                        Editor.console.setText(Editor.console.getText() + " Completed. Go to View > Show AST for visualization.");
+                        Editor.console.setText(Editor.console.getText() + "\nCompleted. Go to 'View > Show AST' if you want to visualize the tree.");
+                        Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other errors...");
                     }
                     TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
 
@@ -853,6 +860,7 @@ public class Editor extends javax.swing.JFrame {
         });
     }
 
+    // <editor-fold desc = "Variables declaration">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem clearTextMenuItem;
     private javax.swing.JTextPane codeTextPane;
@@ -880,4 +888,5 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu toolsMenu;
     private javax.swing.JMenu viewMenu;
     // End of variables declaration//GEN-END:variables
+    //</editor-fold>
 }

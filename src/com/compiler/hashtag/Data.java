@@ -11,7 +11,7 @@ public class Data {
     private int line;
     private int column;
     private String type;
-    private Object assigned_value;
+    private Object value;
     private Scope scope;
 
     /*
@@ -29,25 +29,25 @@ public class Data {
         line = l;
         column = col;
         type = "";
-        assigned_value = null;
+        value = null;
 
         //get the type from val
         if (val != null) {
             if (val instanceof String) {
                 type = "string";
-                assigned_value = val;
+                value = val;
             } else if (val instanceof Integer) {
                 type = "int";
-                assigned_value = ((Integer) val).intValue();
+                value = ((Integer) val).intValue();
             } else if (val instanceof Boolean) {
                 type = "boolean";
-                assigned_value = ((Boolean) val).booleanValue();
+                value = ((Boolean) val).booleanValue();
             } else if (val instanceof Character) {
                 type = "char";
-                assigned_value = ((Character) val).charValue();
+                value = ((Character) val).charValue();
             } else if (val instanceof Double) {
                 type = "double";
-                assigned_value = ((Double) val).doubleValue();
+                value = ((Double) val).doubleValue();
             }
         }
     }
@@ -55,7 +55,7 @@ public class Data {
     public Data() { //used only for non-relevant tokens, where their type is all I need
         lexeme = token = type = "";
         line = column = -1;
-        assigned_value = null;
+        value = null;
     }
 
     public String getLexeme() {
@@ -74,27 +74,27 @@ public class Data {
         return column;
     }
 
-    public Object getAssignValue() {
-        return assigned_value;
+    public Object getValue() {
+        return value;
     }
 
-    public void setAssignValue(Object obj) {
+    public void setValue(Object obj) { //sets the value while updating the type if necessary
         if (obj != null) {
             if (obj instanceof String) {
                 type = "string";
-                assigned_value = obj;
+                value = obj;
             } else if (obj instanceof Integer) {
                 type = "int";
-                assigned_value = ((Integer) obj).intValue();
+                value = ((Integer) obj).intValue();
             } else if (obj instanceof Boolean) {
                 type = "boolean";
-                assigned_value = ((Boolean) obj).booleanValue();
+                value = ((Boolean) obj).booleanValue();
             } else if (obj instanceof Character) {
                 type = "char";
-                assigned_value = ((Character) obj).charValue();
+                value = ((Character) obj).charValue();
             } else if (obj instanceof Double) {
                 type = "double";
-                assigned_value = ((Double) obj).doubleValue();
+                value = ((Double) obj).doubleValue();
             }
         }
     }
@@ -115,11 +115,11 @@ public class Data {
                 ", line=" + line +
                 ", column=" + column +
                 ", type='" + type + '\'' +
-                ", assigned_value=" + assigned_value +
+                ", value=" + value +
                 '}';
     }
 
     public String tabularData() { //for CSV saving purposes (makes it easier I think)
-        return "" + lexeme + "," + token + "," + type + "," + assigned_value + "," + line + "," + column;
+        return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column;
     }
 }
