@@ -22,8 +22,8 @@ public class Scope extends HashMap<String, Data> {
         return previous;
     }
 
-    //recursive
-    public boolean find_in_prev_scope(Scope scope, String key) {
+
+    public static boolean is_in_previous(Scope scope, String key) {
         //if previous scope contains the key
         if (scope.containsKey(key)) {
             return true;
@@ -31,7 +31,7 @@ public class Scope extends HashMap<String, Data> {
             if (scope.getPrevious() == null) {
                 return false;
             } else {
-                return find_in_prev_scope(scope.getPrevious(), key);
+                return is_in_previous(scope.getPrevious(), key);
             }
         }
     }

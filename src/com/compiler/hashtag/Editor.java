@@ -18,6 +18,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -175,6 +177,7 @@ public class Editor extends javax.swing.JFrame {
         tln.setBackground(Color.decode("#1b2426"));
         jsp.setRowHeaderView(tln);
 
+        // <editor-fold desc="Document listener">
 /*
         DocumentListener documentListener = new DocumentListener() {
             @Override
@@ -192,6 +195,7 @@ public class Editor extends javax.swing.JFrame {
             }
         };
 */
+        // </editor-fold>
         //this.codeTextPane.getDocument().addDocumentListener(documentListener);
         this.codeTextPane.addCaretListener(new CaretListener() {
             @Override
@@ -576,7 +580,10 @@ public class Editor extends javax.swing.JFrame {
             writer.write(content);
             writer.close();
             Editor.console.setText("File saved successfully.");
-            toggleConsole();
+            if (!consolePane.isVisible()) {
+                consolePane.setVisible(true);
+                this.setVisible(true);
+            }
         } catch (IOException ex) {
             Editor.console.setText("Error: " + ex.getMessage());
         }

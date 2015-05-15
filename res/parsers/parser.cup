@@ -8,7 +8,7 @@ parser code {:
     public Node root = null;
     public int errors = 0;
     public int fatal = 0;
-    Lexer lexer = (Lexer) this.getScanner();
+    //Lexer lexer = (Lexer) this.getScanner();
 
     public JavaSymbol getCurrentSymbol() {
         return (JavaSymbol) this.cur_token;

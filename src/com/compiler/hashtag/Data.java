@@ -13,6 +13,11 @@ public class Data {
     private String type;
     private Object value;
     private Scope scope;
+    private static final int DECLARED = 0;
+    private static final int INIT_AND_DECLARED = 1;
+    private static final int CALLED = 2;
+
+    private int context;
 
     /*
     Constructor for IDs, mostly for assign and declare
@@ -30,7 +35,7 @@ public class Data {
         column = col;
         type = "";
         value = null;
-
+        context = -1;
         //get the type from val
         if (val != null) {
             if (val instanceof String) {
@@ -54,7 +59,7 @@ public class Data {
 
     public Data() { //used only for non-relevant tokens, where their type is all I need
         lexeme = token = type = "";
-        line = column = -1;
+        line = column = context = -1;
         value = null;
     }
 
@@ -98,6 +103,15 @@ public class Data {
             }
         }
     }
+
+    public int getContext() {
+        return context;
+    }
+
+    public void setContext(int con) {
+        this.context = con;
+    }
+
 
     public String getType() {
         return type;
