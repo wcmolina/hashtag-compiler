@@ -41,6 +41,8 @@ public class Data {
             if (val instanceof String) {
                 type = "string";
                 value = val;
+                //correct column number
+                column -= ((String) val).length()-1;
             } else if (val instanceof Integer) {
                 type = "int";
                 value = ((Integer) val).intValue();
@@ -88,6 +90,8 @@ public class Data {
             if (obj instanceof String) {
                 type = "string";
                 value = obj;
+                //correct column number
+                column -= ((String) obj).length()-1;
             } else if (obj instanceof Integer) {
                 type = "int";
                 value = ((Integer) obj).intValue();

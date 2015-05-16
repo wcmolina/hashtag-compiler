@@ -54,7 +54,7 @@ non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,O
 non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
 non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
 non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,Cadena,Return,Condicion;
-non terminal Node VarDeclare,VarInit,VarDeclarationList,VarDeclarationPart,Functions,Lectura;
+non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Functions,Lectura;
 
 
 precedence left  SUMA,MENOS;
@@ -158,10 +158,10 @@ Lectura                     ::= READINT PARIZQ PARDER
                     donde:
                     V = VarDeclare
                     L = VarDeclarationList
-                    P = VarDeclarationPart
+                    P = Identifier
                     T = Type
 
-                    VarDeclarationPart not necessary anymore?
+                    Identifier not necessary anymore?
 --------------------------------------------------------------------------------
                 */
 
@@ -171,21 +171,21 @@ VarDeclare                  ::= VarDeclarationList:vdl
                                 :}
                                 ;
 
-VarDeclarationList          ::= VarDeclarationList:vdl COMA VarDeclarationPart:vdp
+VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
                                 {:
-                                    vdp.getData().setType(vdl.getData().getType());
-                                    RESULT = vdl.add(vdp);
+                                    iden.getData().setType(vdl.getData().getType());
+                                    RESULT = vdl.add(iden);
                                 :}
                                 |
-                                Type:tp VarDeclarationPart:vdp
+                                Type:tp Identifier:iden
                                 {:
-                                    vdp.getData().setType(tp.label); //habria que hacer clase Tipo propia?
-                                    RESULT = new Node("declare", vdp);
+                                    iden.getData().setType(tp.label); //habria que hacer clase Tipo propia?
+                                    RESULT = new Node("declare", iden);
                                     RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
                                 :}
                                 ;
 
-VarDeclarationPart          ::= IDENTIFICADOR:id
+Identifier                      ::= IDENTIFICADOR:id
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     //dat = lexeme, token, assignval, declared, line, column
@@ -210,9 +210,8 @@ Valor                       ::= NUMERO:num
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, Integer.toString(num));
-                                    RESULT.getData().setValue(num);
                                 :}
                                 |
                                 IDENTIFICADOR:id
@@ -227,9 +226,8 @@ Valor                       ::= NUMERO:num
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "REAL", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(symbol.getLexeme(), "REAL", r, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, Double.toString(r));
-                                    RESULT.getData().setValue(r);
                                 :}
                                 ;
 
@@ -240,9 +238,8 @@ AsigValor                   ::= Cadena:c
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "CHARACTER", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(symbol.getLexeme(), "CHARACTER", ch, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, ("'").concat(Character.toString(ch)).concat("'"));
-                                    RESULT.getData().setValue(ch);
                                 :}
                                 |
                                 Booleana:bool
@@ -255,36 +252,36 @@ Booleana                    ::= TRUE
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "TRUE", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(symbol.getLexeme(), "TRUE", new Boolean(true), symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, "true");
-                                    RESULT.getData().setValue(new Boolean(true));
                                 :}
                                 |
                                 FALSE
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "FALSE", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(symbol.getLexeme(), "FALSE", new Boolean(false), symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, "false");
-                                    RESULT.getData().setValue(new Boolean(false));
                                 :}
                                 ;
 
 Cadena                      ::= CADENA:cad
                                 {:
-                                    RESULT = new Node("\""+cad+"\"");
-                                    RESULT.getData().setValue(cad);
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+
+                                    Data dat = new Data(symbol.getLexeme(), "STRING", cad, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat,"\""+cad+"\"");
                                 :}
                                 |
                                 ExpresionAritmetica:ea
                                 {: RESULT = ea; :}
                                 ;
 
-Asignacion                  ::= IDENTIFICADOR:id ASIGNACION AsigValor:av
-                                {: RESULT = new Node("assign",new Node("ID", new Node(id)), av); :}
+Asignacion                  ::= Identifier:iden ASIGNACION AsigValor:av
+                                {: RESULT = new Node("assign",iden, av); :}
                                 |
-                                IDENTIFICADOR:id ASIGNACION Lectura:lec
-                                {: RESULT = new Node("assign",new Node("ID", new Node(id)), lec); :}
+                                Identifier:iden ASIGNACION Lectura:lec
+                                {: RESULT = new Node("assign",iden, lec); :}
                                 |
                                 ExpresionIncDec:update
                                 {: RESULT = update; :}

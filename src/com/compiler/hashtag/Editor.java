@@ -525,7 +525,6 @@ public class Editor extends javax.swing.JFrame {
 
     private void open(String file) {
         String extension = "";
-
         int i = file.lastIndexOf('.');
         if (i > 0) {
             extension = file.substring(i + 1);
