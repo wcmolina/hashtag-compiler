@@ -38,12 +38,12 @@ public class LinePainter
         this.component = component;
         setColor(color);
 
-		//  Add listeners so we know when to change highlighting
+        //  Add listeners so we know when to change highlighting
         component.addCaretListener(this);
         component.addMouseListener(this);
         component.addMouseMotionListener(this);
 
-		//  Turn highlighting on by adding a dummy highlight
+        //  Turn highlighting on by adding a dummy highlight
         try {
             component.getHighlighter().addHighlight(0, 0, this);
         } catch (BadLocationException ble) {
@@ -71,7 +71,7 @@ public class LinePainter
         setColor(new Color(red, green, blue));
     }
 
-	//  Paint the background highlight
+    //  Paint the background highlight
     public void paint(Graphics g, int p0, int p1, Shape bounds, JTextComponent c) {
         try {
             Rectangle r = c.modelToView(c.getCaretPosition());
@@ -90,7 +90,7 @@ public class LinePainter
      *   Caret position has changed, remove the highlight
      */
     private void resetHighlight() {
-		//  Use invokeLater to make sure updates to the Document are completed,
+        //  Use invokeLater to make sure updates to the Document are completed,
         //  otherwise Undo processing causes the modelToView method to loop.
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -100,7 +100,7 @@ public class LinePainter
                     int offset = component.getCaretPosition();
                     Rectangle currentView = component.modelToView(offset);
 
-					//  Remove the highlighting from the previously highlighted line
+                    //  Remove the highlighting from the previously highlighted line
                     if (lastView.y != currentView.y) {
                         component.repaint(0, lastView.y, component.getWidth(), lastView.height);
                         lastView = currentView;
@@ -111,13 +111,14 @@ public class LinePainter
         });
     }
 
-	//  Implement CaretListener
+
+    //  Implement CaretListener
     @Override
     public void caretUpdate(CaretEvent e) {
         resetHighlight();
     }
 
-	//  Implement MouseListener
+    //  Implement MouseListener
     @Override
     public void mousePressed(MouseEvent e) {
         resetHighlight();
@@ -139,7 +140,7 @@ public class LinePainter
     public void mouseReleased(MouseEvent e) {
     }
 
-	//  Implement MouseMotionListener
+    //  Implement MouseMotionListener
     @Override
     public void mouseDragged(MouseEvent e) {
         resetHighlight();

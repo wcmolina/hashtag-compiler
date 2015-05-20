@@ -50,10 +50,10 @@ terminal Boolean   FALSE,TRUE;
 
 
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,AsigValor,Program,FunctionList,FunctionPart,Stmts;
-non terminal Node Instruccion,Llamado,ExpresionComparacion,OperadorComparacion,OperadorRelacional,ExpresionIncDec,Incremento,Decremento;
-non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,UnionExpresion,Switch,ExprSwitchList,ExprSwitchPart;
-non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,ConditionGroup,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Booleana,Parametros,Param,Valor,Cadena,Return,Condicion;
+non terminal Node Instruccion,Llamado,ExpresionComparacion,LogicalOper,RelationalOper,ExpresionIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
+non terminal Node Bloque,Loops,Conditional,ForLoop,WhileLoop,IfConditional,SwitchConditional,ExprFor,Switch,ExprSwitchList,ExprSwitchPart;
+non terminal Node ExpresionBooleana,ExpresionAritmetica,Factor,Term,Conditions,Contenido,PrintParam;
+non terminal Node Print,LlamadoMetodos,Boolean,Parametros,Param,Valor,Cadena,Return;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Functions,Lectura;
 
 
@@ -185,10 +185,10 @@ VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
                                 :}
                                 ;
 
-Identifier                      ::= IDENTIFICADOR:id
+Identifier                  ::= IDENTIFICADOR:id
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    //dat = lexeme, token, assignval, declared, line, column
+
                                     Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, id);
                                 :}
@@ -206,31 +206,6 @@ VarInit                     ::= VarDeclare:vd ASIGNACION AsigValor:av
                                 {: RESULT = new Node("init",vd,lec); :}
                                 ;
 
-Valor                       ::= NUMERO:num
-                                {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-
-                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num, symbol.getLine(), symbol.getColumn());
-                                    RESULT = new Node(dat, Integer.toString(num));
-                                :}
-                                |
-                                IDENTIFICADOR:id
-                                {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-
-                                    Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
-                                    RESULT = new Node(dat,"ID",new Node(id));
-                                :}
-                                |
-                                REAL:r
-                                {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-
-                                    Data dat = new Data(symbol.getLexeme(), "REAL", r, symbol.getLine(), symbol.getColumn());
-                                    RESULT = new Node(dat, Double.toString(r));
-                                :}
-                                ;
-
 AsigValor                   ::= Cadena:c
                                 {: RESULT = c; :}
                                 |
@@ -242,13 +217,13 @@ AsigValor                   ::= Cadena:c
                                     RESULT = new Node(dat, ("'").concat(Character.toString(ch)).concat("'"));
                                 :}
                                 |
-                                Booleana:bool
+                                Boolean:bool
                                 {:
                                     RESULT = bool;
                                 :}
                                 ;
 
-Booleana                    ::= TRUE
+Boolean                     ::= TRUE
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
 
@@ -312,11 +287,11 @@ Llamado                     ::= Print:pr
                                 {: RESULT = lm; :}
                                 ;
 
-LlamadoMetodos              ::= IDENTIFICADOR:id PARIZQ Contenido:cont PARDER
-                                {: RESULT = new Node("function_call",new Node("ID", new Node(id)),cont); :}
+LlamadoMetodos              ::= Identifier:id PARIZQ Contenido:cont PARDER
+                                {: RESULT = new Node("function_call",id,cont); :}
                                 |
-                                IDENTIFICADOR:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", new Node("ID", new Node(id)), new Node("params",new Node("?"))); :}
+                                Identifier:id PARIZQ PARDER
+                                {: RESULT = new Node("function_call", id, new Node("params",new Node("?"))); :}
                                 ;
 
 Contenido                   ::= AsigValor:av COMA Contenido:cont
@@ -336,8 +311,11 @@ Parametros                  ::= Parametros:ps COMA Param:p
                                 {: RESULT = new Node("?"); :}
                                 ;
 
-Param                       ::= Type IDENTIFICADOR:id
-                                {: RESULT = new Node("ID", new Node(id)); :}
+Param                       ::= Type:tp Identifier:id
+                                {:
+                                    RESULT = id;
+                                    RESULT.getData().setType(tp.label);
+                                :}
                                 ;
 
 Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
@@ -378,7 +356,7 @@ Return                      ::= RETURN LlamadoMetodos:lm
                                 {: RESULT = new Node("RETURN", av); :}
                                 ;
 
-//--------------------------blocks (if, switch, while, for)-------------------------------
+//--------------------------Blocks (if, switch, while, for)-------------------------------
 
 Bloque                      ::= Loops:lp
                                 {: RESULT = lp; :}
@@ -408,37 +386,30 @@ ForLoop                     ::= FOR PARIZQ ExprFor:expr PARDER Stmts:st
 ExprFor                     ::= INT Asignacion:asig PUNTOCOMA ExpresionBooleana:exprb PUNTOCOMA ExpresionIncDec:update
                                 {: RESULT = new Node("structure",asig,exprb,update); :};
 
-WhileLoop                   ::= WHILE PARIZQ Condicion:condw PARDER Stmts:st
-                                {: RESULT = new Node("WHILE", condw, st); :}
+WhileLoop                   ::= WHILE PARIZQ Conditions:cond PARDER Stmts:st
+                                {: RESULT = new Node("WHILE", cond, st); :}
                                 |
                                 WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Stmts
                                 |
-                                WHILE error {: parser.report_error("WHILE statement declaration.  Example <while(a>10)...> ","WRONG"); :} Stmts
+                                WHILE error {: parser.report_error("WHILE statement declaration. Usage example:\n\n\twhile (<boolean expression>) do \n\t\t...\n\tend","WRONG"); :} Stmts
                                 ;
 
-Condicion                   ::= ExpresionBooleana:exprb
-                                {: RESULT = exprb; :}
+IfConditional               ::= IF PARIZQ Conditions:cond PARDER Stmts:st
+                                {: RESULT = new Node("IF",cond, st); :}
                                 |
-                                Cadena:cad
-                                {: RESULT = cad; :}
-                                ;
+                                IF PARIZQ Conditions:cond PARDER Stmts:st1 ELSE Stmts:st2
+                                {: RESULT = new Node("IF",cond,st1,new Node("ELSE",st2)); :}
+                                |
+                                IF error {: parser.report_error("IF statement declaration. Usage example:\n\n\tif (<boolean expression>) do \n\t\t...\n\tend", "WRONG"); :} Stmts;
 
-IfConditional               ::= IF ConditionGroup:cg Stmts:st
-                                {: RESULT = new Node("IF",cg, st); :}
-                                |
-                                IF ConditionGroup:cg Stmts:st1 ELSE Stmts:st2
-                                {: RESULT = new Node("IF",cg,st1,new Node("ELSE",st2)); :}
-                                |
-                                IF error {: parser.report_error("IF statement declaration. Usage example: if (<boolean expression>) do ... end", "WRONG"); :} Stmts;
-
-ConditionGroup              ::= PARIZQ ExpresionBooleana:eb PARDER
+Conditions                  ::= ExpresionBooleana:eb
                                 {: RESULT = eb; :}
                                 |
-                                PARIZQ IDENTIFICADOR:id PARDER
-                                {: RESULT = new Node("ID", new Node(id)); :};
+                                Identifier:id
+                                {: RESULT = id; :};
 
-SwitchConditional           ::= SWITCH PARIZQ IDENTIFICADOR:id PARDER DO ExprSwitchList:exprl END
-                                {: RESULT = new Node("SWITCH", new Node("ID", new Node(id)), exprl); :}
+SwitchConditional           ::= SWITCH PARIZQ Identifier:id PARDER DO ExprSwitchList:exprl END
+                                {: RESULT = new Node("SWITCH", id, exprl); :}
                                 |
                                 SWITCH PARIZQ Switch:sw PARDER DO ExprSwitchList:exprl END
                                 {: RESULT = new Node("SWITCH", sw, exprl); :}
@@ -498,33 +469,54 @@ Term                        ::= PARIZQ ExpresionAritmetica:ea PARDER
                                 {: RESULT = vlr; :}
                                 ;
 
+Valor                       ::= NUMERO:num
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+
+                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Integer.toString(num));
+                                :}
+                                |
+                                Identifier:id
+                                {: RESULT = id; :}
+                                |
+                                REAL:r
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+
+                                    Data dat = new Data(symbol.getLexeme(), "REAL", r, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Double.toString(r));
+                                :}
+                                ;
+
 //--------------------------Boolean expressions-------------------------------
 
-ExpresionBooleana           ::= ExpresionComparacion:exprc UnionExpresion:uexpr
-                                {: RESULT = new Node("conditions",exprc,uexpr); :}
+ExpresionBooleana           ::= BooleanExprList:bel
+                                {: RESULT = bel; :}
                                 |
-                                ExpresionComparacion:ec
-                                {: RESULT = ec; :}
-                                |
-                                Booleana:bool
+                                Boolean:bool
                                 {: RESULT = bool; :}
                                 ;
 
-UnionExpresion              ::= OperadorComparacion:opcomp ExpresionComparacion:exprc UnionExpresion:uexpr
-                                {: RESULT = uexpr.add(opcomp,exprc); :}
+BooleanExprList             ::= BooleanExprList:list LogicalOper BooleanExprPart:part
+                                {: RESULT = list.add(part); :}
                                 |
-                                OperadorComparacion:opcomp ExpresionComparacion:ec
-                                {: RESULT =  opcomp.add(ec);:}
+                                BooleanExprPart:part
+                                {: RESULT = new Node("conditions",part); :}
                                 ;
 
-ExpresionComparacion        ::= AsigValor:av1 OperadorRelacional:oprel AsigValor:av2
-                                {: RESULT = new Node(oprel.label, av1, av2); :}
+BooleanExprPart             ::= ExpresionComparacion:ec
+                                {: RESULT = ec; :}
+                                ;
+
+ExpresionComparacion        ::= AsigValor:v1 RelationalOper:oprel AsigValor:v2
+                                {: RESULT = new Node(oprel.label, v1, v2); :}
                                 |
                                 NOT ExpresionComparacion:exprc
                                 {: RESULT = new Node("negation", exprc); :}
                                 ;
 
-OperadorRelacional          ::= MAYOR
+RelationalOper              ::= MAYOR
                                 {: RESULT = new Node(">"); :}
                                 |
                                 MENOR
@@ -543,18 +535,16 @@ OperadorRelacional          ::= MAYOR
                                 {: RESULT = new Node("!="); :}
                                 ;
 
-OperadorComparacion         ::= AND
-                                {: RESULT = new Node("AND"); :}
+LogicalOper                 ::= AND
                                 |
                                 OR
-                                {: RESULT = new Node("OR"); :}
                                 ;
 
-ExpresionIncDec             ::= IDENTIFICADOR:id Incremento
-                                {: RESULT = new Node("update ++", new Node("ID", new Node(id))); :}
+ExpresionIncDec             ::= Identifier:id Incremento
+                                {: RESULT = new Node("increase", id); :}
                                 |
-                                IDENTIFICADOR:id Decremento
-                                {: RESULT = new Node("update --", new Node("ID", new Node(id))); :};
+                                Identifier:id Decremento
+                                {: RESULT = new Node("decrease", id); :};
 
 Incremento                  ::= SUMA SUMA;
 Decremento                  ::= MENOS MENOS;

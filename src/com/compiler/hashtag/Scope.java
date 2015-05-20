@@ -25,7 +25,7 @@ public class Scope extends HashMap<String, Data> {
 
     public String getID() {
         if (this.ID.isEmpty()) {
-            this.ID = label_from_previous(this, this.label);
+            this.ID = labelFromPrevious(this, this.label);
         }
         return this.ID;
     }
@@ -39,7 +39,7 @@ public class Scope extends HashMap<String, Data> {
     }
 
 
-    public static boolean is_in_previous(Scope scope, String key) {
+    public static boolean isInPrevious(Scope scope, String key) {
         //if previous scope contains the key
         if (scope.containsKey(key)) {
             return true;
@@ -47,12 +47,12 @@ public class Scope extends HashMap<String, Data> {
             if (scope.getPrevious() == null) {
                 return false;
             } else {
-                return is_in_previous(scope.getPrevious(), key);
+                return isInPrevious(scope.getPrevious(), key);
             }
         }
     }
 
-    public static Data find_in_previous(Scope scope, String key) {
+    public static Data findInPrevious(Scope scope, String key) {
         //if previous scope contains the key
         if (scope.containsKey(key)) {
             return scope.get(key);
@@ -60,23 +60,23 @@ public class Scope extends HashMap<String, Data> {
             if (scope.getPrevious() == null) {
                 return null;
             } else {
-                return find_in_previous(scope.getPrevious(), key);
+                return findInPrevious(scope.getPrevious(), key);
             }
         }
     }
 
-    public void add_scope(Scope sc) {
+    public void addScope(Scope sc) {
         if (this.sub_scopes == null) { //from some reason
             this.sub_scopes = new ArrayList<Scope>();
         }
         this.sub_scopes.add(sc);
     }
 
-    private String label_from_previous(Scope scope, String label) {
+    public static String labelFromPrevious(Scope scope, String label) {
         if (scope.getPrevious() == null) {
             return scope.getLabel();
         } else {
-            return label_from_previous(scope.getPrevious(), scope.getPrevious().getLabel()) + "." + label;
+            return labelFromPrevious(scope.getPrevious(), scope.getPrevious().getLabel()) + "." + label;
         }
     }
 }

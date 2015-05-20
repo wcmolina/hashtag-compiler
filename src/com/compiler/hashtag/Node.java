@@ -72,17 +72,16 @@ public class Node {
         return children.isEmpty();
     }
 
-    public String treeToString(String prefix, boolean isTail) {
-        //if (!this.label.equalsIgnoreCase("prog")) inverse();
+    public String toString(String prefix, boolean isTail) {
         inverse();
         print = print.concat(prefix + (isTail ? "└── " : "├── ") + label) + "\n";
         if (!children.isEmpty()) {
             for (int i = 0; i < children.size() - 1; i++) {
-                print = print.concat(children.get(i).treeToString(prefix + (isTail ? "    " : "│   "), false));
+                print = print.concat(children.get(i).toString(prefix + (isTail ? "    " : "│   "), false));
             }
         }
         if (children.size() > 0) {
-            print = print.concat(children.get(children.size() - 1).treeToString(prefix + (isTail ? "    " : "│   "), true));
+            print = print.concat(children.get(children.size() - 1).toString(prefix + (isTail ? "    " : "│   "), true));
         }
         return print;
     }

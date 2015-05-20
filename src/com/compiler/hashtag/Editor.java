@@ -18,8 +18,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -34,18 +32,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.TabSet;
-import javax.swing.text.TabStop;
-import javax.swing.text.Utilities;
+import javax.swing.text.*;
 
 public class Editor extends javax.swing.JFrame {
 
@@ -54,7 +41,9 @@ public class Editor extends javax.swing.JFrame {
     private JPopupMenu popup;
     private SyntaxHighlighter syntax;
     private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane
+    private LinePainter linePainter;
 
+    //todo: highlight in red the lines that have errors
     public Editor() {
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -68,8 +57,9 @@ public class Editor extends javax.swing.JFrame {
         final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
         final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#f99b36"));
         final AttributeSet function = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#b4d864"));
-        final AttributeSet number = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#f7f36f"));
-        final AttributeSet operator = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#cc99cc"));
+        final AttributeSet number = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#aa6164"));
+        final AttributeSet operator = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#9876aa"));
+        final AttributeSet read = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#f7f36f"));
 
         // <editor-fold desc="Syntax highlighter code">
         DefaultStyledDocument doc = new DefaultStyledDocument() {
@@ -95,13 +85,13 @@ public class Editor extends javax.swing.JFrame {
                                 setCharacterAttributes(val.start, val.length, function, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, plain, true);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
                                 setCharacterAttributes(val.start, val.length, operator, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, number, true);
+                                setCharacterAttributes(val.start, val.length, read, true);
                                 break;
                             case TokenType.CARACTER:
                                 setCharacterAttributes(val.start, val.length, string, true);
@@ -138,13 +128,13 @@ public class Editor extends javax.swing.JFrame {
                                 setCharacterAttributes(val.start, val.length, function, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, plain, true);
+                                setCharacterAttributes(val.start, val.length, number, true);
                                 break;
                             case TokenType.OPERATOR:
                                 setCharacterAttributes(val.start, val.length, operator, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, number, true);
+                                setCharacterAttributes(val.start, val.length, read, true);
                                 break;
                             case TokenType.CARACTER:
                                 setCharacterAttributes(val.start, val.length, string, true);
@@ -171,7 +161,7 @@ public class Editor extends javax.swing.JFrame {
 
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
-        LinePainter lp = new LinePainter(codeTextPane, Color.decode("#323e41"));
+        linePainter = new LinePainter(codeTextPane, Color.decode("#323e41"));
         jsp.setViewportView(codeTextPane);
         LineNumber tln = new LineNumber(codeTextPane);
         tln.setBackground(Color.decode("#1b2426"));
@@ -572,7 +562,7 @@ public class Editor extends javax.swing.JFrame {
         }
     }
 
-    void save(String path, String content) {
+    private void save(String path, String content) {
         Writer writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(path));
@@ -588,7 +578,7 @@ public class Editor extends javax.swing.JFrame {
         }
     }
 
-    void resetComponents() {
+    private void resetComponents() {
         Editor.console.setText("");
         if (ASTFrame != null) {
             ASTFrame.setVisible(false);
@@ -715,8 +705,28 @@ public class Editor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_exitMenuItemActionPerformed
 
+    private int getLineEnd(String text, int lineNo) {
+        int lineEnd = 0;
+        for (int i = 1; i <= lineNo && lineEnd + 1 < text.length(); i++) {
+            lineEnd = text.indexOf('\n', lineEnd + 1);
+        }
+        return lineEnd;
+    }
+
     private void parseMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_parseMenuItemActionPerformed
         resetComponents();
+        /*
+        BONUS: highlight in red the lines that have errors.
+        DefaultHighlighter.HighlightPainter err = new DefaultHighlighter.DefaultHighlightPainter(Color.RED);
+        try {
+            //highlight line 5
+            codeTextPane.getHighlighter().addHighlight(getLineEnd(codeTextPane.getText(), 4) + 1, getLineEnd(codeTextPane.getText(), 5), err);
+            //highlight line 13
+            codeTextPane.getHighlighter().addHighlight(getLineEnd(codeTextPane.getText(), 12) + 1, getLineEnd(codeTextPane.getText(), 13), err);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        */
         try {
             if (this.codeTextPane.getText().isEmpty()) {
                 Editor.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
@@ -737,7 +747,7 @@ public class Editor extends javax.swing.JFrame {
                         this.setVisible(true);
                     }
                     if (this.ASTFrame == null) {
-                        String tree = p.root.treeToString("", true);
+                        String tree = p.root.toString("", true);
                         this.showTreeMenuItem.setEnabled(true);
                         JTextArea info = new JTextArea(tree);
                         info.setFont(new Font("Consolas", Font.PLAIN, 12));
@@ -756,9 +766,10 @@ public class Editor extends javax.swing.JFrame {
                         ASTFrame.setTitle("[AST] - " + FILE_PATH);
                         this.showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + "\nCompleted. Go to 'View > Show AST' if you want to visualize the tree.");
-                        Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other errors...");
                     }
+                    Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
                     TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
+                    System.out.println("errors: "+TreeAnalyzer.semantic_errors);
 
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + p.errors);

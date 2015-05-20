@@ -15,19 +15,21 @@ import java.util.Stack;
 
 public class TreeAnalyzer {
 
-    private static final String OPERATORS[] = {"+", "-", "*", "/", "%"};
-    private static final String BLOCK_STATEMENTS[] = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"};
-    public int semantic_errors = 0;
-    private Stack<Scope> scope_stack = new Stack<Scope>();
+    private static final String ARITH_OPERATORS[] = {"+", "-", "*", "/", "%"};
+    private static final String COMP_OPERATORS[] = {">", "<", "not", "==", "<=", ">="};
+    private static final String BLOCK_STATEMENTS[] = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE", "CASE"};
+    public static int semantic_errors = 0;
+    private Stack<Scope> scopeStack = new Stack<Scope>();
 
     public TreeAnalyzer(Node root) {
+        semantic_errors = 0;
         traverse(root);
     }
 
     public void traverse(Node node) {
         if (!node.isLeaf()) {
             if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) { //new scopes if it finds a block stmts or main or prog or functions.
-                setup_stack(node.label);
+                setupStack(node.label);
                 for (Node child : node.getChildren()) { //prog can have 2 children, as well as IF, WHILE, SWITCH, etc...
                     traverse(child);
                     //block_handler? where it can detect the type of block being sent as a parameter...
@@ -37,13 +39,13 @@ public class TreeAnalyzer {
                     for (Node body_node : node.getChildren()) {
                         traverse(body_node);
                     }
-                    scope_stack.pop();
+                    scopeStack.pop();
                 } else if (node.label.equalsIgnoreCase("init")) {
-                    init_handler(node);
+                    initHandler(node);
                 } else if (node.label.equalsIgnoreCase("declare")) {
-                    declare_handler(node);
+                    declareHandler(node);
                 } else if (node.label.equalsIgnoreCase("assign")) {
-                    assign_handler(node);
+                    assignHandler(node);
                 } else {
                     System.out.println("no matches on ifs: " + node.label);
                 }
@@ -51,88 +53,177 @@ public class TreeAnalyzer {
         }
     }
 
-    private void setup_stack(String label) {
+    private void setupStack(String label) {
         Scope current;
         //create a new Scope, which should be the current one with the previous one as its parent
-        current = (scope_stack.empty()) ? new Scope(null) : new Scope(scope_stack.peek());
+        current = (scopeStack.empty()) ? new Scope(null) : new Scope(scopeStack.peek());
         current.setLabel(label);
         //Now add the newly created Scope as a child to the previous Scope.
-        if (!scope_stack.empty()) {
-            scope_stack.peek().add_scope(current);
+        if (!scopeStack.empty()) {
+            scopeStack.peek().addScope(current);
         }
         //now push the new Scope to the stack.
-        scope_stack.push(current);
+        scopeStack.push(current);
     }
 
-    public void assign_handler(Node assign) {
-        Node var, value;
+    //x = 0;
+    private void assignHandler(Node assign) {
+        Node variable, value;
         value = assign.getChildren().get(0);
-        var = assign.getChildren().get(1);
-        //gotta find this ID in the ST
-        Data var_data = Scope.find_in_previous(scope_stack.peek(), var.label);
-        if (var_data != null) {
+        variable = assign.getChildren().get(1);
+
+        //attempting to find this variable in the ST
+        try {
+            Data var_data = getIdentifierData(variable);
+
             //found it, now compare the types
             //todo: find out if i should update its data once found to the assigned value or what....
-            if (!Arrays.asList(OPERATORS).contains(value.label)) { //if its not an arithmetic expression.
-                if (!value.getData().getType().equalsIgnoreCase(var_data.getType())) {
-                    Editor.console.setText(Editor.console.getText()
-                            + "\nError: (line: " + value.getData().getLine() + ", column: " + value.getData().getColumn() + ")\n"
-                            + "    " + (++semantic_errors) + "==> " + "INCOMPATIBLE types"
-                            + "\n" + "        " + " found: " + value.getData().getType()
-                            + "\n" + "        " + " required: " + var_data.getType()
-                            + "\n");
+            if (!Arrays.asList(ARITH_OPERATORS).contains(value.label)) {
+                if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
+                    try {
+                        if (getIdentifierData(value).getValue() == null) {
+                            reportVariableNotInitialized(value);
+                        } else {
+                            Data value_data = getIdentifierData(value);
+                            value.getData().setType(value_data.getType());
+                            if (!value_data.getType().equalsIgnoreCase(var_data.getType())) {
+                                reportTypeMismatch(value, var_data.getType());
+                            }
+                        }
+                    } catch (NullPointerException npe) {
+                        reportVariableNotDeclared(value);
+                    }
+                } else if (!value.getData().getType().equalsIgnoreCase(var_data.getType())) {
+                    //type error
+                    reportTypeMismatch(value, var_data.getType());
                 }
+            } else {
+                arithmeticHandler(value, var_data.getType());
+            }
+        } catch (NullPointerException npe) {
+            reportVariableNotDeclared(variable);
+        }
+    }
+
+    //int x;
+    private void declareHandler(Node declare) {
+        Data data;
+        for (Node variable : declare.getChildren()) {
+            data = variable.getData();
+            if (!Scope.isInPrevious(scopeStack.peek(), data.getLexeme())) {
+                scopeStack.peek().put(data.getLexeme(), data);
+            } else {
+                reportVariableAlreadyDeclared(variable);
+            }
+        }
+    }
+
+    //int x = 7;
+    private void initHandler(Node init) {
+        Node variable, value;
+        value = init.getChildren().get(0); //value
+        variable = init.getChildren().get(1); //id, which is actually a declare node, but it holds info on the type (as well as its children)
+        String variableType = variable.getData().getType();
+
+
+        //adding all variables of 'declare' to the symbol table
+        declareHandler(variable);
+
+        //now checking if the type 'declare' matches the type 'value' has
+        if (!Arrays.asList(ARITH_OPERATORS).contains(value.label)) { //if true, send it to arithmeticHandler
+            if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
+                try {
+                    if (getIdentifierData(value).getValue() == null) {
+                        reportVariableNotInitialized(value);
+                    } else {
+                        Data value_data = getIdentifierData(value);
+                        value.getData().setType(value_data.getType());
+                        if (!value_data.getType().equalsIgnoreCase(variableType)) {
+                            reportTypeMismatch(value, variableType);
+                        }
+                    }
+                } catch (NullPointerException npe) {
+                    reportVariableNotDeclared(value);
+                }
+            } else if (!value.getData().getType().equalsIgnoreCase(variable.getData().getType())) {
+                //type error
+                reportTypeMismatch(value, variableType);
             }
         } else {
-            Editor.console.setText(Editor.console.getText()
-                    + "\nError: (line: " + var.getData().getLine() + ", column: " + var.getData().getColumn() + ")\n"
-                    + "    " + (++semantic_errors) + "==> " + "Variable '" + var.getData().getLexeme() + "' has not been declared."
-                    + "\n");
+            arithmeticHandler(value, variableType);
         }
     }
 
-    private void declare_handler(Node declare) {
-        Data data;
-        for (Node child : declare.getChildren()) {
-            data = child.getData();
-            if (!Scope.is_in_previous(scope_stack.peek(), data.getLexeme())) {
-                scope_stack.peek().put(data.getLexeme(), data);
-            } else {
-                Editor.console.setText(Editor.console.getText()
-                        + "\nError: (line: " + data.getLine() + ", column: " + data.getColumn() + ")\n"
-                        + "    " + (++semantic_errors) + "==> " + "Variable '" + data.getLexeme() + "' has already been declared."
-                        + "\n");
+    //7+5*8/x-y
+    private void arithmeticHandler(Node node, String typeRequired) {
+        if (node.isLeaf()) {
+            if (node.getData().getToken().equalsIgnoreCase("identifier")) {
+                try {
+                    if (getIdentifierData(node).getValue() == null) {
+                        reportVariableNotInitialized(node);
+                    } else {
+                        Data value_data = getIdentifierData(node);
+                        node.getData().setType(value_data.getType());
+                        if (!value_data.getType().equalsIgnoreCase(typeRequired)) {
+                            reportTypeMismatch(node, typeRequired);
+                        }
+                    }
+                } catch (NullPointerException npe) {
+                    reportVariableNotDeclared(node);
+                }
+            } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
+                reportTypeMismatch(node, typeRequired);
             }
+        } else {
+            Node right = node.getChildren().get(0);
+            Node left = node.getChildren().get(1);
+            arithmeticHandler(right, typeRequired);
+            arithmeticHandler(left, typeRequired);
         }
     }
 
-    private void init_handler(Node init) {
-        Node var, value;
-        value = init.getChildren().get(0); //value
-        var = init.getChildren().get(1); //id, which is actually a declare node, but it holds info on the type (as well as its children)
-        //adding info to the table
-        Data data;
-        for (Node child : var.getChildren()) {
-            data = child.getData();
-            if (!Scope.is_in_previous(scope_stack.peek(), data.getLexeme())) {
-                scope_stack.peek().put(data.getLexeme(), data);
-            } else {
-                Editor.console.setText(Editor.console.getText()
-                        + "\nError: (line: " + data.getLine() + ", column: " + data.getColumn() + ")\n"
-                        + "    " + (++semantic_errors) + "==> " + "Variable '" + data.getLexeme() + "' has already been declared."
-                        + "\n");
-            }
+    private void blockHandler(Node block){
+        //IF block stmt
+        if (block.label.equalsIgnoreCase("if")){
+
         }
-        if (!Arrays.asList(OPERATORS).contains(value.label)) { //if true, then the assign value is an arithmetic expression
-            if (!value.getData().getType().equalsIgnoreCase(var.getData().getType())) {
-                //type error
-                Editor.console.setText(Editor.console.getText()
-                        + "\nError: (line: " + value.getData().getLine() + ", column: " + value.getData().getColumn() + ")\n"
-                        + "    " + (++semantic_errors) + "==> " + "INCOMPATIBLE types"
-                        + "\n" + "        " + " found: " + value.getData().getType()
-                        + "\n" + "        " + " required: " + var.getData().getType()
-                        + "\n");
-            }
+    }
+
+    private Data getIdentifierData(Node variable) throws NullPointerException {
+        Data data = Scope.findInPrevious(scopeStack.peek(), variable.label);
+        if (data != null) return data;
+        else {
+            throw new NullPointerException();
         }
+    }
+
+    private static void reportVariableNotInitialized(Node node) {
+        Editor.console.setText(Editor.console.getText()
+                + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
+                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' might have not been initialized."
+                + "\n");
+    }
+
+    private static void reportVariableNotDeclared(Node node) {
+        Editor.console.setText(Editor.console.getText()
+                + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
+                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has not been declared."
+                + "\n");
+    }
+
+    private static void reportVariableAlreadyDeclared(Node node) {
+        Editor.console.setText(Editor.console.getText()
+                + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
+                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared."
+                + "\n");
+    }
+
+    private static void reportTypeMismatch(Node found, String required) {
+        Editor.console.setText(Editor.console.getText()
+                + "\nError: (line: " + found.getData().getLine() + ", column: " + found.getData().getColumn() + ")\n"
+                + "    " + (++semantic_errors) + "==> " + "INCOMPATIBLE types"
+                + "\n" + "        " + " found: " + found.getData().getType()
+                + "\n" + "        " + " required: " + required
+                + "\n");
     }
 }

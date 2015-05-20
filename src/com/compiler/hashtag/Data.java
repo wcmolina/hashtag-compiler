@@ -13,18 +13,27 @@ public class Data {
     private String type;
     private Object value;
     private Scope scope;
+
+        /*
+        helpful for this case, for example:
+        * int x;
+        * x = x+1;
+        * should give an error: var 'x' has not been initialized.
+        *
+        * so x is DECLARED, not INIT_AND_DECLARED
+        * see arithmetic expression handler (TreeAnalyzer)
+        * */
+
     private static final int DECLARED = 0;
     private static final int INIT_AND_DECLARED = 1;
     private static final int CALLED = 2;
-
     private int context;
 
     /*
     Constructor for IDs, mostly for assign and declare
         * lex: the current lexeme of the symbol sent
         * tok: the type of token the lexeme is part of
-        * val: the assigned value to the identifier. null if none
-        * decl: true if the variable has been declared, false if not
+        * val: the value the token has
         * l: line
         * col: column
     * */
@@ -42,7 +51,7 @@ public class Data {
                 type = "string";
                 value = val;
                 //correct column number
-                column -= ((String) val).length()-1;
+                column -= ((String) val).length() - 1;
             } else if (val instanceof Integer) {
                 type = "int";
                 value = ((Integer) val).intValue();
@@ -91,7 +100,7 @@ public class Data {
                 type = "string";
                 value = obj;
                 //correct column number
-                column -= ((String) obj).length()-1;
+                column -= ((String) obj).length() - 1;
             } else if (obj instanceof Integer) {
                 type = "int";
                 value = ((Integer) obj).intValue();
@@ -137,7 +146,7 @@ public class Data {
                 '}';
     }
 
-    public String tabularData() { //for CSV saving purposes (makes it easier I think)
+    public String getTabularForm() { //for CSV saving purposes (makes it easier I think)
         return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column;
     }
 }
