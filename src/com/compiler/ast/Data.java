@@ -14,15 +14,15 @@ public class Data {
     private Object value;
     private Scope scope;
 
-        /*
-        helpful for this case, for example:
+    /*
+    helpful for this case, for example:
         * int x;
         * x = x+1;
         * should give an error: var 'x' has not been initialized.
         *
         * so x is DECLARED, not INIT_AND_DECLARED
         * see arithmetic expression handler (TreeAnalyzer)
-        * */
+    */
 
     private static final int DECLARED = 0;
     private static final int INIT_AND_DECLARED = 1;
@@ -36,11 +36,12 @@ public class Data {
         * val: the value the token has
         * l: line
         * col: column
-    * */
-    public Data(String lex, String tok, Object val, int l, int col) {
+    */
+
+    public Data(String lex, String tok, Object val, int lin, int col) {
         lexeme = lex;
         token = tok;
-        line = l;
+        line = lin;
         column = col;
         type = "";
         value = null;
@@ -121,8 +122,8 @@ public class Data {
         return context;
     }
 
-    public void setContext(int con) {
-        this.context = con;
+    public void setContext(int context) {
+        this.context = context;
     }
 
 

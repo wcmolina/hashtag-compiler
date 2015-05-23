@@ -8,18 +8,20 @@ import java.util.Stack;
 /**
  * Created by Wilmer Carranza on 01/05/2015.
  */
+
 //todo: work on arithmetic expression while type checking!
 
 public class TreeAnalyzer {
 
     private static final String ARITH_OPERATORS[] = {"+", "-", "*", "/", "%"};
-    private static final String COMP_OPERATORS[] = {">", "<", "==", "<=", ">=","!="};
+    private static final String COMPARISON_OPERATORS[] = {">", "<", "==", "<=", ">=", "!="};
+    private static final String LOGICAL_OPERATORS[] = {"AND", "OR"};
     private static final String BLOCK_STATEMENTS[] = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE", "CASE"};
-    public static int semantic_errors = 0;
+    public static int semanticErrors = 0;
     private Stack<Scope> scopeStack = new Stack<Scope>();
 
     public TreeAnalyzer(Node root) {
-        semantic_errors = 0;
+        semanticErrors = 0;
         traverse(root);
     }
 
@@ -27,14 +29,14 @@ public class TreeAnalyzer {
         if (!node.isLeaf()) {
             if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) { //new scopes if it finds a block stmts or main or prog or functions.
                 setupStack(node.label);
-                for (Node child : node.getChildren()) { //prog can have 2 children, as well as IF, WHILE, SWITCH, etc...
-                    traverse(child);
+                for (Node block : node.getChildren()) { //prog can have 2 children, as well as IF, WHILE, SWITCH, etc...
+                    traverse(block);
                     //block_handler? where it can detect the type of block being sent as a parameter...
                 }
             } else {
                 if (node.label.equalsIgnoreCase("body")) {
-                    for (Node body_node : node.getChildren()) {
-                        traverse(body_node);
+                    for (Node bodyNode : node.getChildren()) {
+                        traverse(bodyNode);
                     }
                     scopeStack.pop();
                 } else if (node.label.equalsIgnoreCase("init")) {
@@ -71,7 +73,7 @@ public class TreeAnalyzer {
 
         //attempting to find this variable in the ST
         try {
-            Data var_data = getIdentifierData(variable);
+            Data varData = getIdentifierData(variable);
 
             //found it, now compare the types
             //todo: find out if i should update its data once found to the assigned value or what....
@@ -83,19 +85,19 @@ public class TreeAnalyzer {
                         } else {
                             Data value_data = getIdentifierData(value);
                             value.getData().setType(value_data.getType());
-                            if (!value_data.getType().equalsIgnoreCase(var_data.getType())) {
-                                reportTypeMismatch(value, var_data.getType());
+                            if (!value_data.getType().equalsIgnoreCase(varData.getType())) {
+                                reportTypeMismatch(value, varData.getType());
                             }
                         }
                     } catch (NullPointerException npe) {
                         reportVariableNotDeclared(value);
                     }
-                } else if (!value.getData().getType().equalsIgnoreCase(var_data.getType())) {
+                } else if (!value.getData().getType().equalsIgnoreCase(varData.getType())) {
                     //type error
-                    reportTypeMismatch(value, var_data.getType());
+                    reportTypeMismatch(value, varData.getType());
                 }
             } else {
-                arithmeticHandler(value, var_data.getType());
+                arithmeticHandler(value, varData.getType());
             }
         } catch (NullPointerException npe) {
             reportVariableNotDeclared(variable);
@@ -179,9 +181,9 @@ public class TreeAnalyzer {
         }
     }
 
-    private void blockHandler(Node block){
+    private void blockHandler(Node block) {
         //IF block stmt
-        if (block.label.equalsIgnoreCase("if")){
+        if (block.label.equalsIgnoreCase("if")) {
 
         }
     }
@@ -197,28 +199,28 @@ public class TreeAnalyzer {
     private static void reportVariableNotInitialized(Node node) {
         Editor.console.setText(Editor.console.getText()
                 + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
-                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' might have not been initialized."
+                + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' might have not been initialized."
                 + "\n");
     }
 
     private static void reportVariableNotDeclared(Node node) {
         Editor.console.setText(Editor.console.getText()
                 + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
-                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has not been declared."
+                + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has not been declared."
                 + "\n");
     }
 
     private static void reportVariableAlreadyDeclared(Node node) {
         Editor.console.setText(Editor.console.getText()
                 + "\nError: (line: " + node.getData().getLine() + ", column: " + node.getData().getColumn() + ")\n"
-                + "    " + (++semantic_errors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared."
+                + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared."
                 + "\n");
     }
 
     private static void reportTypeMismatch(Node found, String required) {
         Editor.console.setText(Editor.console.getText()
                 + "\nError: (line: " + found.getData().getLine() + ", column: " + found.getData().getColumn() + ")\n"
-                + "    " + (++semantic_errors) + "==> " + "INCOMPATIBLE types"
+                + "    " + (++semanticErrors) + "==> " + "INCOMPATIBLE types"
                 + "\n" + "        " + " found: " + found.getData().getType()
                 + "\n" + "        " + " required: " + required
                 + "\n");

@@ -1,7 +1,8 @@
 package com.compiler.syntaxhighlight;
 
-public class TokenType {
+public class TokenConstants {
 
+    public static final int EOF = 0;
     public static final int KEYWORD = 1;
     public static final int FUNCTION = 2;
     public static final int RETURN = 3;
@@ -14,7 +15,6 @@ public class TokenType {
     public static final int PLAIN = 10;
     public static final int OPERATOR = 11;
     public static final int NUMBER = 12;
-    public static final int EOF = 0;
     public static final int PRINT = 13;
 
 }

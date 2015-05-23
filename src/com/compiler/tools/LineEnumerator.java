@@ -6,9 +6,9 @@
 package com.compiler.tools;
 
 /**
- *
  * @author Wilmer Carranza
  */
+
 import java.awt.*;
 import java.beans.*;
 import java.util.HashMap;
@@ -37,17 +37,17 @@ public class LineEnumerator extends JPanel
 
     private final static int HEIGHT = Integer.MAX_VALUE - 1000000;
 
-	//  Text component this TextTextLineNumber component is in sync with
+    //  Text component this TextTextLineNumber component is in sync with
     private JTextComponent component;
 
-	//  Properties that can be changed
+    //  Properties that can be changed
     private boolean updateFont;
     private int borderGap;
     private Color currentLineForeground;
     private float digitAlignment;
     private int minimumDisplayDigits;
 
-	//  Keep history information to reduce the number of times the component
+    //  Keep history information to reduce the number of times the component
     //  needs to be repainted
     private int lastDigits;
     private int lastHeight;
@@ -163,9 +163,9 @@ public class LineEnumerator extends JPanel
      * Common values would be:
      * <ul>
      * <li>LineEnumerator.LEFT
- <li>LineEnumerator.CENTER
- <li>LineEnumerator.RIGHT (default)
- </ul>
+     <li>LineEnumerator.CENTER
+     <li>LineEnumerator.RIGHT (default)
+     </ul>
      *
      * @param currentLineForeground the Color used to render the current line
      */
@@ -203,7 +203,7 @@ public class LineEnumerator extends JPanel
         int lines = root.getElementCount();
         int digits = Math.max(String.valueOf(lines).length(), minimumDisplayDigits);
 
-		//  Update sizes when number of digits in the line number changes
+        //  Update sizes when number of digits in the line number changes
         if (lastDigits != digits) {
             lastDigits = digits;
             FontMetrics fontMetrics = getFontMetrics(getFont());
@@ -225,12 +225,12 @@ public class LineEnumerator extends JPanel
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-		//	Determine the width of the space available to draw the line number
+        //	Determine the width of the space available to draw the line number
         FontMetrics fontMetrics = component.getFontMetrics(component.getFont());
         Insets insets = getInsets();
         int availableWidth = getSize().width - insets.left - insets.right;
 
-		//  Determine the rows to draw within the clipped bounds.
+        //  Determine the rows to draw within the clipped bounds.
         Rectangle clip = g.getClipBounds();
         int rowStartOffset = component.viewToModel(new Point(0, clip.y));
         int endOffset = component.viewToModel(new Point(0, clip.y + clip.height));
@@ -243,7 +243,7 @@ public class LineEnumerator extends JPanel
                     g.setColor(getForeground());
                 }
 
-    			//  Get the line number as a string and then determine the
+                //  Get the line number as a string and then determine the
                 //  "X" and "Y" offsets for drawing the string.
                 String lineNumber = getTextLineNumber(rowStartOffset);
                 int stringWidth = fontMetrics.stringWidth(lineNumber);
@@ -251,7 +251,7 @@ public class LineEnumerator extends JPanel
                 int y = getOffsetY(rowStartOffset, fontMetrics);
                 g.drawString(lineNumber, x, y);
 
-    			//  Move to the next row
+                //  Move to the next row
                 rowStartOffset = Utilities.getRowEnd(component, rowStartOffset) + 1;
             } catch (Exception e) {
                 break;
@@ -309,7 +309,7 @@ public class LineEnumerator extends JPanel
         int y = r.y + r.height;
         int descent = 0;
 
-		//  The text needs to be positioned above the bottom of the bounding
+        //  The text needs to be positioned above the bottom of the bounding
         //  rectangle based on the descent of the font(s) contained on the row.
         if (r.height == lineHeight) // default font is being used
         {
@@ -346,7 +346,7 @@ public class LineEnumerator extends JPanel
         return y - descent;
     }
 
-//
+    //
 //  Implement CaretListener interface
 //
     @Override
@@ -357,14 +357,14 @@ public class LineEnumerator extends JPanel
         Element root = component.getDocument().getDefaultRootElement();
         int currentLine = root.getElementIndex(caretPosition);
 
-		//  Need to repaint so the correct line number can be highlighted
+        //  Need to repaint so the correct line number can be highlighted
         if (lastLine != currentLine) {
             repaint();
             lastLine = currentLine;
         }
     }
 
-//
+    //
 //  Implement DocumentListener interface
 //
     @Override
@@ -387,7 +387,7 @@ public class LineEnumerator extends JPanel
      *  Therefore the lines numbers will also change.
      */
     private void documentChanged() {
-		//  View of the component has not been updated at the time
+        //  View of the component has not been updated at the time
         //  the DocumentEvent is fired
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -407,7 +407,7 @@ public class LineEnumerator extends JPanel
         });
     }
 
-//
+    //
 //  Implement PropertyChangeListener interface
 //
     @Override
