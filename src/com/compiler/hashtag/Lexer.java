@@ -384,9 +384,10 @@ public class Lexer implements java_cup.runtime.Scanner {
         return cur_sym;
     }
 
+    //apparently this returns the 'lookahead' symbol, not the current one
     public JavaSymbol current_symbol() {
         return cur_sym;
-      }
+    }
 
 
   /**
@@ -775,11 +776,11 @@ public class Lexer implements java_cup.runtime.Scanner {
           }
         case 61: break;
         case 3: 
-          { return symbol(sym.NUMERO, new Integer(yytext()));
+          { return symbol(SymbolConstants.NUMERO, new Integer(yytext()));
           }
         case 62: break;
         case 4: 
-          { return symbol(sym.IDENTIFICADOR, yytext());
+          { return symbol(SymbolConstants.IDENTIFICADOR, yytext());
           }
         case 63: break;
         case 5: 
@@ -795,55 +796,55 @@ public class Lexer implements java_cup.runtime.Scanner {
           }
         case 66: break;
         case 8: 
-          { return symbol(sym.SUMA);
+          { return symbol(SymbolConstants.SUMA);
           }
         case 67: break;
         case 9: 
-          { return symbol(sym.MENOS);
+          { return symbol(SymbolConstants.MENOS);
           }
         case 68: break;
         case 10: 
-          { return symbol(sym.DIV);
+          { return symbol(SymbolConstants.DIV);
           }
         case 69: break;
         case 11: 
-          { return symbol(sym.MULT);
+          { return symbol(SymbolConstants.MULT);
           }
         case 70: break;
         case 12: 
-          { return symbol(sym.MAYOR);
+          { return symbol(SymbolConstants.MAYOR);
           }
         case 71: break;
         case 13: 
-          { return symbol(sym.MENOR);
+          { return symbol(SymbolConstants.MENOR);
           }
         case 72: break;
         case 14: 
-          { return symbol(sym.ASIGNACION);
+          { return symbol(SymbolConstants.ASIGNACION);
           }
         case 73: break;
         case 15: 
-          { return symbol(sym.PARIZQ);
+          { return symbol(SymbolConstants.PARIZQ);
           }
         case 74: break;
         case 16: 
-          { return symbol(sym.PARDER);
+          { return symbol(SymbolConstants.PARDER);
           }
         case 75: break;
         case 17: 
-          { return symbol(sym.MOD);
+          { return symbol(SymbolConstants.MOD);
           }
         case 76: break;
         case 18: 
-          { return symbol(sym.COMA);
+          { return symbol(SymbolConstants.COMA);
           }
         case 77: break;
         case 19: 
-          { return symbol(sym.PUNTOCOMA);
+          { return symbol(SymbolConstants.PUNTOCOMA);
           }
         case 78: break;
         case 20: 
-          { return symbol(sym.DOSPUNTOS);
+          { return symbol(SymbolConstants.DOSPUNTOS);
           }
         case 79: break;
         case 21: 
@@ -855,158 +856,158 @@ public class Lexer implements java_cup.runtime.Scanner {
           }
         case 81: break;
         case 23: 
-          { yybegin (YYINITIAL); return symbol(sym.CADENA, string.toString());
+          { yybegin (YYINITIAL); return symbol(SymbolConstants.CADENA, string.toString());
           }
         case 82: break;
         case 24: 
-          { return symbol(sym.MAYORIGUAL);
+          { return symbol(SymbolConstants.MAYORIGUAL);
           }
         case 83: break;
         case 25: 
-          { return symbol(sym.MENORIGUAL);
+          { return symbol(SymbolConstants.MENORIGUAL);
           }
         case 84: break;
         case 26: 
-          { return symbol(sym.IGUAL);
+          { return symbol(SymbolConstants.IGUAL);
           }
         case 85: break;
         case 27: 
-          { return symbol(sym.OR);
+          { return symbol(SymbolConstants.OR);
           }
         case 86: break;
         case 28: 
-          { return symbol(sym.DIFERENTE);
+          { return symbol(SymbolConstants.DIFERENTE);
           }
         case 87: break;
         case 29: 
-          { return symbol(sym.IF);
+          { return symbol(SymbolConstants.IF);
           }
         case 88: break;
         case 30: 
-          { return symbol(sym.DO);
+          { return symbol(SymbolConstants.DO);
           }
         case 89: break;
         case 31: 
-          { return symbol(sym.REAL, new Double(yytext()));
+          { return symbol(SymbolConstants.REAL, new Double(yytext()));
           }
         case 90: break;
         case 32: 
-          { return symbol(sym.CARACTER, new Character(yytext().charAt(1)));
+          { return symbol(SymbolConstants.CARACTER, new Character(yytext().charAt(1)));
           }
         case 91: break;
         case 33: 
-          { return symbol(sym.NOT);
+          { return symbol(SymbolConstants.NOT);
           }
         case 92: break;
         case 34: 
-          { return symbol(sym.INT);
+          { return symbol(SymbolConstants.INT);
           }
         case 93: break;
         case 35: 
-          { return symbol(sym.END);
+          { return symbol(SymbolConstants.END);
           }
         case 94: break;
         case 36: 
-          { return symbol(sym.AND);
+          { return symbol(SymbolConstants.AND);
           }
         case 95: break;
         case 37: 
-          { return symbol(sym.FOR);
+          { return symbol(SymbolConstants.FOR);
           }
         case 96: break;
         case 38: 
-          { return symbol(sym.TRUE);
+          { return symbol(SymbolConstants.TRUE);
           }
         case 97: break;
         case 39: 
-          { return symbol(sym.ELSE);
+          { return symbol(SymbolConstants.ELSE);
           }
         case 98: break;
         case 40: 
-          { return symbol (sym.CHAR);
+          { return symbol (SymbolConstants.CHAR);
           }
         case 99: break;
         case 41: 
-          { return symbol(sym.CASE);
+          { return symbol(SymbolConstants.CASE);
           }
         case 100: break;
         case 42: 
-          { return symbol(sym.VOID);
+          { return symbol(SymbolConstants.VOID);
           }
         case 101: break;
         case 43: 
-          { return symbol(sym.OTHER);
+          { return symbol(SymbolConstants.OTHER);
           }
         case 102: break;
         case 44: 
-          { return symbol(sym.BEGIN);
+          { return symbol(SymbolConstants.BEGIN);
           }
         case 103: break;
         case 45: 
-          { return symbol(sym.BREAK);
+          { return symbol(SymbolConstants.BREAK);
           }
         case 104: break;
         case 46: 
-          { return symbol(sym.FALSE);
+          { return symbol(SymbolConstants.FALSE);
           }
         case 105: break;
         case 47: 
-          { return symbol(sym.WHILE);
+          { return symbol(SymbolConstants.WHILE);
           }
         case 106: break;
         case 48: 
-          { return symbol(sym.PRINT);
+          { return symbol(SymbolConstants.PRINT);
           }
         case 107: break;
         case 49: 
-          { return symbol(sym.DOUBLE);
+          { return symbol(SymbolConstants.DOUBLE);
           }
         case 108: break;
         case 50: 
-          { return symbol(sym.RETURN);
+          { return symbol(SymbolConstants.RETURN);
           }
         case 109: break;
         case 51: 
-          { return symbol(sym.STRING);
+          { return symbol(SymbolConstants.STRING);
           }
         case 110: break;
         case 52: 
-          { return symbol(sym.SWITCH);
+          { return symbol(SymbolConstants.SWITCH);
           }
         case 111: break;
         case 53: 
-          { return symbol(sym.BOOLEAN);
+          { return symbol(SymbolConstants.BOOLEAN);
           }
         case 112: break;
         case 54: 
-          { return symbol(sym.READINT);
+          { return symbol(SymbolConstants.READINT);
           }
         case 113: break;
         case 55: 
-          { return symbol(sym.READCHAR);
+          { return symbol(SymbolConstants.READCHAR);
           }
         case 114: break;
         case 56: 
-          { return symbol(sym.FUNCTION);
+          { return symbol(SymbolConstants.FUNCTION);
           }
         case 115: break;
         case 57: 
-          { return symbol(sym.MAINBEGIN);
+          { return symbol(SymbolConstants.MAINBEGIN);
           }
         case 116: break;
         case 58: 
-          { return symbol(sym.READDOUBLE);
+          { return symbol(SymbolConstants.READDOUBLE);
           }
         case 117: break;
         case 59: 
-          { return symbol(sym.READSTRING);
+          { return symbol(SymbolConstants.READSTRING);
           }
         case 118: break;
         default: 
           if (zzInput == YYEOF && zzStartRead == zzCurrentPos) {
             zzAtEOF = true;
             zzDoEOF();
-              {   return symbol(sym.EOF);
+              {   return symbol(SymbolConstants.EOF);
  }
           } 
           else {

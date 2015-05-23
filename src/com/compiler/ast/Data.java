@@ -1,4 +1,4 @@
-package com.compiler.hashtag;
+package com.compiler.ast;
 
 /**
  * Created by Wilmer Carranza on 01/05/2015.

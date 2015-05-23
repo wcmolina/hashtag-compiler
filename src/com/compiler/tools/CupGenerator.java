@@ -3,12 +3,14 @@ package com.compiler.tools;
 public class CupGenerator {
 
     public static void main(String[] args) {
-        String opts[] = new String[5];
+        String opts[] = new String[7];
         opts[0] = "-destdir";
         opts[1] = "src\\com\\compiler\\hashtag";
         opts[2] = "-parser";
         opts[3] = "Parser";
-        opts[4] = "res\\parsers\\parser.cup";
+        opts[4] = "-symbols";
+        opts[5] = "SymbolConstants";
+        opts[6] = "res\\parsers\\parser.cup";
         //opts[4] = "res\\parsers\\test.cup";
 
         try {

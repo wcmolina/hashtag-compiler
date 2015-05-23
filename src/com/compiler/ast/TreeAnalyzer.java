@@ -1,9 +1,6 @@
-package com.compiler.tools;
+package com.compiler.ast;
 
-import com.compiler.hashtag.Data;
 import com.compiler.hashtag.Editor;
-import com.compiler.hashtag.Node;
-import com.compiler.hashtag.Scope;
 
 import java.util.Arrays;
 import java.util.Stack;

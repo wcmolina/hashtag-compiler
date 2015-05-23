@@ -369,24 +369,24 @@ public class Lexer implements java_cup.runtime.Scanner {
   private int zzFinalHighSurrogate = 0;
 
   /* user code: */
-    /*para los simbolos generales*/
-    public Symbol symbol(int type){
-      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext());
-    }
 
-    /*para el tipo de token con su valor*/
-    public Symbol symbol (int type, Object value){
-      return new JavaSymbol(type,yyline+1,yycolumn+1,yytext(),value);
-    }
-
-    public String current_lexeme() {
-        int l = yyline+1;
-        int c = yycolumn+1;
-        return yytext();
-      }
-
+    JavaSymbol cur_sym = null;
     StringBuilder string = new StringBuilder();
     StringBuilder comment = new StringBuilder();
+
+    private Symbol symbol(int type){
+        cur_sym = new JavaSymbol(type,yyline+1,yycolumn+1,yytext());
+        return cur_sym;
+    }
+
+    private Symbol symbol (int type, Object value){
+        cur_sym = new JavaSymbol(type,yyline+1,yycolumn+1,yytext(),value);
+        return cur_sym;
+    }
+
+    public JavaSymbol current_symbol() {
+        return cur_sym;
+      }
 
 
   /**

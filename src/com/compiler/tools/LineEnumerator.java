@@ -3,14 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.compiler.hashtag;
+package com.compiler.tools;
 
 /**
  *
  * @author Wilmer Carranza
  */
 import java.awt.*;
-import java.awt.event.*;
 import java.beans.*;
 import java.util.HashMap;
 import javax.swing.*;
@@ -20,14 +19,14 @@ import javax.swing.text.*;
 
 /**
  * This class will display line numbers for a related text component. The text
- component must use the same line height for each line. LineNumber
+ component must use the same line height for each line. LineEnumerator
  supports wrapped lines and will highlight the line number of the current line
  in the text component.
 
  This class was designed to be used as a component added to the row header of
  a JScrollPane.
  */
-public class LineNumber extends JPanel
+public class LineEnumerator extends JPanel
         implements CaretListener, DocumentListener, PropertyChangeListener {
 
     public final static float LEFT = 0.0f;
@@ -62,7 +61,7 @@ public class LineNumber extends JPanel
      *
      * @param component the related text component
      */
-    public LineNumber(JTextComponent component) {
+    public LineEnumerator(JTextComponent component) {
         this(component, 3);
     }
 
@@ -73,7 +72,7 @@ public class LineNumber extends JPanel
      * @param minimumDisplayDigits the number of digits used to calculate the
      * minimum width of the component
      */
-    public LineNumber(JTextComponent component, int minimumDisplayDigits) {
+    public LineEnumerator(JTextComponent component, int minimumDisplayDigits) {
         this.component = component;
 
         setFont(component.getFont());
@@ -163,9 +162,9 @@ public class LineNumber extends JPanel
      * Specify the horizontal alignment of the digits within the component.
      * Common values would be:
      * <ul>
-     * <li>LineNumber.LEFT
- <li>LineNumber.CENTER
- <li>LineNumber.RIGHT (default)
+     * <li>LineEnumerator.LEFT
+ <li>LineEnumerator.CENTER
+ <li>LineEnumerator.RIGHT (default)
  </ul>
      *
      * @param currentLineForeground the Color used to render the current line

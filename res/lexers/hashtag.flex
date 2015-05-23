@@ -34,7 +34,7 @@ import java_cup.runtime.Symbol;
 %}
 
 %eofval{
-  return symbol(sym.EOF);
+  return symbol(SymbolConstants.EOF);
 %eofval}
 
 
@@ -66,64 +66,64 @@ COMENTARIOUNALINEA={HASHTAG}.*
     {COMILLAS}              {string.setLength(0); yybegin(SSTRING);}
     {LLAVEIZQ}              {comment.setLength(0); yybegin(COMMENT);}
     {COMENTARIOUNALINEA}    {}
-    {NUMERO}                {return symbol(sym.NUMERO, new Integer(yytext()));}
-    {REAL}                  {return symbol(sym.REAL, new Double(yytext()));}
-    {CARACTER}              {return symbol(sym.CARACTER, new Character(yytext().charAt(1)));}  
+    {NUMERO}                {return symbol(SymbolConstants.NUMERO, new Integer(yytext()));}
+    {REAL}                  {return symbol(SymbolConstants.REAL, new Double(yytext()));}
+    {CARACTER}              {return symbol(SymbolConstants.CARACTER, new Character(yytext().charAt(1)));}  
     {SALTOLINEA}            {}
     {ESPACIO}               {}
     
     /*-----------------------------------------OPERADORES----------------------------------*/
-    "+"              {return symbol(sym.SUMA);}
-    "-"              {return symbol(sym.MENOS);}
-    "/"              {return symbol(sym.DIV);}
-    "*"              {return symbol(sym.MULT);}
-    ">"              {return symbol(sym.MAYOR);}
-    "<"              {return symbol(sym.MENOR);}
-    ">="             {return symbol(sym.MAYORIGUAL);}
-    "<="             {return symbol(sym.MENORIGUAL);}
-    "not"            {return symbol(sym.NOT);}
-    "!="             {return symbol(sym.DIFERENTE);}
-    "=="             {return symbol(sym.IGUAL);}
-    "="              {return symbol(sym.ASIGNACION);}
+    "+"              {return symbol(SymbolConstants.SUMA);}
+    "-"              {return symbol(SymbolConstants.MENOS);}
+    "/"              {return symbol(SymbolConstants.DIV);}
+    "*"              {return symbol(SymbolConstants.MULT);}
+    ">"              {return symbol(SymbolConstants.MAYOR);}
+    "<"              {return symbol(SymbolConstants.MENOR);}
+    ">="             {return symbol(SymbolConstants.MAYORIGUAL);}
+    "<="             {return symbol(SymbolConstants.MENORIGUAL);}
+    "not"            {return symbol(SymbolConstants.NOT);}
+    "!="             {return symbol(SymbolConstants.DIFERENTE);}
+    "=="             {return symbol(SymbolConstants.IGUAL);}
+    "="              {return symbol(SymbolConstants.ASIGNACION);}
     /*---------------------------------------SIGNOS----------------------------------------*/
-    "("              {return symbol(sym.PARIZQ);}
-    ")"              {return symbol(sym.PARDER);}
-    "%"              {return symbol(sym.MOD);}
-    ","              {return symbol(sym.COMA);}
-    ";"              {return symbol(sym.PUNTOCOMA);}
-    ":"              {return symbol(sym.DOSPUNTOS);}
+    "("              {return symbol(SymbolConstants.PARIZQ);}
+    ")"              {return symbol(SymbolConstants.PARDER);}
+    "%"              {return symbol(SymbolConstants.MOD);}
+    ","              {return symbol(SymbolConstants.COMA);}
+    ";"              {return symbol(SymbolConstants.PUNTOCOMA);}
+    ":"              {return symbol(SymbolConstants.DOSPUNTOS);}
     /*------------------------------TIPOS DE DATOS-----------------------------------------*/
-    "int"            {return symbol(sym.INT);}
-    "double"         {return symbol(sym.DOUBLE);}
-    "char"           {return symbol (sym.CHAR);}
-    "string"         {return symbol(sym.STRING);}
-    "boolean"        {return symbol(sym.BOOLEAN);}
+    "int"            {return symbol(SymbolConstants.INT);}
+    "double"         {return symbol(SymbolConstants.DOUBLE);}
+    "char"           {return symbol (SymbolConstants.CHAR);}
+    "string"         {return symbol(SymbolConstants.STRING);}
+    "boolean"        {return symbol(SymbolConstants.BOOLEAN);}
     /*-----------------------------PALABRAS RESERVADAS-------------------------------------*/
-    "and"            {return symbol(sym.AND);}
-    "or"             {return symbol(sym.OR);}
-    "for"            {return symbol(sym.FOR);}
-    "if"             {return symbol(sym.IF);}
-    "else"           {return symbol(sym.ELSE);}
-    "while"          {return symbol(sym.WHILE);}
-    "function"       {return symbol(sym.FUNCTION);}
-    "mainbegin"      {return symbol(sym.MAINBEGIN);}
-    "begin"          {return symbol(sym.BEGIN); }
-    "switch"         {return symbol(sym.SWITCH);}
-    "case"           {return symbol(sym.CASE);}
-    "do"             {return symbol(sym.DO);}
-    "end"            {return symbol(sym.END); }
-    "true"           {return symbol(sym.TRUE);}
-    "false"          {return symbol(sym.FALSE);}
-    "other"          {return symbol(sym.OTHER);}
-    "break"          {return symbol(sym.BREAK);}
-    "return"         {return symbol(sym.RETURN);}
-    "readint"        {return symbol(sym.READINT);}
-    "readdouble"     {return symbol(sym.READDOUBLE);}
-    "readstring"     {return symbol(sym.READSTRING);}
-    "readchar"       {return symbol(sym.READCHAR);}
-    "print"          {return symbol(sym.PRINT);}
-    "void"           {return symbol(sym.VOID);}
-    {IDENTIFICADOR}  {return symbol(sym.IDENTIFICADOR, yytext());}
+    "and"            {return symbol(SymbolConstants.AND);}
+    "or"             {return symbol(SymbolConstants.OR);}
+    "for"            {return symbol(SymbolConstants.FOR);}
+    "if"             {return symbol(SymbolConstants.IF);}
+    "else"           {return symbol(SymbolConstants.ELSE);}
+    "while"          {return symbol(SymbolConstants.WHILE);}
+    "function"       {return symbol(SymbolConstants.FUNCTION);}
+    "mainbegin"      {return symbol(SymbolConstants.MAINBEGIN);}
+    "begin"          {return symbol(SymbolConstants.BEGIN); }
+    "switch"         {return symbol(SymbolConstants.SWITCH);}
+    "case"           {return symbol(SymbolConstants.CASE);}
+    "do"             {return symbol(SymbolConstants.DO);}
+    "end"            {return symbol(SymbolConstants.END); }
+    "true"           {return symbol(SymbolConstants.TRUE);}
+    "false"          {return symbol(SymbolConstants.FALSE);}
+    "other"          {return symbol(SymbolConstants.OTHER);}
+    "break"          {return symbol(SymbolConstants.BREAK);}
+    "return"         {return symbol(SymbolConstants.RETURN);}
+    "readint"        {return symbol(SymbolConstants.READINT);}
+    "readdouble"     {return symbol(SymbolConstants.READDOUBLE);}
+    "readstring"     {return symbol(SymbolConstants.READSTRING);}
+    "readchar"       {return symbol(SymbolConstants.READCHAR);}
+    "print"          {return symbol(SymbolConstants.PRINT);}
+    "void"           {return symbol(SymbolConstants.VOID);}
+    {IDENTIFICADOR}  {return symbol(SymbolConstants.IDENTIFICADOR, yytext());}
     [^]              {int l = yyline+1; int c = yycolumn+1;
                         Editor.console.setText(Editor.console.getText()+"Error: (line: " + l + ", column: " + c + "). Unrecognized token " + yytext() + " : Lexical error\n");
                     }
@@ -136,6 +136,6 @@ COMENTARIOUNALINEA={HASHTAG}.*
 
 <SSTRING>{
     
-    {COMILLAS}          {yybegin (YYINITIAL); return symbol(sym.CADENA, string.toString());  }
+    {COMILLAS}          {yybegin (YYINITIAL); return symbol(SymbolConstants.CADENA, string.toString());  }
     .                   { string.append(yytext());}
 } 

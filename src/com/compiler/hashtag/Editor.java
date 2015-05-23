@@ -1,7 +1,9 @@
 package com.compiler.hashtag;
 
 import com.compiler.syntaxhighlight.*;
-import com.compiler.tools.TreeAnalyzer;
+import com.compiler.ast.TreeAnalyzer;
+import com.compiler.tools.LineEnumerator;
+import com.compiler.tools.LinePainter;
 
 import java.awt.Color;
 import java.awt.Desktop;
@@ -45,11 +47,22 @@ import javax.swing.text.Utilities;
 
 public class Editor extends javax.swing.JFrame {
 
-    private String FILE_PATH;
-    private JFrame ASTFrame;
-    private JPopupMenu popup;
-    private SyntaxHighlighter syntax;
-    private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane
+    private String filePath;
+    private JFrame treeFrame;
+    private JPopupMenu popupMenu;
+    private SyntaxHighlighter syntaxHighlighter;
+    private boolean contentChanged;
+
+    private final StyleContext styleContext = StyleContext.getDefaultStyleContext();
+
+    private final AttributeSet KEYWORD = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#72a9cd"));
+    private final AttributeSet PLAIN = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#CCCCCC"));
+    private final AttributeSet COMMENT = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
+    private final AttributeSet STRING = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#f99b36"));
+    private final AttributeSet FUNCTION = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#b4d864"));
+    private final AttributeSet NUMBER = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#aa6164"));
+    private final AttributeSet OPERATOR = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#9876aa"));
+    private final AttributeSet READ = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#f7f36f"));
 
     //todo: highlight in red the lines that have errors
     public Editor() {
@@ -58,54 +71,43 @@ public class Editor extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         fillRecentItems();
 
-        final StyleContext cont = StyleContext.getDefaultStyleContext();
-
-        final AttributeSet keyword = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#72a9cd"));
-        final AttributeSet plain = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#CCCCCC"));
-        final AttributeSet comment = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
-        final AttributeSet string = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#f99b36"));
-        final AttributeSet function = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#b4d864"));
-        final AttributeSet number = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#aa6164"));
-        final AttributeSet operator = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#9876aa"));
-        final AttributeSet read = cont.addAttribute(cont.getEmptySet(), StyleConstants.Foreground, Color.decode("#f7f36f"));
-
         // <editor-fold desc="Syntax highlighter code">
         DefaultStyledDocument doc = new DefaultStyledDocument() {
             @Override
             public void insertString(int offset, String str, AttributeSet a) throws BadLocationException { //cuando se insertan caracteres.
                 super.insertString(offset, str, a);
                 String text = getText(0, getLength());
-                syntax = new SyntaxHighlighter(new java.io.StringReader(text));
+                syntaxHighlighter = new SyntaxHighlighter(new java.io.StringReader(text));
                 Token val;
                 try {
-                    while ((val = syntax.yylex()) != null) {
+                    while ((val = syntaxHighlighter.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
-                                setCharacterAttributes(val.start, val.length, keyword, true);
+                                setCharacterAttributes(val.start, val.length, KEYWORD, true);
                                 break;
                             case TokenType.COMMENT:
-                                setCharacterAttributes(val.start, val.length, comment, true);
+                                setCharacterAttributes(val.start, val.length, COMMENT, true);
                                 break;
                             case TokenType.CADENA:
-                                setCharacterAttributes(val.start, val.length, string, true);
+                                setCharacterAttributes(val.start, val.length, STRING, true);
                                 break;
                             case TokenType.FUNCTION:
-                                setCharacterAttributes(val.start, val.length, function, true);
+                                setCharacterAttributes(val.start, val.length, FUNCTION, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, number, true);
+                                setCharacterAttributes(val.start, val.length, NUMBER, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, true);
+                                setCharacterAttributes(val.start, val.length, OPERATOR, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, read, true);
+                                setCharacterAttributes(val.start, val.length, READ, true);
                                 break;
                             case TokenType.CARACTER:
-                                setCharacterAttributes(val.start, val.length, string, true);
+                                setCharacterAttributes(val.start, val.length, STRING, true);
                                 break;
                             default:
-                                setCharacterAttributes(val.start, val.length, plain, true);
+                                setCharacterAttributes(val.start, val.length, PLAIN, true);
                                 break;
                         }
                     }
@@ -118,37 +120,37 @@ public class Editor extends javax.swing.JFrame {
             public void remove(int offs, int len) throws BadLocationException { //para cuando se borra algun caracter
                 super.remove(offs, len);
                 String text = getText(0, getLength());
-                syntax = new SyntaxHighlighter(new java.io.StringReader(text));
+                syntaxHighlighter = new SyntaxHighlighter(new java.io.StringReader(text));
                 Token val;
                 try {
-                    while ((val = syntax.yylex()) != null) {
+                    while ((val = syntaxHighlighter.yylex()) != null) {
                         switch (val.type) {
                             case TokenType.KEYWORD:
-                                setCharacterAttributes(val.start, val.length, keyword, true);
+                                setCharacterAttributes(val.start, val.length, KEYWORD, true);
                                 break;
                             case TokenType.COMMENT:
-                                setCharacterAttributes(val.start, val.length, comment, true);
+                                setCharacterAttributes(val.start, val.length, COMMENT, true);
                                 break;
                             case TokenType.CADENA:
-                                setCharacterAttributes(val.start, val.length, string, true);
+                                setCharacterAttributes(val.start, val.length, STRING, true);
                                 break;
                             case TokenType.FUNCTION:
-                                setCharacterAttributes(val.start, val.length, function, true);
+                                setCharacterAttributes(val.start, val.length, FUNCTION, true);
                                 break;
                             case TokenType.NUMBER:
-                                setCharacterAttributes(val.start, val.length, number, true);
+                                setCharacterAttributes(val.start, val.length, NUMBER, true);
                                 break;
                             case TokenType.OPERATOR:
-                                setCharacterAttributes(val.start, val.length, operator, true);
+                                setCharacterAttributes(val.start, val.length, OPERATOR, true);
                                 break;
                             case TokenType.READ:
-                                setCharacterAttributes(val.start, val.length, read, true);
+                                setCharacterAttributes(val.start, val.length, READ, true);
                                 break;
                             case TokenType.CARACTER:
-                                setCharacterAttributes(val.start, val.length, string, true);
+                                setCharacterAttributes(val.start, val.length, STRING, true);
                                 break;
                             default:
-                                setCharacterAttributes(val.start, val.length, plain, true);
+                                setCharacterAttributes(val.start, val.length, PLAIN, true);
                                 break;
                         }
                     }
@@ -165,51 +167,26 @@ public class Editor extends javax.swing.JFrame {
         }
 
         TabSet tabSet = new TabSet(tabs);
-        AttributeSet paraSet = cont.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
+        AttributeSet paraSet = styleContext.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
 
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
         LinePainter linePainter = new LinePainter(codeTextPane, Color.decode("#323e41"));
-        jsp.setViewportView(codeTextPane);
-        LineNumber tln = new LineNumber(codeTextPane);
+        scrollPane.setViewportView(codeTextPane);
+        LineEnumerator tln = new LineEnumerator(codeTextPane);
         tln.setBackground(Color.decode("#1b2426"));
-        jsp.setRowHeaderView(tln);
+        scrollPane.setRowHeaderView(tln);
 
-        // <editor-fold desc="Document listener">
-/*
-        DocumentListener documentListener = new DocumentListener() {
-            @Override
-            public void changedUpdate(DocumentEvent documentEvent) {
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent documentEvent) {
-                setContentChange(true);
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent documentEvent) {
-                setContentChange(true);
-            }
-        };
-*/
-        // </editor-fold>
-        //this.codeTextPane.getDocument().addDocumentListener(documentListener);
         this.codeTextPane.addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(CaretEvent e) {
                 status.setText("Line " + getRow(e.getDot(), (JTextComponent) e.getSource()) + ", Column " + getColumn(e.getDot(), (JTextComponent) e.getSource()));
             }
         });
-        CONTENT_CHANGED = false;
+        contentChanged = false;
         this.consolePane.setVisible(false);
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -218,7 +195,7 @@ public class Editor extends javax.swing.JFrame {
         consolePane = new javax.swing.JScrollPane();
         console = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
-        jsp = new javax.swing.JScrollPane();
+        scrollPane = new javax.swing.JScrollPane();
         codeTextPane = new javax.swing.JTextPane();
         statusPanel = new javax.swing.JPanel();
         status = new javax.swing.JLabel();
@@ -265,7 +242,7 @@ public class Editor extends javax.swing.JFrame {
                 codeTextPaneMouseClicked(evt);
             }
         });
-        jsp.setViewportView(codeTextPane);
+        scrollPane.setViewportView(codeTextPane);
 
         statusPanel.setBackground(new java.awt.Color(83, 83, 83));
         statusPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -397,7 +374,7 @@ public class Editor extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jsp, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(scrollPane, javax.swing.GroupLayout.Alignment.TRAILING)
                         .addGroup(layout.createSequentialGroup()
                                 .addGap(479, 479, 479)
                                 .addComponent(jLabel6)
@@ -408,7 +385,7 @@ public class Editor extends javax.swing.JFrame {
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
-                                .addComponent(jsp, javax.swing.GroupLayout.DEFAULT_SIZE, 506, Short.MAX_VALUE)
+                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 506, Short.MAX_VALUE)
                                 .addGap(0, 0, 0)
                                 .addComponent(jLabel6)
                                 .addGap(0, 0, 0)
@@ -494,10 +471,6 @@ public class Editor extends javax.swing.JFrame {
     }
     //</editor-fold>
 
-    private void setContentChange(boolean b) {
-        CONTENT_CHANGED = b;
-    }
-
     private int getRow(int pos, JTextComponent editor) {
         int rn = (pos == 0) ? 1 : 0;
         try {
@@ -528,11 +501,11 @@ public class Editor extends javax.swing.JFrame {
             extension = file.substring(i + 1);
         }
         if (extension.equalsIgnoreCase("ht")) {
-            FILE_PATH = file;
+            filePath = file;
             this.codeTextPane.setText("");
             FileReader fr = null;
             try {
-                fr = new FileReader(FILE_PATH);
+                fr = new FileReader(filePath);
                 BufferedReader br = new BufferedReader(fr);
                 StringBuilder str = new StringBuilder();
                 String text;
@@ -542,8 +515,8 @@ public class Editor extends javax.swing.JFrame {
                     }
                     str.deleteCharAt(str.length() - 1); //removes empty line at the end.
                     this.codeTextPane.setText(str.toString());
-                    this.setTitle(FILE_PATH + " - Hashtag Compiler");
-                    CONTENT_CHANGED = false;
+                    this.setTitle(filePath + " - Hashtag Compiler");
+                    contentChanged = false;
                     resetComponents();
                     this.codeTextPane.setCaretPosition(0);
 
@@ -551,7 +524,7 @@ public class Editor extends javax.swing.JFrame {
                     Writer writer = null;
                     try {
                         writer = new BufferedWriter(new FileWriter("cache/recent.cache", true));
-                        writer.write(FILE_PATH + "\n");
+                        writer.write(filePath + "\n");
                         writer.close();
                     } catch (IOException ex) {
                         Editor.console.setText("Error: " + ex.getMessage());
@@ -588,9 +561,9 @@ public class Editor extends javax.swing.JFrame {
 
     private void resetComponents() {
         Editor.console.setText("");
-        if (ASTFrame != null) {
-            ASTFrame.setVisible(false);
-            ASTFrame = null;
+        if (treeFrame != null) {
+            treeFrame.setVisible(false);
+            treeFrame = null;
         }
         this.showTreeMenuItem.setEnabled(false);
     }
@@ -646,10 +619,10 @@ public class Editor extends javax.swing.JFrame {
     }//GEN-LAST:event_clearTextMenuItemActionPerformed
 
     private void showTreeMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showTreeMenuItemActionPerformed
-        if (this.ASTFrame == null) {
+        if (this.treeFrame == null) {
             JOptionPane.showMessageDialog(rootPane, "Unexpected error. JFrame is null");
         } else {
-            this.ASTFrame.setVisible(true);
+            this.treeFrame.setVisible(true);
         }
     }//GEN-LAST:event_showTreeMenuItemActionPerformed
 
@@ -658,21 +631,21 @@ public class Editor extends javax.swing.JFrame {
     }//GEN-LAST:event_toggleConsoleMenuItemActionPerformed
 
     private void saveMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveMenuItemActionPerformed
-        if (FILE_PATH == null) { //es porque aun no ha abierto un archivo y quiere guardar lo que hay en el textpane...
+        if (filePath == null) { //es porque aun no ha abierto un archivo y quiere guardar lo que hay en el textpane...
             JFileChooser fc = new JFileChooser();
             fc.setDialogTitle("Save As");
             int userSelection = fc.showSaveDialog(this);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fc.getSelectedFile();
-                FILE_PATH = fileToSave.getAbsolutePath();
-                save(FILE_PATH, this.codeTextPane.getText());
-                this.setTitle(FILE_PATH + " - Hashtag Compiler");
+                filePath = fileToSave.getAbsolutePath();
+                save(filePath, this.codeTextPane.getText());
+                this.setTitle(filePath + " - Hashtag Compiler");
             }
         } else { //ya hay una referencia de un archivo abierto y quiere guardarlo.
             int dialogResult = JOptionPane.showConfirmDialog(null, "File will be overwritten. Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
             if (dialogResult == JOptionPane.YES_OPTION) {
-                save(FILE_PATH, this.codeTextPane.getText());
-                CONTENT_CHANGED = false;
+                save(filePath, this.codeTextPane.getText());
+                contentChanged = false;
             }
 
         }
@@ -685,15 +658,15 @@ public class Editor extends javax.swing.JFrame {
         int userSelection = fc.showSaveDialog(this);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = fc.getSelectedFile();
-            FILE_PATH = fileToSave.getAbsolutePath();
-            save(FILE_PATH, this.codeTextPane.getText());
-            this.setTitle(FILE_PATH + " - Hashtag Compiler");
+            filePath = fileToSave.getAbsolutePath();
+            save(filePath, this.codeTextPane.getText());
+            this.setTitle(filePath + " - Hashtag Compiler");
 
             //add newly created file to recents...
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new FileWriter("cache/recent.cache", true));
-                writer.write(FILE_PATH + "\n");
+                writer.write(filePath + "\n");
                 writer.close();
             } catch (IOException ex) {
                 Editor.console.setText("Error: " + ex.getMessage());
@@ -703,7 +676,7 @@ public class Editor extends javax.swing.JFrame {
     }//GEN-LAST:event_saveAsMenuItemActionPerformed
 
     private void exitMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitMenuItemActionPerformed
-        if (CONTENT_CHANGED) {
+        if (contentChanged) {
             int dialogResult = JOptionPane.showConfirmDialog(null, "Close without saving?", "Warning", JOptionPane.YES_NO_CANCEL_OPTION);
             if (dialogResult == JOptionPane.YES_OPTION) {
                 System.exit(1);
@@ -754,24 +727,24 @@ public class Editor extends javax.swing.JFrame {
                         consolePane.setVisible(true);
                         this.setVisible(true);
                     }
-                    if (this.ASTFrame == null) {
+                    if (this.treeFrame == null) {
                         String tree = p.root.toString("", true);
                         this.showTreeMenuItem.setEnabled(true);
                         JTextArea info = new JTextArea(tree);
                         info.setFont(new Font("Consolas", Font.PLAIN, 12));
                         info.setEditable(false);
                         JScrollPane scroll = new JScrollPane(info);
-                        ASTFrame = new JFrame();
-                        ASTFrame.setSize(new Dimension(550, 700));
-                        ASTFrame.setResizable(true);
-                        ASTFrame.add(new JPanel() {
+                        treeFrame = new JFrame();
+                        treeFrame.setSize(new Dimension(550, 700));
+                        treeFrame.setResizable(true);
+                        treeFrame.add(new JPanel() {
 
                             {
                                 setBackground(Color.WHITE);
                             }
                         });
-                        ASTFrame.getContentPane().add(scroll);
-                        ASTFrame.setTitle("[AST] - " + FILE_PATH);
+                        treeFrame.getContentPane().add(scroll);
+                        treeFrame.setTitle("[AST] - " + filePath);
                         this.showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + "\nCompleted. Go to 'View > Show AST' if you want to visualize the tree.");
                     }
@@ -795,8 +768,8 @@ public class Editor extends javax.swing.JFrame {
 
     // <editor-fold desc="init right click popup menu">
     private void initPopupMenu() {
-        if (popup == null) {
-            popup = new JPopupMenu();
+        if (popupMenu == null) {
+            popupMenu = new JPopupMenu();
             JMenuItem copy = new JMenuItem("Copy        Ctrl+C");
             JMenuItem cut = new JMenuItem("Cut           Ctrl+X");
             JMenuItem paste = new JMenuItem("Paste        Ctrl+V");
@@ -835,9 +808,9 @@ public class Editor extends javax.swing.JFrame {
 
                 }
             });
-            popup.add(copy);
-            popup.add(cut);
-            popup.add(paste);
+            popupMenu.add(copy);
+            popupMenu.add(cut);
+            popupMenu.add(paste);
         }
     }
     // </editor-fold>
@@ -845,13 +818,10 @@ public class Editor extends javax.swing.JFrame {
     private void codeTextPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_codeTextPaneMouseClicked
         initPopupMenu();
         if (SwingUtilities.isRightMouseButton(evt)) {
-            popup.show(this.codeTextPane, evt.getX(), evt.getY());
+            popupMenu.show(this.codeTextPane, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_codeTextPaneMouseClicked
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -898,7 +868,7 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu helpMenu;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JScrollPane jsp;
+    private javax.swing.JScrollPane scrollPane;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JMenu openRecentMenuItem;
