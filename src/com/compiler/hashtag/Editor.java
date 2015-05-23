@@ -257,7 +257,7 @@ public class Editor extends javax.swing.JFrame {
 
         codeTextPane.setBackground(new java.awt.Color(27, 36, 38));
         codeTextPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        codeTextPane.setFont(new java.awt.Font("Consolas", 0, 12)); // NOI18N
+        codeTextPane.setFont(new java.awt.Font("Consolas", 0, 13)); // NOI18N
         codeTextPane.setForeground(new java.awt.Color(204, 204, 204));
         codeTextPane.setCaretColor(new java.awt.Color(255, 255, 255));
         codeTextPane.addMouseListener(new java.awt.event.MouseAdapter() {
