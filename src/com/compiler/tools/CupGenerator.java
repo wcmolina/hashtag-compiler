@@ -9,7 +9,7 @@ public class CupGenerator {
         opts[2] = "-parser";
         opts[3] = "Parser";
         opts[4] = "res\\parsers\\parser.cup";
-        //opts[4] = "src\\hashtag\\test.cup";
+        //opts[4] = "res\\parsers\\test.cup";
 
         try {
             java_cup.Main.main(opts);

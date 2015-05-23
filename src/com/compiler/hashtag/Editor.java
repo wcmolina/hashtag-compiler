@@ -32,7 +32,16 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.text.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
+import javax.swing.text.Utilities;
 
 public class Editor extends javax.swing.JFrame {
 
@@ -41,7 +50,6 @@ public class Editor extends javax.swing.JFrame {
     private JPopupMenu popup;
     private SyntaxHighlighter syntax;
     private boolean CONTENT_CHANGED; //flag to see if there are changes in the jtextpane
-    private LinePainter linePainter;
 
     //todo: highlight in red the lines that have errors
     public Editor() {
@@ -161,7 +169,7 @@ public class Editor extends javax.swing.JFrame {
 
         this.codeTextPane.setStyledDocument(doc);
         this.codeTextPane.setParagraphAttributes(paraSet, false);
-        linePainter = new LinePainter(codeTextPane, Color.decode("#323e41"));
+        LinePainter linePainter = new LinePainter(codeTextPane, Color.decode("#323e41"));
         jsp.setViewportView(codeTextPane);
         LineNumber tln = new LineNumber(codeTextPane);
         tln.setBackground(Color.decode("#1b2426"));
@@ -769,7 +777,7 @@ public class Editor extends javax.swing.JFrame {
                     }
                     Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
                     TreeAnalyzer analyzer = new TreeAnalyzer(p.root); //aqui se le manda el AST...
-                    System.out.println("errors: "+TreeAnalyzer.semantic_errors);
+                    System.out.println("errors: " + TreeAnalyzer.semantic_errors);
 
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + p.errors);

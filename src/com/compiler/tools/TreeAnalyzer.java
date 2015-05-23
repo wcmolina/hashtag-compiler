@@ -16,7 +16,7 @@ import java.util.Stack;
 public class TreeAnalyzer {
 
     private static final String ARITH_OPERATORS[] = {"+", "-", "*", "/", "%"};
-    private static final String COMP_OPERATORS[] = {">", "<", "not", "==", "<=", ">="};
+    private static final String COMP_OPERATORS[] = {">", "<", "==", "<=", ">=","!="};
     private static final String BLOCK_STATEMENTS[] = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE", "CASE"};
     public static int semantic_errors = 0;
     private Stack<Scope> scopeStack = new Stack<Scope>();
