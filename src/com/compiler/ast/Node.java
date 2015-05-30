@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Node {
-    /*
-    todo: in parser.cup, I think IDENTIFICADOR has to be a Node...
-    * */
+
     private ArrayList<Node> children;
     public String label;
     private Data data;

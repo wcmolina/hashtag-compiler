@@ -5,7 +5,10 @@ import com.compiler.ast.TreeAnalyzer;
 import com.compiler.tools.LineEnumerator;
 import com.compiler.tools.LinePainter;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -19,21 +22,40 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.text.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
+import javax.swing.text.Utilities;
 
-//todo: highlight in red the lines that have errors (done, still tetsing though...)
+    //todo: highlight in red the lines that have errors (done, seems to work)
     /*todo: improve insertion/removing of characters to be more fluent... (parse only on keyreleased)*/
 
-public class Editor extends javax.swing.JFrame {
+public class Editor extends JFrame {
 
     private String filePath;
     private JFrame treeFrame;
     private JPopupMenu popupMenu;
     private boolean contentChanged;
-    private int tabIdentionDepth = 0;
 
     private final StyleContext styleContext = StyleContext.getDefaultStyleContext();
 
@@ -41,7 +63,7 @@ public class Editor extends javax.swing.JFrame {
     private final AttributeSet PLAIN = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#CCCCCC"));
     private final AttributeSet COMMENT = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
     private final AttributeSet STRING = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#F99B36"));
-    private final AttributeSet FUNCTION = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#B4D864"));
+    //private final AttributeSet FUNCTION = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#B4D864"));
     //private final AttributeSet NUMBER = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#AA6164"));
     private final AttributeSet OPERATOR = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#9876AA"));
     //private final AttributeSet READ = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#F7F36F"));
@@ -117,7 +139,7 @@ public class Editor extends javax.swing.JFrame {
                                 setCharacterAttributes(token.start, token.length, STRING, true);
                                 break;
                             case TokenConstants.FUNCTION:
-                                setCharacterAttributes(token.start, token.length, FUNCTION, true);
+                                setCharacterAttributes(token.start, token.length, KEYWORD, true);
                                 break;
                             case TokenConstants.NUMBER:
                                 setCharacterAttributes(token.start, token.length, OPERATOR, true);
