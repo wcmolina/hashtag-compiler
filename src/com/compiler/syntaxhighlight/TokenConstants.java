@@ -16,5 +16,6 @@ public class TokenConstants {
     public static final int OPERATOR = 11;
     public static final int NUMBER = 12;
     public static final int PRINT = 13;
+    public static final int SEMI = 14;
 
 }

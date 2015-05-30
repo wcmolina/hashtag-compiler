@@ -43,15 +43,16 @@ public class Data {
         token = tok;
         line = lin;
         column = col;
-        type = "";
+        type = "null";
         value = null;
+        scope = null;
         context = -1;
         //get the type from val
         if (val != null) {
             if (val instanceof String) {
                 type = "string";
                 value = val;
-                //correct column number
+                //fix column number
                 column -= ((String) val).length() - 1;
             } else if (val instanceof Integer) {
                 type = "int";
@@ -65,12 +66,16 @@ public class Data {
             } else if (val instanceof Double) {
                 type = "double";
                 value = ((Double) val).doubleValue();
+            } else if (val instanceof FunctionType) {
+                type = "function";
+                //assign the whole object... FunctionType should contain information about the function being declared.
+                value = (FunctionType) val;
             }
         }
     }
 
-    public Data() { //used only for non-relevant tokens, where their type is all I need
-        lexeme = token = type = "";
+    public Data() { //can't think of a use for this, but i'll leave it just in case...
+        lexeme = token = type = "null";
         line = column = context = -1;
         value = null;
     }
@@ -87,6 +92,14 @@ public class Data {
         return line;
     }
 
+    public Scope getScope() {
+        return scope;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
+
     public int getColumn() {
         return column;
     }
@@ -100,7 +113,7 @@ public class Data {
             if (obj instanceof String) {
                 type = "string";
                 value = obj;
-                //correct column number
+                //fix column number
                 column -= ((String) obj).length() - 1;
             } else if (obj instanceof Integer) {
                 type = "int";
@@ -114,6 +127,9 @@ public class Data {
             } else if (obj instanceof Double) {
                 type = "double";
                 value = ((Double) obj).doubleValue();
+            } else if (obj instanceof FunctionType) {
+                type = "function";
+                value = (FunctionType) obj;
             }
         }
     }
@@ -144,10 +160,11 @@ public class Data {
                 ", column=" + column +
                 ", type='" + type + '\'' +
                 ", value=" + value +
+                ", scope=" + scope.getID() +
                 '}';
     }
 
     public String getTabularForm() { //for CSV saving purposes (makes it easier I think)
-        return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column;
+        return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column + "," + scope.getID();
     }
 }

@@ -2,6 +2,7 @@ package com.compiler.hashtag;
 
 import com.compiler.ast.Data;
 import com.compiler.ast.Node;
+import com.compiler.ast.FunctionType;
 
 parser code {:
     public Node root = null;
@@ -50,7 +51,7 @@ terminal Boolean   FALSE,TRUE;
 
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionList,FunctionPart,Statements;
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
-non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Switch,SwitchExprList,SwitchExprPart;
+non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,SwitchExprList,SwitchExprPart;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam;
 non terminal Node Print,LlamadoMetodos,Parametros,Param,Return,Functions,Lectura;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
@@ -248,7 +249,7 @@ LlamadoMetodos              ::= Identifier:id PARIZQ Contenido:cont PARDER
                                 {: RESULT = new Node("function_call",id,cont); :}
                                 |
                                 Identifier:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", id, new Node("params",new Node("?"))); :}
+                                {: RESULT = new Node("function_call", id, new Node("params",new Node("..."))); :}
                                 ;
 
 Contenido                   ::= Value:val COMA Contenido:cont
@@ -265,7 +266,7 @@ Parametros                  ::= Parametros:params COMA Param:param
                                 Param:param
                                 {: RESULT = new Node("parameters",param); :}
                                 |
-                                {: RESULT = new Node("..."); :}
+                                {: RESULT = new Node("parameters"); :}
                                 ;
 
 Param                       ::= Type:tp Identifier:id
@@ -295,11 +296,24 @@ FunctionList                ::= FunctionPart:fp FunctionList:fl
                                 FunctionPart:fp
                                 {: RESULT = new Node("body",fp); :};
 
-FunctionPart                ::= FUNCTION VOID IDENTIFICADOR:id PARIZQ Parametros:param PARDER Statements:st
-                                {: RESULT = new Node(id, param, st); :}
+FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:param PARDER Statements:st
+                                {: RESULT = new Node(id.label, param, st); :}
                                 |
-                                FUNCTION Type IDENTIFICADOR:id PARIZQ Parametros:param PARDER Statements:st
-                                {: RESULT = new Node(id, param, st); :}
+                                FUNCTION Type:tp Identifier:id PARIZQ Parametros:param PARDER Statements:st
+                                {:
+                                    StringBuilder domain = new StringBuilder("");
+                                    if (param.getChildren().size()>0) {
+                                        for (Node iden : param.getChildren()){
+                                            domain.append(iden.getData().getType().concat("x"));
+                                        }
+                                        domain.deleteCharAt(domain.length()-1);
+                                    }
+
+                                    FunctionType functionType = new FunctionType(id,domain.toString(),tp.label);
+                                    Data data = id.getData();
+                                    data.setValue(functionType);
+                                    RESULT = new Node(data, id.label, param, st);
+                                :}
                                 |
                                 FUNCTION error {:
                                             parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG");
@@ -359,11 +373,8 @@ IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
                                 |
                                 IF error {: parser.report_error("IF statement declaration. Usage example:\n\n\tif (<boolean expression>) do \n\t\t...\n\tend", "WRONG"); :} Statements;
 
-SwitchStmt                  ::= SWITCH PARIZQ Identifier:id PARDER DO SwitchExprList:exprl END
-                                {: RESULT = new Node("SWITCH", id, exprl); :}
-                                |
-                                SWITCH PARIZQ Switch:sw PARDER DO SwitchExprList:exprl END
-                                {: RESULT = new Node("SWITCH", sw, exprl); :}
+SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER DO SwitchExprList:exprl END
+                                {: RESULT = new Node("SWITCH", expr, exprl); :}
                                 |
                                 SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} SwitchExprList
                                 ;
@@ -374,19 +385,13 @@ SwitchExprList              ::= SwitchExprPart:exprp SwitchExprList:exprl
                                 SwitchExprPart:exprp
                                 {: RESULT = new Node("body",exprp); :};
 
-SwitchExprPart              ::= CASE Switch:sw DOSPUNTOS Statements:st BREAK PUNTOCOMA
-                                {: RESULT = new Node("CASE", sw, st); :}
+SwitchExprPart              ::= CASE Expression:expr DOSPUNTOS Statements:st BREAK PUNTOCOMA
+                                {: RESULT = new Node("CASE", expr, st); :}
                                 |
                                 OTHER DOSPUNTOS Statements:st BREAK PUNTOCOMA
                                 {: RESULT = new Node("OTHER", st); :}
                                 |
                                 CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} Statements;
-
-Switch                      ::= NUMERO:n
-                                {: RESULT = new Node(Integer.toString(n)); :}
-                                |
-                                CARACTER:c
-                                {: RESULT = new Node(Character.toString(c)); :};
 
 
 //--------------------------Boolean expressions-------------------------------

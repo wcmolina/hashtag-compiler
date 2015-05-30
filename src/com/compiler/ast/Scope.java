@@ -79,4 +79,9 @@ public class Scope extends HashMap<String, Data> {
             return labelFromPrevious(scope.getPrevious(), scope.getPrevious().getLabel()) + "." + label;
         }
     }
+
+    @Override
+    public String toString() {
+        return getID();
+    }
 }

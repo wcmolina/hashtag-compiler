@@ -5,11 +5,9 @@ import java.util.Collections;
 
 public class Node {
     /*
-    todo: implement parent node (each node should know its parent)
     todo: in parser.cup, I think IDENTIFICADOR has to be a Node...
     * */
     private ArrayList<Node> children;
-    private Node parent;
     public String label;
     private Data data;
     public String print = "";
@@ -56,6 +54,10 @@ public class Node {
         return this.data;
     }
 
+    public void setData(Data data) {
+        this.data = data;
+    }
+
     public void inverse() {
         Collections.reverse(children);
     }
@@ -73,7 +75,7 @@ public class Node {
     }
 
     public String toString(String prefix, boolean isTail) {
-        inverse();
+        if (this.label.equalsIgnoreCase("body")) inverse();
         print = print.concat(prefix + (isTail ? "└── " : "├── ") + label) + "\n";
         if (!children.isEmpty()) {
             for (int i = 0; i < children.size() - 1; i++) {

@@ -11,7 +11,7 @@ public class CupGenerator {
         opts[4] = "-symbols";
         opts[5] = "SymbolConstants";
         opts[6] = "res\\parsers\\parser.cup";
-        //opts[4] = "res\\parsers\\test.cup";
+        //opts[6] = "res\\parsers\\test.cup";
 
         try {
             java_cup.Main.main(opts);
