@@ -15,6 +15,21 @@ public class Data {
     private Scope scope;
 
     /*
+    helpful for this case, for example:
+        * int x;
+        * x = x+1;
+        * should give an error: var 'x' has not been initialized.
+        *
+        * so x is DECLARED, not INIT_AND_DECLARED
+        * see arithmetic expression handler (TreeAnalyzer)
+    */
+
+    private static final int DECLARED = 0;
+    private static final int INIT_AND_DECLARED = 1;
+    private static final int CALLED = 2;
+    private int context;
+
+    /*
     Constructor for IDs, mostly for assign and declare
         * lex: the current lexeme of the symbol sent
         * tok: the type of token the lexeme is part of
@@ -31,6 +46,7 @@ public class Data {
         type = "null";
         value = null;
         scope = null;
+        context = -1;
         //get the type from val
         if (val != null) {
             if (val instanceof String) {
@@ -60,7 +76,7 @@ public class Data {
 
     public Data() { //can't think of a use for this, but i'll leave it just in case...
         lexeme = token = type = "null";
-        line = column = -1;
+        line = column = context = -1;
         value = null;
     }
 
@@ -116,6 +132,14 @@ public class Data {
                 value = (FunctionType) obj;
             }
         }
+    }
+
+    public int getContext() {
+        return context;
+    }
+
+    public void setContext(int context) {
+        this.context = context;
     }
 
 

@@ -1,8 +1,8 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.TreeAnalyzer;
-import com.compiler.utils.LineEnumerator;
-import com.compiler.utils.LinePainter;
+import com.compiler.tools.LineEnumerator;
+import com.compiler.tools.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.syntaxkits.HashtagSyntaxKit;
 import jsyntaxpane.util.Configuration;
