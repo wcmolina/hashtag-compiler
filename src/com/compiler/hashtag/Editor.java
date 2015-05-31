@@ -139,7 +139,7 @@ public class Editor extends JFrame {
         status.setBackground(new java.awt.Color(255, 255, 255));
         status.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
         status.setForeground(new java.awt.Color(255, 255, 255));
-        status.setText("Linea 1, Columna 1");
+        status.setText("Line 1, Column 1");
         status.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
         javax.swing.GroupLayout statusPanelLayout = new javax.swing.GroupLayout(statusPanel);
@@ -263,22 +263,22 @@ public class Editor extends JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(scrollPane, javax.swing.GroupLayout.Alignment.TRAILING)
                         .addGroup(layout.createSequentialGroup()
                                 .addGap(479, 479, 479)
                                 .addComponent(jLabel6)
                                 .addGap(2, 421, Short.MAX_VALUE))
                         .addComponent(consolePane)
                         .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(scrollPane)
         );
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
-                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
+                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 523, Short.MAX_VALUE)
                                 .addGap(0, 0, 0)
                                 .addComponent(jLabel6)
                                 .addGap(0, 0, 0)
-                                .addComponent(consolePane, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE)
+                                .addComponent(consolePane, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, 0)
                                 .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
