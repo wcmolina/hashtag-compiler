@@ -1,16 +1,35 @@
 package com.compiler.hashtag;
 
-import com.compiler.syntaxhighlight.*;
 import com.compiler.ast.TreeAnalyzer;
 import com.compiler.tools.LineEnumerator;
 import com.compiler.tools.LinePainter;
+import jsyntaxpane.DefaultSyntaxKit;
+import jsyntaxpane.syntaxkits.HashtagSyntaxKit;
+import jsyntaxpane.util.Configuration;
 
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.Utilities;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,172 +39,38 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.TabSet;
-import javax.swing.text.TabStop;
-import javax.swing.text.Utilities;
 
-    //todo: highlight in red the lines that have errors (done, seems to work)
-    /*todo: improve insertion/removing of characters to be more fluent... (parse only on keyreleased)*/
+//todo: highlight in red the lines that have errors (done, seems to work)
 
 public class Editor extends JFrame {
 
     private String filePath;
     private JFrame treeFrame;
-    private JPopupMenu popupMenu;
     private boolean contentChanged;
-
-    private final StyleContext styleContext = StyleContext.getDefaultStyleContext();
-
-    private final AttributeSet KEYWORD = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#72A9CD"));
-    private final AttributeSet PLAIN = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#CCCCCC"));
-    private final AttributeSet COMMENT = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#656565"));
-    private final AttributeSet STRING = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#F99B36"));
-    //private final AttributeSet FUNCTION = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#B4D864"));
-    //private final AttributeSet NUMBER = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#AA6164"));
-    private final AttributeSet OPERATOR = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#9876AA"));
-    //private final AttributeSet READ = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#F7F36F"));
-    //private final AttributeSet SEMI = styleContext.addAttribute(styleContext.getEmptySet(), StyleConstants.Foreground, Color.decode("#AB6124"));
 
     public Editor() {
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
         fillRecentItems();
 
-        // <editor-fold desc="Syntax highlighter code">
-        DefaultStyledDocument doc = new DefaultStyledDocument() {
-            @Override
-            public void insertString(int offset, String str, AttributeSet a) throws BadLocationException { //cuando se insertan caracteres.
-                super.insertString(offset, str, a);
-                String text = getText(0, getLength());
-                SyntaxHighlighter syntaxHighlighter = new SyntaxHighlighter(new java.io.StringReader(text));
-                Token token;
-                try {
-                    while ((token = syntaxHighlighter.yylex()) != null) {
-                        switch (token.type) {
-                            case TokenConstants.KEYWORD:
-                                setCharacterAttributes(token.start, token.length, KEYWORD, true);
-                                break;
-                            case TokenConstants.COMMENT:
-                                setCharacterAttributes(token.start, token.length, COMMENT, true);
-                                break;
-                            case TokenConstants.CADENA:
-                                setCharacterAttributes(token.start, token.length, STRING, true);
-                                break;
-                            case TokenConstants.FUNCTION:
-                                setCharacterAttributes(token.start, token.length, KEYWORD, true);
-                                break;
-                            case TokenConstants.NUMBER:
-                                setCharacterAttributes(token.start, token.length, OPERATOR, true);
-                                break;
-                            case TokenConstants.OPERATOR:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                            case TokenConstants.READ:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                            case TokenConstants.CARACTER:
-                                setCharacterAttributes(token.start, token.length, STRING, true);
-                                break;
-                            default:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                        }
-                    }
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(rootPane, "Oops! Something went wrong trying to highlight the syntax.\n" + ex.getMessage());
-                }
-            }
+        //finally got it working (JSyntaxPane)
+        DefaultSyntaxKit.initKit();
+        Configuration config = DefaultSyntaxKit.getConfig(HashtagSyntaxKit.class);
+        config.put("DefaultFont", "Consolas 13");
+        editorPane.setContentType("text/hashtag");
+        initPopupMenu();
 
-            @Override
-            public void remove(int offs, int len) throws BadLocationException {
-                super.remove(offs, len);
-                String text = getText(0, getLength());
-                SyntaxHighlighter syntaxHighlighter = new SyntaxHighlighter(new java.io.StringReader(text));
-                Token token;
-                try {
-                    while ((token = syntaxHighlighter.yylex()) != null) {
-                        switch (token.type) {
-                            case TokenConstants.KEYWORD:
-                                setCharacterAttributes(token.start, token.length, KEYWORD, true);
-                                break;
-                            case TokenConstants.COMMENT:
-                                setCharacterAttributes(token.start, token.length, COMMENT, true);
-                                break;
-                            case TokenConstants.CADENA:
-                                setCharacterAttributes(token.start, token.length, STRING, true);
-                                break;
-                            case TokenConstants.FUNCTION:
-                                setCharacterAttributes(token.start, token.length, KEYWORD, true);
-                                break;
-                            case TokenConstants.NUMBER:
-                                setCharacterAttributes(token.start, token.length, OPERATOR, true);
-                                break;
-                            case TokenConstants.OPERATOR:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                            case TokenConstants.READ:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                            case TokenConstants.CARACTER:
-                                setCharacterAttributes(token.start, token.length, STRING, true);
-                                break;
-                            default:
-                                setCharacterAttributes(token.start, token.length, PLAIN, true);
-                                break;
-                        }
-                    }
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(rootPane, "Oops! Something went wrong trying to highlight the syntax.\n" + ex.getMessage());
-                }
-            }
-        };
-        // </editor-fold>
+        //highlights line where the caret is
+        LinePainter lp = new LinePainter(editorPane, Color.decode("0x343D46")); //error line color: #463434
 
-        TabStop[] tabs = new TabStop[30];
-        for (int j = 0; j < tabs.length; j++) {
-            tabs[j] = new TabStop((j + 1) * 28);
-        }
+        scrollPane.setViewportView(editorPane);
+        LineEnumerator lineEnumerator = new LineEnumerator(editorPane);
+        lineEnumerator.setBackground(Color.decode("0x262B35"));
+        scrollPane.setRowHeaderView(lineEnumerator);
 
-        TabSet tabSet = new TabSet(tabs);
-        AttributeSet paraSet = styleContext.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabSet);
-
-        codeTextPane.setStyledDocument(doc);
-        codeTextPane.setParagraphAttributes(paraSet, false);
-
-        LinePainter linePainter = new LinePainter(codeTextPane, Color.decode("#323e41"));
-
-        scrollPane.setViewportView(codeTextPane);
-
-        LineEnumerator tln = new LineEnumerator(codeTextPane);
-        tln.setBackground(Color.decode("#1b2426"));
-
-        scrollPane.setRowHeaderView(tln);
-
-        codeTextPane.addCaretListener(new CaretListener() {
+        editorPane.addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(CaretEvent e) {
                 status.setText("Line " + getRow(e.getDot(), (JTextComponent) e.getSource()) + ", Column " + getColumn(e.getDot(), (JTextComponent) e.getSource()));
@@ -204,7 +89,7 @@ public class Editor extends JFrame {
         console = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
         scrollPane = new javax.swing.JScrollPane();
-        codeTextPane = new javax.swing.JTextPane();
+        editorPane = new javax.swing.JEditorPane();
         statusPanel = new javax.swing.JPanel();
         status = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
@@ -236,23 +121,19 @@ public class Editor extends JFrame {
         console.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
         console.setForeground(new java.awt.Color(255, 255, 255));
         console.setRows(5);
+        console.setTabSize(4);
         console.setToolTipText("");
-        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         consolePane.setViewportView(console);
 
-        codeTextPane.setBackground(new java.awt.Color(27, 36, 38));
-        codeTextPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        codeTextPane.setFont(new java.awt.Font("Consolas", 0, 13)); // NOI18N
-        codeTextPane.setForeground(new java.awt.Color(204, 204, 204));
-        codeTextPane.setCaretColor(new java.awt.Color(255, 255, 255));
-        codeTextPane.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                codeTextPaneMouseClicked(evt);
-            }
-        });
-        scrollPane.setViewportView(codeTextPane);
+        editorPane.setBackground(new java.awt.Color(38, 43, 53));
+        editorPane.setBorder(null);
+        editorPane.setFont(new java.awt.Font("Consolas", 0, 13)); // NOI18N
+        editorPane.setForeground(new java.awt.Color(255, 255, 255));
+        editorPane.setCaretColor(new java.awt.Color(255, 255, 255));
+        scrollPane.setViewportView(editorPane);
 
-        statusPanel.setBackground(new java.awt.Color(83, 83, 83));
+        statusPanel.setBackground(new java.awt.Color(57, 57, 57));
         statusPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         status.setBackground(new java.awt.Color(255, 255, 255));
@@ -393,11 +274,11 @@ public class Editor extends JFrame {
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
-                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 506, Short.MAX_VALUE)
+                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
                                 .addGap(0, 0, 0)
                                 .addComponent(jLabel6)
                                 .addGap(0, 0, 0)
-                                .addComponent(consolePane, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(consolePane, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE)
                                 .addGap(0, 0, 0)
                                 .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -444,8 +325,6 @@ public class Editor extends JFrame {
                             JMenuItem c = new JMenuItem("Clear items");
                             c.setEnabled(false);
                             openRecentMenuItem.add(c);
-                            revalidate();
-                            repaint();
                             Writer writer = null;
                             try {
                                 writer = new BufferedWriter(new FileWriter("cache/recent.cache"));
@@ -457,23 +336,21 @@ public class Editor extends JFrame {
                         }
                     });
 
-                    openRecentMenuItem.add(new JSeparator());
+                    openRecentMenuItem.addSeparator();
                     openRecentMenuItem.add(clear);
                 } else {
                     JMenuItem clear = new JMenuItem("Clear items");
                     clear.setEnabled(false);
                     openRecentMenuItem.add(clear);
-                    revalidate();
-                    repaint();
                 }
             } catch (IOException ex) {
-                Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(rootPane, ex.getMessage());
             }
             fr.close();
         } catch (FileNotFoundException ex) {
             Editor.console.setText("Error: " + ex.getMessage());
         } catch (IOException ex) {
-            Logger.getLogger(Editor.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage());
         }
 
     }
@@ -510,7 +387,7 @@ public class Editor extends JFrame {
         }
         if (extension.equalsIgnoreCase("ht")) {
             filePath = file;
-            codeTextPane.setText("");
+            editorPane.setText("");
             FileReader fr = null;
             try {
                 fr = new FileReader(filePath);
@@ -522,11 +399,11 @@ public class Editor extends JFrame {
                         str.append(text.replaceAll("\\t", "    ")).append("\n");
                     }
                     str.deleteCharAt(str.length() - 1); //removes empty line at the end.
-                    codeTextPane.setText(str.toString());
+                    editorPane.setText(str.toString());
                     setTitle(filePath + " - Hashtag Compiler");
                     contentChanged = false;
                     resetComponents();
-                    codeTextPane.setCaretPosition(0);
+                    editorPane.setCaretPosition(0);
 
                     //save for recent opened files...
                     Writer writer = null;
@@ -569,7 +446,8 @@ public class Editor extends JFrame {
 
     private void resetComponents() {
         Editor.console.setText("");
-        codeTextPane.getHighlighter().removeAllHighlights();
+        editorPane.getHighlighter().removeAllHighlights();
+        LinePainter lp = new LinePainter(editorPane, Color.decode("0x343D46"));
         if (treeFrame != null) {
             treeFrame.setVisible(false);
             treeFrame = null;
@@ -623,10 +501,10 @@ public class Editor extends JFrame {
     }
 
     private void clearTextMenuItemActionPerformed(ActionEvent evt) {
-        if (!codeTextPane.getText().isEmpty()) {
+        if (!editorPane.getText().isEmpty()) {
             int dialogResult = JOptionPane.showConfirmDialog(null, "This will clear all text. Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
             if (dialogResult == JOptionPane.YES_OPTION) {
-                codeTextPane.setText("");
+                editorPane.setText("");
                 console.setText("");
             }
         } else {
@@ -655,13 +533,13 @@ public class Editor extends JFrame {
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fc.getSelectedFile();
                 filePath = fileToSave.getAbsolutePath();
-                save(filePath, codeTextPane.getText());
+                save(filePath, editorPane.getText());
                 setTitle(filePath + " - Hashtag Compiler");
             }
         } else { //ya hay una referencia de un archivo abierto y quiere guardarlo.
             int dialogResult = JOptionPane.showConfirmDialog(null, "File will be overwritten. Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
             if (dialogResult == JOptionPane.YES_OPTION) {
-                save(filePath, codeTextPane.getText());
+                save(filePath, editorPane.getText());
                 contentChanged = false;
             }
 
@@ -676,7 +554,7 @@ public class Editor extends JFrame {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             File fileToSave = fc.getSelectedFile();
             filePath = fileToSave.getAbsolutePath();
-            save(filePath, codeTextPane.getText());
+            save(filePath, editorPane.getText());
             setTitle(filePath + " - Hashtag Compiler");
 
             //add newly created file to recents...
@@ -705,16 +583,16 @@ public class Editor extends JFrame {
 
     private void parseMenuItemActionPerformed(ActionEvent evt) {
         resetComponents();
-        DefaultHighlighter.HighlightPainter err = new DefaultHighlighter.DefaultHighlightPainter(Color.decode("#921e26"));
+        DefaultHighlighter.HighlightPainter err = new DefaultHighlighter.DefaultHighlightPainter(Color.decode("#463434")); //#463434
         try {
-            if (codeTextPane.getText().isEmpty()) {
+            if (editorPane.getText().isEmpty()) {
                 Editor.console.setText("Please provide a valid source code first.\nTry loading it from a file or write it in the text area above.");
                 if (!consolePane.isVisible()) {
                     consolePane.setVisible(true);
                     setVisible(true);
                 }
             } else {
-                Parser parser = new Parser(new Lexer(new java.io.StringReader(codeTextPane.getText()))); //asi no depende del archivo.
+                Parser parser = new Parser(new Lexer(new java.io.StringReader(editorPane.getText()))); //asi no depende del archivo.
                 parser.parse();
                 if (parser.errors == 0 && parser.fatal == 0 && Editor.console.getText().isEmpty()) {
                     Editor.console.setText("Number of errors: 0\n"
@@ -753,7 +631,7 @@ public class Editor extends JFrame {
                     for (int num : analyzer.getErrorLines()) {
                         try {
                             //highlight error line
-                            codeTextPane.getHighlighter().addHighlight(getLineEnd(codeTextPane.getText(), num - 1) + 1, getLineEnd(codeTextPane.getText(), num), err);
+                            editorPane.getHighlighter().addHighlight(getLineEnd(editorPane.getText(), num - 1) + 1, getLineEnd(editorPane.getText(), num), err);
                         } catch (BadLocationException e) {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
@@ -775,74 +653,24 @@ public class Editor extends JFrame {
 
     // <editor-fold desc="init right click popup menu">
     private void initPopupMenu() {
-        if (popupMenu == null) {
-            popupMenu = new JPopupMenu();
-            JMenuItem copy = new JMenuItem("Copy        Ctrl+C");
-            JMenuItem cut = new JMenuItem("Cut           Ctrl+X");
-            JMenuItem paste = new JMenuItem("Paste        Ctrl+V");
-            JMenuItem parse = new JMenuItem("Parse        Ctrl+P");
-            try {
-                parse.setIcon(new ImageIcon("res/img/icons/run-icon.png"));
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
-            }
-
-            JSeparator separator = new JSeparator();
-
-            copy.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (codeTextPane.getSelectedText() != null) {
-                        //StringSelection strSelection = new StringSelection(codeTextPane.getSelectedText());
-                        //Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-                        //clpbrd.setContents(strSelection, null);
-
-                        //use this instead, I was reinventing the wheel...
-                        codeTextPane.copy();
-                    }
-
-                }
-            });
-
-            cut.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (codeTextPane.getSelectedText() != null) {
-                        codeTextPane.cut();
-                    }
-
-                }
-            });
-
-            paste.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    codeTextPane.paste();
-
-                }
-            });
-
-            parse.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    parseMenuItemActionPerformed(e);
-                }
-            });
-            popupMenu.add(copy);
-            popupMenu.add(cut);
-            popupMenu.add(paste);
-            popupMenu.add(separator);
-            popupMenu.add(parse);
+        JMenuItem parse = new JMenuItem("Parse");
+        parse.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
+        try {
+            parse.setIcon(new ImageIcon("res/img/icons/run-icon.png"));
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage());
         }
+
+        parse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parseMenuItemActionPerformed(e);
+            }
+        });
+        editorPane.getComponentPopupMenu().addSeparator();
+        editorPane.getComponentPopupMenu().add(parse);
     }
     // </editor-fold>
-
-    private void codeTextPaneMouseClicked(java.awt.event.MouseEvent evt) {
-        initPopupMenu();
-        if (SwingUtilities.isRightMouseButton(evt)) {
-            popupMenu.show(codeTextPane, evt.getX(), evt.getY());
-        }
-    }
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -880,23 +708,23 @@ public class Editor extends JFrame {
     // <editor-fold desc = "Variables declaration">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem clearTextMenuItem;
-    private javax.swing.JTextPane codeTextPane;
     public static javax.swing.JTextArea console;
     private javax.swing.JScrollPane consolePane;
     private javax.swing.JMenuItem docMenuItem;
     private javax.swing.JMenu editMenu;
+    private javax.swing.JEditorPane editorPane;
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JScrollPane scrollPane;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem openMenuItem;
     private javax.swing.JMenu openRecentMenuItem;
     private javax.swing.JMenuItem parseMenuItem;
     private javax.swing.JMenuItem saveAsMenuItem;
     private javax.swing.JMenuItem saveMenuItem;
+    private javax.swing.JScrollPane scrollPane;
     private javax.swing.JPopupMenu.Separator separator;
     private javax.swing.JMenuItem showTreeMenuItem;
     private javax.swing.JLabel status;

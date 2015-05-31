@@ -17,7 +17,7 @@ public class Node {
         data = new Data();
         for (Node node : nodes) {
             if (node == null) {
-                children.add(new Node("null child"));
+                children.add(new Node("null"));
             } else {
                 children.add(node);
             }
