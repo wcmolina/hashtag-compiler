@@ -1,8 +1,8 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.TreeAnalyzer;
-import com.compiler.utils.LineEnumerator;
-import com.compiler.utils.LinePainter;
+import com.compiler.util.LineEnumerator;
+import com.compiler.util.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.syntaxkits.HashtagSyntaxKit;
 import jsyntaxpane.util.Configuration;
@@ -123,7 +123,7 @@ public class Editor extends JFrame {
         console.setRows(5);
         console.setTabSize(4);
         console.setToolTipText("");
-        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
         consolePane.setViewportView(console);
 
         editorPane.setBackground(new java.awt.Color(38, 43, 53));
@@ -322,9 +322,10 @@ public class Editor extends JFrame {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             openRecentMenuItem.removeAll();
-                            JMenuItem c = new JMenuItem("Clear items");
-                            c.setEnabled(false);
-                            openRecentMenuItem.add(c);
+                            clear.setEnabled(false);
+                            openRecentMenuItem.add(clear);
+
+                            //remove entries from file
                             Writer writer = null;
                             try {
                                 writer = new BufferedWriter(new FileWriter("cache/recent.cache"));
@@ -402,7 +403,7 @@ public class Editor extends JFrame {
                     editorPane.setText(str.toString());
                     setTitle(filePath + " - Hashtag Compiler");
                     contentChanged = false;
-                    resetComponents();
+                    reset();
                     editorPane.setCaretPosition(0);
 
                     //save for recent opened files...
@@ -444,7 +445,7 @@ public class Editor extends JFrame {
         }
     }
 
-    private void resetComponents() {
+    private void reset() {
         Editor.console.setText("");
         editorPane.getHighlighter().removeAllHighlights();
         LinePainter lp = new LinePainter(editorPane, Color.decode("0x343D46"));
@@ -582,7 +583,7 @@ public class Editor extends JFrame {
     }
 
     private void parseMenuItemActionPerformed(ActionEvent evt) {
-        resetComponents();
+        reset();
         DefaultHighlighter.HighlightPainter err = new DefaultHighlighter.DefaultHighlightPainter(Color.decode("#463434")); //#463434
         try {
             if (editorPane.getText().isEmpty()) {
@@ -594,10 +595,10 @@ public class Editor extends JFrame {
             } else {
                 Parser parser = new Parser(new Lexer(new java.io.StringReader(editorPane.getText()))); //asi no depende del archivo.
                 parser.parse();
-                if (parser.errors == 0 && parser.fatal == 0 && Editor.console.getText().isEmpty()) {
+                if (parser.errors == 0 && parser.fatal == 0) {
                     Editor.console.setText("Number of errors: 0\n"
-                            + "Finished parsing successfully\n"
-                            + "\n> Generating the AST...");
+                            + "Finished parsing successfully"
+                            + "\n\n> Generating the AST...");
 
                     if (!consolePane.isVisible()) {
                         consolePane.setVisible(true);
@@ -622,7 +623,7 @@ public class Editor extends JFrame {
                         treeFrame.getContentPane().add(scroll);
                         treeFrame.setTitle("[AST] - " + filePath);
                         showTreeMenuItem.setEnabled(true);
-                        Editor.console.setText(Editor.console.getText() + "\nCompleted. Go to 'View > Show AST' if you want to visualize the tree.");
+                        Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
                     Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
                     TreeAnalyzer analyzer = new TreeAnalyzer(parser.root); //aqui se le manda el AST...
