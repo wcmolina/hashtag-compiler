@@ -1,5 +1,13 @@
 begin
 
+    function int sum(int a, int b) do
+        return a+b;
+    end
+    
+    function boolean isEven(int number) do
+        return number%0 == 0;
+    end 
+
     mainbegin do     # mainbegin do...end
         int var1 = 8;
         int var2 = 11;

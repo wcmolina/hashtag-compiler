@@ -5,6 +5,7 @@ import java.util.Collections;
 
 public class Node {
 
+    private Node parent;
     private ArrayList<Node> children;
     public String label;
     private Data data;
@@ -60,8 +61,46 @@ public class Node {
         Collections.reverse(children);
     }
 
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+
+    /**
+     * @return
+     */
+    public Node getParent() {
+        return (parent == null) ? new Node("null") : parent;
+    }
+
+
+    /**
+     * <p>
+     * This method is used to set connections between parent nodes and their children.
+     * When parsing (with Cup) is done, each node of the AST can access only to their children,
+     * but not to its parent (this is because of the way the AST is generated: from the grammar
+     * itself). <code>setConnection</code> fixes this problem by recursively setting the parent
+     * for each node of the AST.
+     * </p>
+     *
+     * @param parent The parent of the node. <code>null</code> means the node is root.
+     * @param child  The child of the parent node. <code>null</code> may result in a <code>NullPointerException</code>
+     */
+    public static void setConnection(Node parent, Node child) {
+        child.setParent(parent);
+        if (!child.isLeaf()) {
+            for (Node node : child.getChildren()) {
+                setConnection(child, node);
+            }
+        }
+    }
+
+    /**
+     * Add nodes to the <code>ArrayList</code> of children of a specific node.
+     *
+     * @param nodes An array of <code>Node</code>.
+     * @return Returns the node with its updated children.
+     */
     public Node add(Node... nodes) {
-        //Collections.reverse(Arrays.asList(children));
         for (Node child : nodes) {
             children.add(child);
         }

@@ -260,22 +260,6 @@ Contenido                   ::= Value:val COMA Contenido:cont
 
 //--------------------------Parameters-------------------------------
 
-Parametros                  ::= Parametros:params COMA Param:param
-                                {: RESULT = params.add(param); :}
-                                |
-                                Param:param
-                                {: RESULT = new Node("parameters",param); :}
-                                |
-                                {: RESULT = new Node("parameters"); :}
-                                ;
-
-Param                       ::= Type:tp Identifier:id
-                                {:
-                                    RESULT = id;
-                                    RESULT.getData().setType(tp.label);
-                                :}
-                                ;
-
 Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
                                 {: RESULT = new Node("PRINT", pp); :};
 
@@ -297,7 +281,20 @@ FunctionList                ::= FunctionPart:fp FunctionList:fl
                                 {: RESULT = new Node("body",fp); :};
 
 FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:param PARDER Statements:st
-                                {: RESULT = new Node(id.label, param, st); :}
+                                {:
+                                    StringBuilder domain = new StringBuilder("");
+                                    if (param.getChildren().size()>0) {
+                                        for (Node iden : param.getChildren()){
+                                            domain.append(iden.getData().getType().concat("x"));
+                                        }
+                                        domain.deleteCharAt(domain.length()-1);
+                                    }
+
+                                    FunctionType function = new FunctionType(id,domain.toString(),"void");
+                                    Data data = id.getData();
+                                    data.setValue(function);
+                                    RESULT = new Node(data, id.label, param, st);
+                                :}
                                 |
                                 FUNCTION Type:tp Identifier:id PARIZQ Parametros:param PARDER Statements:st
                                 {:
@@ -309,9 +306,9 @@ FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:pa
                                         domain.deleteCharAt(domain.length()-1);
                                     }
 
-                                    FunctionType functionType = new FunctionType(id,domain.toString(),tp.label);
+                                    FunctionType function = new FunctionType(id, domain.toString(), tp.label);
                                     Data data = id.getData();
-                                    data.setValue(functionType);
+                                    data.setValue(function);
                                     RESULT = new Node(data, id.label, param, st);
                                 :}
                                 |
@@ -320,11 +317,27 @@ FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:pa
                                         :} Statements
                                 ;
 
-Return                      ::= RETURN LlamadoMetodos:lm
-                                {: RESULT = new Node("RETURN",lm); :}
+Parametros                  ::= Parametros:params COMA Param:param
+                                {: RESULT = params.add(param); :}
                                 |
-                                RETURN Value:av
-                                {: RESULT = new Node("RETURN", av); :}
+                                Param:param
+                                {: RESULT = new Node("parameters",param); :}
+                                |
+                                {: RESULT = new Node("parameters"); :}
+                                ;
+
+Param                       ::= Type:tp Identifier:id
+                                {:
+                                    RESULT = id;
+                                    RESULT.getData().setType(tp.label);
+                                :}
+                                ;
+
+Return                      ::= RETURN LlamadoMetodos:call
+                                {: RESULT = new Node("RETURN", call); :}
+                                |
+                                RETURN Value:val
+                                {: RESULT = new Node("RETURN", val); :}
                                 ;
 
 //--------------------------Blocks (if, switch, while, for)-------------------------------

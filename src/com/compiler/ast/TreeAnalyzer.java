@@ -20,7 +20,9 @@ public class TreeAnalyzer {
     private static final String[] LOGICAL_OPERATORS = {"AND", "OR"};
     private static final String[] BLOCK_STATEMENTS = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE", "CASE"};
 
-    //static variable that serves only as an error counter.
+    /**
+     * Serves only as an error counter. Increases is time an error is reported.
+     */
     public static int semanticErrors = 0;
 
     //used for my Editor class to highlight in red the lines contained here.
@@ -30,14 +32,16 @@ public class TreeAnalyzer {
     private Stack<Scope> scopeStack;
 
     //main constructor, where root is the root of the AST.
-    public TreeAnalyzer(Node root) {
+    public TreeAnalyzer() {
         semanticErrors = 0;
         errors = new ArrayList<Integer>();
         scopeStack = new Stack<Scope>();
-        traverse(root);
     }
 
-    //this function 'runs' through the AST. It divides its work by calling functions it needs when a certain node is reached.
+    /**
+     * <code>traverse</code> 'runs' through the AST. It divides its work by calling functions it needs when a certain node is reached.
+     * @param node the starting <code>Node</code>.
+     */
     public void traverse(Node node) {
         if (!node.isLeaf()) {
             if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) {
@@ -63,6 +67,10 @@ public class TreeAnalyzer {
                     assignHandler(node);
                 } else if (node.label.equalsIgnoreCase("conditions")) {
                     conditionHandler(node.getChildren().get(0));
+                } else if (node.label.equalsIgnoreCase("functions")) {
+                    functionHandler(node);
+                } else if (node.label.equalsIgnoreCase("return")) {
+
                 } else {
                     System.out.println("can't recognize node: " + node.label);
                 }
@@ -214,6 +222,8 @@ public class TreeAnalyzer {
     private void functionHandler(Node node) {
         Node body = node.getChildren().get(0); //el unico hijo qe deberia de tener
         for (Node function : body.getChildren()) {
+            //cada hijo tendria su propio scope.
+            System.out.println(function.getData().getValue());
         }
     }
 

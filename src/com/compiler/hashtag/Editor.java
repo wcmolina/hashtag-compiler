@@ -1,5 +1,6 @@
 package com.compiler.hashtag;
 
+import com.compiler.ast.Node;
 import com.compiler.ast.TreeAnalyzer;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
@@ -605,6 +606,7 @@ public class Editor extends JFrame {
                         setVisible(true);
                     }
                     if (treeFrame == null) {
+                        Node.setConnection(null, parser.root);
                         String tree = parser.root.toString("", true);
                         showTreeMenuItem.setEnabled(true);
                         JTextArea info = new JTextArea(tree);
@@ -626,7 +628,8 @@ public class Editor extends JFrame {
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
                     Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
-                    TreeAnalyzer analyzer = new TreeAnalyzer(parser.root); //aqui se le manda el AST...
+                    TreeAnalyzer analyzer = new TreeAnalyzer(); //aqui se le manda el AST...
+                    analyzer.traverse(parser.root);
                     System.out.println("errors: " + TreeAnalyzer.semanticErrors);
 
                     for (int num : analyzer.getErrorLines()) {

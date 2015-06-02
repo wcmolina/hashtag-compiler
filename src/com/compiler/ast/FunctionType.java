@@ -13,7 +13,7 @@ public class FunctionType {
         identifier = id;
         domain = dom;
         range = ran;
-        signature = dom.concat(ran);
+        signature = dom.concat("->").concat(ran);
     }
 
     public String getDomain() {
@@ -41,6 +41,6 @@ public class FunctionType {
     }
 
     public String toString() {
-        return "Function: ".concat(signature);
+        return identifier.label.concat(":").concat(signature);
     }
 }
