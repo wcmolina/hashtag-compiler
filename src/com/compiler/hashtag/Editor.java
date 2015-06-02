@@ -1,7 +1,7 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.Node;
-import com.compiler.ast.TreeAnalyzer;
+import com.compiler.util.TreeAnalyzer;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
@@ -275,7 +275,7 @@ public class Editor extends JFrame {
         layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(layout.createSequentialGroup()
-                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 523, Short.MAX_VALUE)
+                                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE)
                                 .addGap(0, 0, 0)
                                 .addComponent(jLabel6)
                                 .addGap(0, 0, 0)
