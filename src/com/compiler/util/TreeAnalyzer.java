@@ -43,6 +43,7 @@ public class TreeAnalyzer {
 
     /**
      * <code>traverse</code> 'runs' through the AST. It divides its work by calling functions it needs when a certain node is reached.
+     *
      * @param node the starting <code>Node</code>.
      */
     public void traverse(Node node) {
@@ -154,6 +155,8 @@ public class TreeAnalyzer {
                         node.getData().setType(valueData.getType());
                         if (!valueData.getType().equalsIgnoreCase(typeRequired)) {
                             reportTypeMismatch(node, typeRequired);
+                        } else {
+                            //es int o double, que le suba el valor al papa...
                         }
                     }
                 } catch (NullPointerException npe) {
@@ -161,6 +164,8 @@ public class TreeAnalyzer {
                 }
             } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
                 reportTypeMismatch(node, typeRequired);
+            } else {
+            //suba el valor?
             }
         } else {
             Node right = node.getChildren().get(1);
@@ -295,10 +300,34 @@ public class TreeAnalyzer {
         }
     }
 
+    public double interpreter(String operator, double val1, double val2) throws ArithmeticException {
+        if (operator.equalsIgnoreCase("+")) {
+            return val1 + val2;
+        } else if (operator.equalsIgnoreCase("-")) {
+            return val1 - val2;
+        } else if (operator.equalsIgnoreCase("*")) {
+            return val1 * val2;
+        } else if (operator.equalsIgnoreCase("/")) {
+            if (val2 != 0) {
+                return val1 / val2;
+            } else {
+                throw new ArithmeticException();
+            }
+        } else if (operator.equalsIgnoreCase("%")) {
+            if (val2 != 0) {
+                return val1 / val2;
+            } else {
+                throw new ArithmeticException();
+            }
+        }
+        return -1;
+    }
+
     public ArrayList<Integer> getErrorLines() {
         return this.errors;
     }
 
+    //<editor-fold desc="Error reporting">
     //different types of error reports
     private static void reportVariableNotInitialized(Node node) {
         int line = node.getData().getLine();
@@ -364,4 +393,6 @@ public class TreeAnalyzer {
             errors.add(line);
         }
     }
+
+    //</editor-fold>
 }

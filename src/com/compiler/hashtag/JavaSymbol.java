@@ -51,6 +51,6 @@ public class JavaSymbol extends java_cup.runtime.Symbol {
 
     @Override
     public String toString() {
-        return "(line: " + line + ", column: " + column + "). Unexpected symbol " + getTokenName(sym) + (value == null ? "" : (" , value: '" + value + "')"));
+        return "(line: " + line + ", column: " + column + "). Unexpected symbol '" + getTokenName(sym) + "'"+ (value == null ? "" : (", value: '" + value + "')"));
     }
 }

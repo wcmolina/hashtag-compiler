@@ -19,7 +19,7 @@ parser code {:
         if(info instanceof java_cup.runtime.Symbol){
             m.append("Error: ");
             m.append(info);
-            m.append(" : " + message);
+            m.append(": " + message);
         } else {
             if (info instanceof String) {
                 errors++;
@@ -51,7 +51,7 @@ terminal Boolean   FALSE,TRUE;
 
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionList,FunctionPart,Statements;
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
-non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,SwitchExprList,SwitchExprPart;
+non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,Case;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam;
 non terminal Node Print,LlamadoMetodos,Parametros,Param,Return,Functions,Lectura;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
@@ -93,7 +93,7 @@ Statements                  ::= DO BodyList:bdl END
                                 {: RESULT = bdl; :}
                                 |
                                 DO END
-                                {: RESULT = new Node("..."); :}
+                                {: RESULT = new Node("null"); :}
                                 |
                                 error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END
                                 ;
@@ -105,11 +105,11 @@ BodyList                    ::= BodyPart:bp BodyList:bdl
                                 {: RESULT = new Node("body", bp); :}
                                 ;
 
-BodyPart                    ::= Instruccion:ins PUNTOCOMA
-                                {: RESULT = ins; :}
-                                |
-                                Block:bq
+BodyPart                    ::= Block:bq
                                 {: RESULT = bq; :}
+                                |
+                                Instruccion:ins PUNTOCOMA
+                                {: RESULT = ins; :}
                                 |
                                 Asignacion:asig PUNTOCOMA
                                 {: RESULT = asig; :}
@@ -117,9 +117,14 @@ BodyPart                    ::= Instruccion:ins PUNTOCOMA
                                 Return:ret PUNTOCOMA
                                 {: RESULT = ret; :}
                                 |
+                                Break:bk PUNTOCOMA
+                                {: RESULT = bk; :}
+                                |
+                                Case:cs
+                                {: RESULT = cs; :}
+                                |
                                 error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
                                 ;
-
 
 Instruccion                 ::= VarDeclare:vd
                                 {: RESULT = vd; :}
@@ -146,9 +151,24 @@ Lectura                     ::= READINT PARIZQ PARDER
                                 {: RESULT = new Node("READCHAR"); :}
                                 ;
 
+Break                       ::= BREAK
+                                {: RESULT = new Node("BREAK"); :}
+                                ;
+
+Case                        ::= CASE Value:val DOSPUNTOS Statements:st
+                                {: RESULT = new Node("CASE", val, st); :}
+                                |
+                                OTHER DOSPUNTOS Statements:st
+                                {: RESULT = new Node("OTHER", st); :}
+                                |
+                                CASE error {: parser.report_error("'CASE' syntax.","WRONG"); :} Statements
+                                |
+                                OTHER error {: parser.report_error("'OTHER' syntax.","WRONG"); :} Statements
+                                ;
+
                 /*
 --------------------------------------------------------------------------------
-                S-Atribuida ejemplo (como deber?a de ser):
+                S-Atribuida ejemplo (como deberia de ser):
                     V -> L
                     T -> int | double | char | string | boolean
                     L -> L,P
@@ -249,7 +269,7 @@ LlamadoMetodos              ::= Identifier:id PARIZQ Contenido:cont PARDER
                                 {: RESULT = new Node("function_call",id,cont); :}
                                 |
                                 Identifier:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", id, new Node("params",new Node("..."))); :}
+                                {: RESULT = new Node("function_call", id, new Node("params",new Node("null"))); :}
                                 ;
 
 Contenido                   ::= Value:val COMA Contenido:cont
@@ -269,7 +289,7 @@ PrintParam                  ::= Value:val
                                 LlamadoMetodos:lm
                                 {: RESULT = lm; :}
                                 |
-                                {: RESULT = new Node("..."); :}
+                                {: RESULT = new Node("null"); :}
                                 ;
 
 //--------------------------Functions-------------------------------
@@ -386,25 +406,11 @@ IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
                                 |
                                 IF error {: parser.report_error("IF statement declaration. Usage example:\n\n\tif (<boolean expression>) do \n\t\t...\n\tend", "WRONG"); :} Statements;
 
-SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER DO SwitchExprList:exprl END
-                                {: RESULT = new Node("SWITCH", expr, exprl); :}
+SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER Statements:st
+                                {: RESULT = new Node("SWITCH", expr, st); :}
                                 |
-                                SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} SwitchExprList
+                                SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Statements
                                 ;
-
-SwitchExprList              ::= SwitchExprPart:exprp SwitchExprList:exprl
-                                {: RESULT = exprl.add(exprp); :}
-                                |
-                                SwitchExprPart:exprp
-                                {: RESULT = new Node("body",exprp); :};
-
-SwitchExprPart              ::= CASE Expression:expr DOSPUNTOS Statements:st BREAK PUNTOCOMA
-                                {: RESULT = new Node("CASE", expr, st); :}
-                                |
-                                OTHER DOSPUNTOS Statements:st BREAK PUNTOCOMA
-                                {: RESULT = new Node("OTHER", st); :}
-                                |
-                                CASE error {:parser.report_error("CASE syntax in SWITCH statement.","WRONG");:} Statements;
 
 
 //--------------------------Boolean expressions-------------------------------
