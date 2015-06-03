@@ -93,6 +93,7 @@ public class Data {
     }
 
     public void setValue(Object obj) { //sets the value while updating the type if necessary
+        System.out.println("value era: "+value+", y el que viene: "+obj);
         if (obj != null) {
             if (obj instanceof String) {
                 type = "string";

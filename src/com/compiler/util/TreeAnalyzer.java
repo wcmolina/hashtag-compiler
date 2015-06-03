@@ -165,7 +165,7 @@ public class TreeAnalyzer {
             } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
                 reportTypeMismatch(node, typeRequired);
             } else {
-            //suba el valor?
+                //suba el valor?
             }
         } else {
             Node right = node.getChildren().get(1);
@@ -300,22 +300,22 @@ public class TreeAnalyzer {
         }
     }
 
-    public double interpreter(String operator, double val1, double val2) throws ArithmeticException {
+    public Object operate(String operator, Object val1, Object val2) throws ArithmeticException {
         if (operator.equalsIgnoreCase("+")) {
-            return val1 + val2;
+            return (Integer) val1 + (Integer) val2;
         } else if (operator.equalsIgnoreCase("-")) {
-            return val1 - val2;
+            return (Integer) val1 - (Integer) val2;
         } else if (operator.equalsIgnoreCase("*")) {
-            return val1 * val2;
+            return (Integer) val1 * (Integer) val2;
         } else if (operator.equalsIgnoreCase("/")) {
-            if (val2 != 0) {
-                return val1 / val2;
+            if ((Integer) val2 != 0) {
+                return (Integer) val1 / (Integer) val2;
             } else {
                 throw new ArithmeticException();
             }
         } else if (operator.equalsIgnoreCase("%")) {
-            if (val2 != 0) {
-                return val1 / val2;
+            if ((Integer) val2 != 0) {
+                return (Integer) val1 / (Integer) val2;
             } else {
                 throw new ArithmeticException();
             }

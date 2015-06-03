@@ -527,6 +527,22 @@ NumLiterals                 ::= NUMERO:num
                                     Data dat = new Data(symbol.getLexeme(), "REAL", real, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, Double.toString(real));
                                 :}
+                                |
+                                MENOS NUMERO:num
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+
+                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num*-1, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Integer.toString(num*-1));
+                                :}
+                                |
+                                MENOS REAL:real
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+
+                                    Data dat = new Data(symbol.getLexeme(), "REAL", real*-1, symbol.getLine(), symbol.getColumn());
+                                    RESULT = new Node(dat, Double.toString(real*-1));
+                                :}
                                 ;
 
 StringLiterals              ::= CADENA:str
