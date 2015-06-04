@@ -3,6 +3,7 @@ package com.compiler.hashtag;
 import com.compiler.ast.Data;
 import com.compiler.ast.Node;
 import com.compiler.ast.FunctionType;
+import java_cup.runtime.Symbol;
 
 parser code {:
     public Node root = null;
@@ -53,7 +54,7 @@ non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionL
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
 non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,Case;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Parametros,Param,Return,Functions,Lectura;
+non terminal Node Print,LlamadoMetodos,Parametros,Param,Return,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
 
 
@@ -469,24 +470,15 @@ LogicalOperator             ::= AND
 
 //--------------------------Arithmetic expression-------------------------------
 
-ArithmeticExpr              ::= ArithmeticExpr:ea SUMA Factor:fct
-                                {: RESULT = new Node("+",ea,fct); :}
-                                |
-                                ArithmeticExpr:ea MENOS Factor:fct
-                                {: RESULT = new Node("-",ea,fct); :}
+ArithmeticExpr              ::= ArithmeticExpr:ea AddOrSubstract:aos Factor:fct
+                                {: RESULT = aos.add(ea,fct); :}
                                 |
                                 Factor:fct
                                 {: RESULT = fct; :}
                                 ;
 
-Factor                      ::= Factor:fct MULT Term:trm
-                                {: RESULT = new Node("*",fct,trm); :}
-                                |
-                                Factor:fct DIV Term:trm
-                                {: RESULT = new Node("/",fct,trm); :}
-                                |
-                                Factor:fct MOD Term:trm
-                                {: RESULT = new Node("%",fct,trm); :}
+Factor                      ::= Factor:fct MultiplyOrDivide:mdm Term:trm
+                                {: RESULT = mdm.add(fct,trm); :}
                                 |
                                 Term:trm
                                 {: RESULT = trm; :}
@@ -497,6 +489,38 @@ Term                        ::= PARIZQ Expression:expr PARDER
                                 |
                                 Literals:lit
                                 {: RESULT = lit; :}
+                                ;
+
+AddOrSubstract              ::= SUMA
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "+");
+                                :}
+                                |
+                                MENOS
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "-");
+                                :}
+                                ;
+
+MultiplyOrDivide            ::= MULT
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "*");
+                                :}
+                                |
+                                DIV
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "/");
+                                :}
+                                |
+                                MOD
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "%");
+                                :}
                                 ;
 
 Literals                    ::= NumLiterals:nl

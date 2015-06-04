@@ -33,11 +33,11 @@ public class JavaSymbol extends java_cup.runtime.Symbol {
         return lexeme;
     }
 
-    public String getTokenName(int token) {
+    public String getTokenName() {
         try {
             java.lang.reflect.Field[] classFields = SymbolConstants.class.getFields();
             for (int i = 0; i < classFields.length; i++) {
-                if (classFields[i].getInt(null) == token) {
+                if (classFields[i].getInt(null) == sym) {
                     return classFields[i].getName();
                 }
             }
@@ -51,6 +51,6 @@ public class JavaSymbol extends java_cup.runtime.Symbol {
 
     @Override
     public String toString() {
-        return "(line: " + line + ", column: " + column + "). Unexpected symbol '" + getTokenName(sym) + "'"+ (value == null ? "" : (", value: '" + value + "')"));
+        return "(line: " + line + ", column: " + column + "). Unexpected symbol '" + getTokenName() + "'" + (value == null ? "" : (", value: '" + value + "')"));
     }
 }

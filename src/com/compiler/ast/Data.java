@@ -1,5 +1,8 @@
 package com.compiler.ast;
 
+import com.compiler.hashtag.JavaSymbol;
+import java_cup.runtime.Symbol;
+
 /**
  * Created by Wilmer Carranza on 01/05/2015.
  */
@@ -58,6 +61,15 @@ public class Data {
         }
     }
 
+    public Data(JavaSymbol symbol) {
+        lexeme = symbol.getLexeme();
+        token = symbol.getTokenName();
+        line = symbol.getLine();
+        column = symbol.getColumn();
+        type = "null";
+        value = scope = null;
+    }
+
     public Data() { //can't think of a use for this, but i'll leave it just in case...
         lexeme = token = type = "null";
         line = column = -1;
@@ -93,7 +105,6 @@ public class Data {
     }
 
     public void setValue(Object obj) { //sets the value while updating the type if necessary
-        System.out.println("value era: "+value+", y el que viene: "+obj);
         if (obj != null) {
             if (obj instanceof String) {
                 type = "string";
@@ -137,7 +148,7 @@ public class Data {
                 ", column=" + column +
                 ", type='" + type + '\'' +
                 ", value=" + value +
-                ", scope=" + scope.getID() +
+                ", scope=" + (this.getToken().equalsIgnoreCase("identifier") ? scope.getID() : "scope?") +
                 '}';
     }
 

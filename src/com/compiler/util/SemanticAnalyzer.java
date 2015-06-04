@@ -16,7 +16,7 @@ import java.util.Stack;
  * </p>
  */
 
-public class TreeAnalyzer {
+public class SemanticAnalyzer {
 
     private static final String[] ARITHMETIC_OPERATORS = {"+", "-", "*", "/", "%"};
     private static final String[] COMPARISON_OPERATORS = {">", "<", "==", "<=", ">=", "!="};
@@ -35,7 +35,7 @@ public class TreeAnalyzer {
     private Stack<Scope> scopeStack;
 
     //main constructor, where root is the root of the AST.
-    public TreeAnalyzer() {
+    public SemanticAnalyzer() {
         semanticErrors = 0;
         errors = new ArrayList<Integer>();
         scopeStack = new Stack<Scope>();
@@ -74,7 +74,9 @@ public class TreeAnalyzer {
                 } else if (node.label.equalsIgnoreCase("functions")) {
                     functionHandler(node);
                 } else if (node.label.equalsIgnoreCase("return")) {
-
+                    if (Node.findInPrevious(node, "function") == null) {
+                        System.out.println("hmm, return out of a function... hmm... sera que es error...");
+                    }
                 } else {
                     System.out.println("can't recognize node: " + node.label);
                 }
@@ -130,11 +132,11 @@ public class TreeAnalyzer {
         variable = assign.getChildren().get(0);
         Data variableData = new Data();
 
-        //attempting to find this variable in the ST
         try {
+            //attempting to find this variable in the ST
             variableData = getIdentifierData(variable);
 
-            //found it, now update its data and analyze the value being assigned.
+            //found it, now update its data (for error reporting) and analyze the value being assigned.
             variable.setData(variableData);
             analyzeValue(value, variable);
         } catch (NullPointerException npe) {
@@ -143,63 +145,48 @@ public class TreeAnalyzer {
 
     }
 
-    //example: 7+5*8/x-y
-    private void arithmeticHandler(Node node, String typeRequired) {
+    //checks operators with their valid types, e.g. operator '*' only supports int or double
+    private boolean isValidExpression(Node node, String typeRequired) {
         if (node.isLeaf()) {
             if (node.getData().getToken().equalsIgnoreCase("identifier")) {
                 try {
-                    if (getIdentifierData(node).getValue() == null) {
+                    Data valueData;
+                    if ((valueData = getIdentifierData(node)).getValue() == null) {
                         reportVariableNotInitialized(node);
+                        return false;
                     } else {
-                        Data valueData = getIdentifierData(node);
                         node.getData().setType(valueData.getType());
                         if (!valueData.getType().equalsIgnoreCase(typeRequired)) {
                             reportTypeMismatch(node, typeRequired);
-                        } else {
-                            //es int o double, que le suba el valor al papa...
-                        }
+                            return false;
+                        } else return true;
                     }
                 } catch (NullPointerException npe) {
                     reportVariableNotDeclared(node);
+                    return false;
                 }
             } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
                 reportTypeMismatch(node, typeRequired);
-            } else {
-                //suba el valor?
-            }
+                return false;
+            } else return true;
         } else {
             Node right = node.getChildren().get(1);
             Node left = node.getChildren().get(0);
 
-            if (node.label.equalsIgnoreCase("/")) {
-                checkDivision(right);
-                arithmeticHandler(left, typeRequired);
-            } else {
-                arithmeticHandler(right, typeRequired);
-                arithmeticHandler(left, typeRequired);
-            }
+            return (isValidExpression(right, typeRequired) && isValidExpression(left, typeRequired));
         }
-    }
-
-    private void comparisonHandler(Node operator) {
-        Node left = operator.getChildren().get(0);
-        Node right = operator.getChildren().get(1);
-
-        //here, i use arithmeticHandler just because it has the same code comparisonHandler needs
-        arithmeticHandler(left, "int");
-        arithmeticHandler(right, "int");
     }
 
     private void conditionHandler(Node node) {
         if (node.isLeaf()) {
             if (node.getData().getToken().equalsIgnoreCase("identifier")) {
                 try {
-                    if (getIdentifierData(node).getValue() == null) {
+                    Data valueData;
+                    if ((valueData = getIdentifierData(node)).getValue() == null) {
                         reportVariableNotInitialized(node);
                     } else {
-                        Data valueData = getIdentifierData(node);
-                        node.getData().setType(valueData.getType());
-                        if (!valueData.getType().equalsIgnoreCase("boolean")) {
+                        node.getData().setValue(valueData.getValue());
+                        if (!node.getData().getType().equalsIgnoreCase("boolean")) {
                             reportTypeMismatch(node, "boolean");
                         }
                     }
@@ -214,7 +201,9 @@ public class TreeAnalyzer {
         } else {
             String label = node.label;
             if (Arrays.asList(COMPARISON_OPERATORS).contains(label)) {
-                comparisonHandler(node);
+
+                //int < int ; int >= int ; int == int
+                isValidExpression(node, "int");
             } else if (Arrays.asList(LOGICAL_OPERATORS).contains(label)) {
                 Node left = node.getChildren().get(0);
                 Node right = node.getChildren().get(1);
@@ -238,8 +227,10 @@ public class TreeAnalyzer {
     private void analyzeValue(Node value, Node variable) {
         String variableType = variable.getData().getType();
         if (Arrays.asList(ARITHMETIC_OPERATORS).contains(value.label)) { //arithmetic expr
-            if (variableType.equalsIgnoreCase("int") || variableType.equalsIgnoreCase("double")) { //Hashtag only supports int or double
-                arithmeticHandler(value, variableType);
+            if (variableType.equalsIgnoreCase("int") || variableType.equalsIgnoreCase("double")) { //double or int only for this kind of expr
+                if (isValidExpression(value, variableType)) {
+                    checkArithmetic(value);
+                }
             } else {
                 String message = "The expression can't be applied to type: " + variableType + ". Expected type: 'int' or 'double'.";
                 reportError(variable, message);
@@ -249,12 +240,12 @@ public class TreeAnalyzer {
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
                 try {
-                    if (getIdentifierData(value).getValue() == null) {
+                    Data valueData;
+                    if ((valueData = getIdentifierData(value)).getValue() == null) {
                         reportVariableNotInitialized(value);
                     } else {
-                        Data valueData = getIdentifierData(value);
-                        value.getData().setType(valueData.getType());
-                        if (!valueData.getType().equalsIgnoreCase(variableType)) {
+                        value.getData().setValue(valueData.getValue());
+                        if (!value.getData().getType().equalsIgnoreCase(variableType)) {
                             reportTypeMismatch(value, variableType);
                         }
                     }
@@ -267,28 +258,38 @@ public class TreeAnalyzer {
         }
     }
 
-    private void checkDivision(Node node) {
-        Data data = node.getData();
-        if (data.getType().equalsIgnoreCase("int")) {
-            if ((Integer) data.getValue() == 0) {
-                reportError(node, "Can't divide by 0.");
-            }
-        } else if (data.getToken().equalsIgnoreCase("identifier")) {
-            Data idData = getIdentifierData(node);
-            node.getData().setType(idData.getType());
-            if (idData.getValue() == null) {
-                reportVariableNotInitialized(node);
-            } else {
-                if (idData.getType().equalsIgnoreCase("int")) {
-                    if ((Integer) idData.getValue() == 0) {
-                        reportError(node, "Can't divide by 0.");
-                    }
-                } else {
-                    reportTypeMismatch(node, "int");
-                }
-            }
+    private Object checkArithmetic(Node node) {
+        if (node.isLeaf()) {
+            if (node.getData().getToken().equalsIgnoreCase("identifier")) {
+                return getIdentifierData(node).getValue();
+            } else return node.getData().getValue();
         } else {
-            reportTypeMismatch(node, "int");
+            Node right = node.getChildren().get(1);
+            Node left = node.getChildren().get(0);
+
+            Object val1 = checkArithmetic(left);
+            Object val2 = checkArithmetic(right);
+
+            if (val1 == null || val2 == null) {
+                return null;
+            } else {
+                try {
+                    if (val2 instanceof Integer && (Integer) val2 == 0 && (node.label.equalsIgnoreCase("/") || node.label.equalsIgnoreCase("%"))) {
+                        reportError(right, "This expression results in a division by zero.");
+                        return null;
+                    } else if (val2 instanceof Double && (Double) val2 == 0.0 && (node.label.equalsIgnoreCase("/") || node.label.equalsIgnoreCase("%"))) {
+                        reportError(right, "This expression results in a division by zero.");
+                        return null;
+                    }
+                    Object result = StringUtils.operate(node.label, val1, val2);
+                    node.getData().setValue(result);
+                    return result;
+                } catch (ArithmeticException ae) {
+                    return null;
+                }
+
+            }
+
         }
     }
 
@@ -298,29 +299,6 @@ public class TreeAnalyzer {
         else {
             throw new NullPointerException();
         }
-    }
-
-    public Object operate(String operator, Object val1, Object val2) throws ArithmeticException {
-        if (operator.equalsIgnoreCase("+")) {
-            return (Integer) val1 + (Integer) val2;
-        } else if (operator.equalsIgnoreCase("-")) {
-            return (Integer) val1 - (Integer) val2;
-        } else if (operator.equalsIgnoreCase("*")) {
-            return (Integer) val1 * (Integer) val2;
-        } else if (operator.equalsIgnoreCase("/")) {
-            if ((Integer) val2 != 0) {
-                return (Integer) val1 / (Integer) val2;
-            } else {
-                throw new ArithmeticException();
-            }
-        } else if (operator.equalsIgnoreCase("%")) {
-            if ((Integer) val2 != 0) {
-                return (Integer) val1 / (Integer) val2;
-            } else {
-                throw new ArithmeticException();
-            }
-        }
-        return -1;
     }
 
     public ArrayList<Integer> getErrorLines() {

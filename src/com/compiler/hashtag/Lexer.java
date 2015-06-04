@@ -406,13 +406,11 @@ public class Lexer implements java_cup.runtime.Scanner {
     StringBuilder comment = new StringBuilder();
 
     private Symbol symbol(int type) {
-        cur_sym = new JavaSymbol(type, yyline + 1, yycolumn + 1, yytext());
-        return cur_sym;
+        return new JavaSymbol(type, yyline + 1, yycolumn + 1, yytext());
     }
 
     private Symbol symbol(int type, Object value) {
-        cur_sym = new JavaSymbol(type, yyline + 1, yycolumn + 1, yytext(), value);
-        return cur_sym;
+        return new JavaSymbol(type, yyline + 1, yycolumn + 1, yytext(), value);
     }
 
     //apparently this returns the 'lookahead' symbol, not the current one

@@ -1,7 +1,7 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.Node;
-import com.compiler.util.TreeAnalyzer;
+import com.compiler.util.SemanticAnalyzer;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
@@ -78,6 +78,7 @@ public class Editor extends JFrame {
             }
         });
         contentChanged = false;
+        filePath = "";
         consolePane.setVisible(false);
     }
 
@@ -623,14 +624,14 @@ public class Editor extends JFrame {
                             }
                         });
                         treeFrame.getContentPane().add(scroll);
-                        treeFrame.setTitle("[AST] - " + filePath);
+                        treeFrame.setTitle((filePath.isEmpty()) ? "[AST]" : "[AST] - " + filePath);
                         showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
                     Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
-                    TreeAnalyzer analyzer = new TreeAnalyzer(); //aqui se le manda el AST...
+                    SemanticAnalyzer analyzer = new SemanticAnalyzer(); //aqui se le manda el AST...
                     analyzer.traverse(parser.root);
-                    System.out.println("errors: " + TreeAnalyzer.semanticErrors);
+                    System.out.println("errors: " + SemanticAnalyzer.semanticErrors);
 
                     for (int num : analyzer.getErrorLines()) {
                         try {
@@ -652,6 +653,7 @@ public class Editor extends JFrame {
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered\n" + e.getMessage());
+            e.printStackTrace();
         }
     }
 

@@ -65,11 +65,22 @@ public class Node {
         this.parent = parent;
     }
 
+    public static Node findInPrevious(Node parent, String type) {
+        if (parent.getData().getType().equalsIgnoreCase(type)) {
+            return parent;
+        } else {
+            if (parent.getParent() == null) {
+                return null;
+            } else
+                return findInPrevious(parent.getParent(), type);
+        }
+    }
+
     /**
-     * @return
+     * @return Returns the parent <code>Node</code> of the referenced <code>Node</code>
      */
     public Node getParent() {
-        return (parent == null) ? new Node("null") : parent;
+        return parent;
     }
 
 
