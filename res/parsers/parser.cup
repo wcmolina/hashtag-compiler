@@ -9,11 +9,6 @@ parser code {:
     public Node root = null;
     public int errors = 0;
     public int fatal = 0;
-    //Lexer lexer = (Lexer) this.getScanner();
-
-    public JavaSymbol getCurrentSymbol() {
-        return (JavaSymbol) this.cur_token;
-    }
 
     public void report_error(String message, Object info){
         StringBuilder m = new StringBuilder("");
@@ -49,14 +44,12 @@ terminal Character CARACTER;
 terminal String    CADENA,IDENTIFICADOR;
 terminal Boolean   FALSE,TRUE;
 
-
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionList,FunctionPart,Statements;
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
 non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,CaseExpr,Case,Other;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return;
 non terminal Node Print,LlamadoMetodos,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
-
 
 precedence left  SUMA,MENOS;
 precedence left  MULT,DIV,MOD;
@@ -228,7 +221,6 @@ Identifier                  ::= IDENTIFICADOR:id
 
                                     Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, id);
-                                    RESULT.getData().setType("identifier");
                                 :}
                                 ;
 
@@ -367,7 +359,27 @@ Parametros                  ::= Parametros:params COMA Param:param
 Param                       ::= Type:tp Identifier:id
                                 {:
                                     RESULT = id;
-                                    RESULT.getData().setType(tp.label);
+                /*
+                --------------------------------------------------------------------
+                    why do I do this?
+                    - variables in parameters are basically declarations with no value (until someone calls the function and sends values)
+                    - during type checking, if I leave this parameters with 'null' values, it will cause a 'variableNotInitialized' error if they
+                        are used in the function's body.
+                    - to 'fix' this, I assign 'default' values to the parameters depending on their types, just so it won't trigger the error.
+                    - not sure it's the right way but... whatever
+                --------------------------------------------------------------------
+                */
+                                    if (tp.label.equalsIgnoreCase("int")) {
+                                        RESULT.getData().setValue(0);
+                                    } else if (tp.label.equalsIgnoreCase("double")) {
+                                        RESULT.getData().setValue(0.0);
+                                    } else if (tp.label.equalsIgnoreCase("boolean")) {
+                                        RESULT.getData().setValue(false);
+                                    } else if (tp.label.equalsIgnoreCase("string")) {
+                                        RESULT.getData().setValue("");
+                                    } else if (tp.label.equalsIgnoreCase("char")) {
+                                        RESULT.getData().setValue(' ');
+                                    }
                                 :}
                                 ;
 

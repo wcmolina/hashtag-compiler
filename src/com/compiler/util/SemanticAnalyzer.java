@@ -73,6 +73,8 @@ public class SemanticAnalyzer {
                     checkCaseStatement(node);
                 } else if (node.label.equalsIgnoreCase("case_arg") || node.label.equalsIgnoreCase("switch_arg")) {
                     checkSwitchParameter(node.getChildren().get(0));
+                } else if (node.label.equalsIgnoreCase("parameters")) {
+                    checkDeclaration(node);
                 } else {
                     System.out.println("can't recognize node: " + node.label);
                 }
@@ -165,7 +167,6 @@ public class SemanticAnalyzer {
                     Node left = node.getChildren().get(0);
                     Node right = node.getChildren().get(1);
                     if (left.getData().getType().equalsIgnoreCase("boolean") || right.getData().getType().equalsIgnoreCase("boolean")) {
-                        //if either one has a boolean type, checkConditions on both.
                         checkConditions(left);
                         checkConditions(right);
                     } else {
@@ -186,11 +187,23 @@ public class SemanticAnalyzer {
     }
 
     private void checkFunction(Node node) {
+        setupScopeStack(node.label);
         Node body = node.getChildren().get(0); //el unico hijo que deberia de tener
         for (Node function : body.getChildren()) {
-            //cada hijo tendria su propio scope.
-            System.out.println(function.getData().getValue());
+            Data data = function.getData();
+            if (!Scope.isInPrevious(scopeStack.peek(), data.getValue().toString())) {
+                function.getData().setScope(scopeStack.peek());
+                data = function.getData();
+                scopeStack.peek().put(data.getValue().toString(), data);
+            } else {
+                reportVariableAlreadyDeclared(function);
+            }
+            setupScopeStack(function.label);
+            for (Node child : function.getChildren()) {
+                traverse(child);
+            }
         }
+        scopeStack.pop();
     }
 
     private void checkCaseStatement(Node node) {
@@ -380,7 +393,7 @@ public class SemanticAnalyzer {
         int column = node.getData().getColumn();
         Editor.console.setText(Editor.console.getText()
                 + "\nError: (line: " + line + ", column: " + column + ")\n"
-                + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared."
+                + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared in the scope."
                 + "\n");
         if (!errors.contains(line)) {
             errors.add(line);

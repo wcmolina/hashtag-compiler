@@ -4,6 +4,10 @@ begin
         return a+b;
     end
     
+    function int diff(int a, int b) do
+        return a-b;
+    end    
+    
     function boolean isEven(int number) do
         return number%0 == 0;
     end 

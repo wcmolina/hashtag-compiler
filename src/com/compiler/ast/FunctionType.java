@@ -37,10 +37,10 @@ public class FunctionType {
     }
 
     public String getSignature() {
-        return signature;
+        return identifier.label.concat(":").concat(signature);
     }
 
     public String toString() {
-        return identifier.label.concat(":").concat(signature);
+        return getSignature();
     }
 }
