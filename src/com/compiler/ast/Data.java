@@ -93,7 +93,7 @@ public class Data {
 
     public void setScope(Scope scope) {
         this.scope = scope;
-        System.out.println("the new scope of " + this.lexeme + " is: " + scope.getID());
+        System.out.println("scope of " + this.lexeme + " is: " + scope.getID());
     }
 
     public int getColumn() {

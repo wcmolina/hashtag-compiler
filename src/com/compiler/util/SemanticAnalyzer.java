@@ -1,6 +1,7 @@
 package com.compiler.util;
 
 import com.compiler.ast.Data;
+import com.compiler.ast.FunctionType;
 import com.compiler.ast.Node;
 import com.compiler.ast.Scope;
 import com.compiler.hashtag.Editor;
@@ -28,18 +29,12 @@ public class SemanticAnalyzer {
     //while traversing the tree, I lose track of which scope is which, or which one is the current. This stack controls that.
     private Stack<Scope> scopeStack;
 
-    //main constructor, where root is the root of the AST.
     public SemanticAnalyzer() {
         semanticErrors = 0;
         errors = new ArrayList<Integer>();
         scopeStack = new Stack<Scope>();
     }
 
-    /**
-     * <code>traverse</code> 'runs' through the AST. It divides its work by calling functions it needs when a certain node is reached.
-     *
-     * @param node the starting <code>Node</code>.
-     */
     public void traverse(Node node) {
         if (!node.isLeaf()) {
             if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) {
@@ -199,6 +194,7 @@ public class SemanticAnalyzer {
                 reportVariableAlreadyDeclared(function);
             }
             setupScopeStack(function.label);
+
             for (Node child : function.getChildren()) {
                 traverse(child);
             }
@@ -221,9 +217,22 @@ public class SemanticAnalyzer {
     }
 
     private void checkReturn(Node returnNode) {
-        if (Node.findInPrevious(returnNode, "function") == null) {
-            String message = "return out of function?";
+        Node function;
+        if ((function = (Node.findInPrevious(returnNode, "function"))) == null) {
+            String message = "Return out of function.";
             reportError(returnNode, message);
+        } else {
+            FunctionType functionType = (FunctionType) function.getData().getValue();
+            Node rtrn = returnNode.getChildren().get(0);
+            if (Arrays.asList(COMPARISON_OPERATORS).contains(rtrn.label) || Arrays.asList(LOGICAL_OPERATORS).contains(rtrn.label)) {
+                if (functionType.getRange().equalsIgnoreCase("boolean") && rtrn.getData().getType().equalsIgnoreCase("boolean")) {
+                    checkConditions(rtrn);
+                } else {
+                    reportTypeMismatch(rtrn, functionType.getRange());
+                }
+            } else {
+                checkExpression(rtrn, functionType.getRange());
+            }
         }
     }
 
@@ -320,6 +329,7 @@ public class SemanticAnalyzer {
         }
     }
 
+    //similar code checkExpression has, but with a different approach
     private void checkSwitchParameter(Node arg) {
         if (arg.isLeaf()) {
             if (arg.getData().getToken().equalsIgnoreCase("identifier")) {
@@ -406,7 +416,7 @@ public class SemanticAnalyzer {
             int column = found.getData().getColumn();
             Editor.console.setText(Editor.console.getText()
                     + "\nError: (line: " + line + ", column: " + column + ")\n"
-                    + "    " + (++semanticErrors) + "==> " + "INCOMPATIBLE types"
+                    + "    " + (++semanticErrors) + "==> " + "Incompatible types"
                     + "\n" + "        " + " found: '" + found.getData().getType() + "'"
                     + "\n" + "        " + " required: '" + required + "'"
                     + "\n");
