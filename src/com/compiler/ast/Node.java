@@ -1,6 +1,7 @@
 package com.compiler.ast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 public class Node {
@@ -65,24 +66,24 @@ public class Node {
         this.parent = parent;
     }
 
-    public static Node findInPrevious(Node parent, String type) {
-        if (parent.getData().getType().equalsIgnoreCase(type)) {
+    public static Node findInPrevious(Node parent, String... args) {
+        if (Arrays.asList(args).contains(parent.getData().getType().toLowerCase())) {
             return parent;
         } else {
             if (parent.getParent() == null) {
                 return null;
             } else
-                return findInPrevious(parent.getParent(), type);
+                return findInPrevious(parent.getParent(), args);
         }
     }
 
     /**
      * @return Returns the parent <code>Node</code> of the referenced <code>Node</code>
      */
+
     public Node getParent() {
         return parent;
     }
-
 
     /**
      * <p>
@@ -96,6 +97,7 @@ public class Node {
      * @param parent The parent of the node. <code>null</code> means the node is root.
      * @param child  The child of the parent node. <code>null</code> may result in a <code>NullPointerException</code>
      */
+
     public static void setConnection(Node parent, Node child) {
         child.setParent(parent);
         if (!child.isLeaf()) {
@@ -111,6 +113,7 @@ public class Node {
      * @param nodes An array of <code>Node</code>.
      * @return Returns the node with its updated children.
      */
+
     public Node add(Node... nodes) {
         for (Node child : nodes) {
             children.add(child);

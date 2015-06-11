@@ -1,7 +1,6 @@
 package com.compiler.ast;
 
 import com.compiler.hashtag.JavaSymbol;
-import java_cup.runtime.Symbol;
 
 /**
  * Created by Wilmer Carranza on 01/05/2015.

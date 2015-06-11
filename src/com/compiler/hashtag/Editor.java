@@ -449,8 +449,7 @@ public class Editor extends JFrame {
 
     private void reset() {
         Editor.console.setText("");
-        editorPane.getHighlighter().removeAllHighlights();
-        LinePainter lp = new LinePainter(editorPane, Color.decode("0x343D46"));
+        clearHighlights();
         if (treeFrame != null) {
             treeFrame.setVisible(false);
             treeFrame = null;
@@ -641,7 +640,6 @@ public class Editor extends JFrame {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
                     }
-
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + parser.errors);
                     Editor.console.setText(Editor.console.getText() + "\nNumber of unexpected errors: " + parser.fatal);
@@ -660,6 +658,7 @@ public class Editor extends JFrame {
     // <editor-fold desc="init right click popup menu">
     private void initPopupMenu() {
         JMenuItem parse = new JMenuItem("Parse");
+        JMenuItem clear = new JMenuItem("Clear highlights");
         parse.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
         try {
             parse.setIcon(new ImageIcon("res/img/icons/run-icon.png"));
@@ -673,10 +672,23 @@ public class Editor extends JFrame {
                 parseMenuItemActionPerformed(e);
             }
         });
+
+        clear.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearHighlights();
+            }
+        });
         editorPane.getComponentPopupMenu().addSeparator();
         editorPane.getComponentPopupMenu().add(parse);
+        editorPane.getComponentPopupMenu().add(clear);
     }
     // </editor-fold>
+
+    public void clearHighlights() {
+        editorPane.getHighlighter().removeAllHighlights();
+        LinePainter lp = new LinePainter(editorPane, Color.decode("0x343D46"));
+    }
 
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */

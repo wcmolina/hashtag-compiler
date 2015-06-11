@@ -52,9 +52,9 @@ terminal Boolean   FALSE,TRUE;
 
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionList,FunctionPart,Statements;
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
-non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,Case;
-non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam;
-non terminal Node Print,LlamadoMetodos,Parametros,Param,Return,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
+non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,CaseExpr,Case,Other;
+non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return;
+non terminal Node Print,LlamadoMetodos,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
 
 
@@ -115,13 +115,13 @@ BodyPart                    ::= Block:bq
                                 Asignacion:asig PUNTOCOMA
                                 {: RESULT = asig; :}
                                 |
-                                Return:ret PUNTOCOMA
+                                ReturnExpr:ret PUNTOCOMA
                                 {: RESULT = ret; :}
                                 |
                                 Break:bk PUNTOCOMA
                                 {: RESULT = bk; :}
                                 |
-                                Case:cs
+                                CaseExpr:cs
                                 {: RESULT = cs; :}
                                 |
                                 error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
@@ -153,20 +153,36 @@ Lectura                     ::= READINT PARIZQ PARDER
                                 ;
 
 Break                       ::= BREAK
-                                {: RESULT = new Node("BREAK"); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"BREAK");
+                                :}
                                 ;
 
-Case                        ::= CASE Value:val DOSPUNTOS Statements:st
-                                {: RESULT = new Node("CASE", val, st); :}
+CaseExpr                    ::= Case:cs Value:val DOSPUNTOS Statements:st
+                                {: RESULT = cs.add(new Node("case_arg",val),st); :}
                                 |
-                                OTHER DOSPUNTOS Statements:st
-                                {: RESULT = new Node("OTHER", st); :}
+                                Other:ot DOSPUNTOS Statements:st
+                                {: RESULT = ot.add(st); :}
                                 |
                                 CASE error {: parser.report_error("'CASE' syntax.","WRONG"); :} Statements
                                 |
                                 OTHER error {: parser.report_error("'OTHER' syntax.","WRONG"); :} Statements
                                 ;
 
+Case                        ::= CASE
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"CASE");
+                                :}
+                                ;
+
+Other                       ::= OTHER
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"OTHER");
+                                :}
+                                ;
                 /*
 --------------------------------------------------------------------------------
                 S-Atribuida ejemplo (como deberia de ser):
@@ -212,6 +228,7 @@ Identifier                  ::= IDENTIFICADOR:id
 
                                     Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, id);
+                                    RESULT.getData().setType("identifier");
                                 :}
                                 ;
 
@@ -354,11 +371,18 @@ Param                       ::= Type:tp Identifier:id
                                 :}
                                 ;
 
-Return                      ::= RETURN LlamadoMetodos:call
-                                {: RESULT = new Node("RETURN", call); :}
+ReturnExpr                  ::= Return:ret LlamadoMetodos:call
+                                {: RESULT = ret.add(call); :}
                                 |
-                                RETURN Value:val
-                                {: RESULT = new Node("RETURN", val); :}
+                                Return:ret Value:val
+                                {: RESULT = ret.add(val); :}
+                                ;
+
+Return                      ::= RETURN
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol), "RETURN");
+                                :}
                                 ;
 
 //--------------------------Blocks (if, switch, while, for)-------------------------------
@@ -384,7 +408,10 @@ Conditional                 ::= IfStmt:ic
                                 {: RESULT = swc; :};
 
 ForStmt                     ::= FOR PARIZQ ForExpr:expr PARDER Statements:st
-                                {: RESULT = new Node("FOR", expr, st); :}
+                                {:
+                                    RESULT = new Node("FOR", expr, st);
+                                    RESULT.getData().setType("for_statement");
+                                :}
                                 |
                                 FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Statements;
 
@@ -392,7 +419,10 @@ ForExpr                     ::= VarInit:init PUNTOCOMA Expression:expr PUNTOCOMA
                                 {: RESULT = new Node("structure",init,expr,update); :};
 
 WhileStmt                   ::= WHILE PARIZQ Expression:expr PARDER Statements:st
-                                {: RESULT = new Node("WHILE",new Node("conditions",expr), st); :}
+                                {:
+                                    RESULT = new Node("WHILE",new Node("conditions",expr), st);
+                                    RESULT.getData().setType("while_statement");
+                                :}
                                 |
                                 WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Statements
                                 |
@@ -400,7 +430,10 @@ WhileStmt                   ::= WHILE PARIZQ Expression:expr PARDER Statements:s
                                 ;
 
 IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
-                                {: RESULT = new Node("IF",new Node("conditions",expr), st); :}
+                                {:
+                                    RESULT = new Node("IF",new Node("conditions",expr), st);
+                                    RESULT.getData().setType("if_statement");
+                                :}
                                 |
                                 IF PARIZQ Expression:expr PARDER Statements:st1 ELSE Statements:st2
                                 {: RESULT = new Node("IF",new Node("conditions",expr),st1,new Node("ELSE",st2)); :}
@@ -408,7 +441,10 @@ IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
                                 IF error {: parser.report_error("IF statement declaration. Usage example:\n\n\tif (<boolean expression>) do \n\t\t...\n\tend", "WRONG"); :} Statements;
 
 SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER Statements:st
-                                {: RESULT = new Node("SWITCH", expr, st); :}
+                                {:
+                                    RESULT = new Node("SWITCH", new Node("switch_arg",expr), st);
+                                    RESULT.getData().setType("switch_statement");
+                                :}
                                 |
                                 SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Statements
                                 ;
@@ -421,7 +457,10 @@ Expression                  ::= BooleanExprList:bel
                                 ;
 
 BooleanExprList             ::= BooleanExprList:list LogicalOperator:lop BooleanExprPart:part
-                                {: RESULT = new Node(lop.label,list,part); :}
+                                {:
+                                    RESULT = new Node(lop.label,list,part);
+                                    RESULT.getData().setType("boolean");
+                                :}
                                 |
                                 BooleanExprPart:part
                                 {: RESULT = part; :}
@@ -432,7 +471,10 @@ BooleanExprPart             ::= ExprComparacion:ec
                                 ;
 
 ExprComparacion             ::= ArithmeticExpr:ae1 RelationalOper:oprel ArithmeticExpr:ae2
-                                {: RESULT = new Node(oprel.label, ae1, ae2); :}
+                                {:
+                                    RESULT = oprel.add(ae1,ae2);
+                                    RESULT.getData().setType("boolean");
+                                :}
                                 |
                                 NOT ExprComparacion:exprc
                                 {: RESULT = new Node("negation", exprc); :}
@@ -442,29 +484,53 @@ ExprComparacion             ::= ArithmeticExpr:ae1 RelationalOper:oprel Arithmet
                                 ;
 
 RelationalOper              ::= MAYOR
-                                {: RESULT = new Node(">"); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),">");
+                                :}
                                 |
                                 MENOR
-                                {: RESULT = new Node("<"); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"<");
+                                :}
                                 |
                                 MAYORIGUAL
-                                {: RESULT = new Node(">="); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),">=");
+                                :}
                                 |
                                 MENORIGUAL
-                                {: RESULT = new Node("<="); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"<=");
+                                :}
                                 |
                                 IGUAL
-                                {: RESULT = new Node("=="); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"==");
+                                :}
                                 |
                                 DIFERENTE
-                                {: RESULT = new Node("!="); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"!=");
+                                :}
                                 ;
 
 LogicalOperator             ::= AND
-                                {: RESULT = new Node("AND"); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"AND");
+                                :}
                                 |
                                 OR
-                                {: RESULT = new Node("OR"); :}
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"OR");
+                                :}
                                 ;
 
 

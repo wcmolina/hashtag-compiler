@@ -11,9 +11,6 @@ import java.util.Stack;
 
 /**
  * Created by Wilmer Carranza on 01/05/2015.
- * <p>
- * This class basically manages all my Semantic Analysis
- * </p>
  */
 
 public class SemanticAnalyzer {
@@ -21,11 +18,8 @@ public class SemanticAnalyzer {
     private static final String[] ARITHMETIC_OPERATORS = {"+", "-", "*", "/", "%"};
     private static final String[] COMPARISON_OPERATORS = {">", "<", "==", "<=", ">=", "!="};
     private static final String[] LOGICAL_OPERATORS = {"AND", "OR"};
-    private static final String[] BLOCK_STATEMENTS = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE", "CASE"};
+    private static final String[] BLOCK_STATEMENTS = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"};
 
-    /**
-     * Serves only as an error counter. Increases is time an error is reported.
-     */
     public static int semanticErrors = 0;
 
     //used for my Editor class to highlight in red the lines contained here.
@@ -50,7 +44,7 @@ public class SemanticAnalyzer {
         if (!node.isLeaf()) {
             if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) {
                 //since a block has been found, it should have its own scope, so I need to setup my stack
-                setupStack(node.label);
+                setupScopeStack(node.label);
                 for (Node block : node.getChildren()) {
                     //most of the time there are only two children, 'body' (always) and 'conditions', or 'structure', etc
                     traverse(block);
@@ -61,44 +55,57 @@ public class SemanticAnalyzer {
                         traverse(bodyNode);
                     }
                     scopeStack.pop();
-
-                    //here is where the function divides its work
                 } else if (node.label.equalsIgnoreCase("init")) {
-                    initHandler(node);
+                    checkInitialization(node);
                 } else if (node.label.equalsIgnoreCase("declare")) {
-                    declareHandler(node);
+                    checkDeclaration(node);
                 } else if (node.label.equalsIgnoreCase("assign")) {
-                    assignHandler(node);
+                    checkAssignment(node);
                 } else if (node.label.equalsIgnoreCase("conditions")) {
-                    conditionHandler(node.getChildren().get(0));
+                    checkConditions(node.getChildren().get(0));
                 } else if (node.label.equalsIgnoreCase("functions")) {
-                    functionHandler(node);
+                    checkFunction(node);
+                } else if (node.label.equalsIgnoreCase("structure")) {
+                    System.out.println("structure handler missing");
                 } else if (node.label.equalsIgnoreCase("return")) {
-                    if (Node.findInPrevious(node, "function") == null) {
-                        System.out.println("hmm, return out of a function... hmm... sera que es error...");
-                    }
+                    checkReturn(node);
+                } else if (node.label.equalsIgnoreCase("case")) {
+                    checkCaseStatement(node);
+                } else if (node.label.equalsIgnoreCase("case_arg") || node.label.equalsIgnoreCase("switch_arg")) {
+                    checkSwitchParameter(node.getChildren().get(0));
                 } else {
                     System.out.println("can't recognize node: " + node.label);
                 }
             }
+        } else {
+            if (node.label.equalsIgnoreCase("break")) {
+                if (Node.findInPrevious(node, "while_statement", "for_statement", "switch_statement") == null) {
+                    String message = "Break out of switch statement or loop.";
+                    reportError(node, message);
+                }
+            } else {
+                System.out.println("can't recognize node: " + node.label);
+            }
         }
     }
 
-    private void setupStack(String label) {
+    private void setupScopeStack(String label) {
         Scope current;
+
         //create a new Scope, which should be the current one with the previous one as its parent
         current = (scopeStack.empty()) ? new Scope(null) : new Scope(scopeStack.peek());
         current.setLabel(label);
-        //Now add the newly created Scope as a child to the previous Scope.
+
+        //now add the newly created scope as a child to the previous one.
         if (!scopeStack.empty()) {
             scopeStack.peek().addScope(current);
         }
-        //now push the new Scope to the stack.
+
+        //now push the new scope to the stack.
         scopeStack.push(current);
     }
 
-    //example: int x;
-    private void declareHandler(Node declare) {
+    private void checkDeclaration(Node declare) {
         Data data;
         for (Node variable : declare.getChildren()) {
             data = variable.getData();
@@ -112,21 +119,19 @@ public class SemanticAnalyzer {
         }
     }
 
-    //example: int x = 7;
-    private void initHandler(Node init) {
+    private void checkInitialization(Node init) {
         Node variable, value;
         value = init.getChildren().get(1); //value
         variable = init.getChildren().get(0); //id, which is actually a declare node, but it holds info on the type (as well as its children)
 
         //adding all variables of 'declare' to the symbol table
-        declareHandler(variable);
+        checkDeclaration(variable);
 
         //analyze what kind of expression is this value
         analyzeValue(value, variable);
     }
 
-    //example: x = 0;
-    private void assignHandler(Node assign) {
+    private void checkAssignment(Node assign) {
         Node variable, value;
         value = assign.getChildren().get(1);
         variable = assign.getChildren().get(0);
@@ -142,57 +147,12 @@ public class SemanticAnalyzer {
         } catch (NullPointerException npe) {
             reportVariableNotDeclared(variable);
         }
-
     }
 
-    //checks operators with their valid types, e.g. operator '*' only supports int or double
-    private boolean isValidExpression(Node node, String typeRequired) {
+    private void checkConditions(Node node) {
         if (node.isLeaf()) {
             if (node.getData().getToken().equalsIgnoreCase("identifier")) {
-                try {
-                    Data valueData;
-                    if ((valueData = getIdentifierData(node)).getValue() == null) {
-                        reportVariableNotInitialized(node);
-                        return false;
-                    } else {
-                        node.getData().setType(valueData.getType());
-                        if (!valueData.getType().equalsIgnoreCase(typeRequired)) {
-                            reportTypeMismatch(node, typeRequired);
-                            return false;
-                        } else return true;
-                    }
-                } catch (NullPointerException npe) {
-                    reportVariableNotDeclared(node);
-                    return false;
-                }
-            } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
-                reportTypeMismatch(node, typeRequired);
-                return false;
-            } else return true;
-        } else {
-            Node right = node.getChildren().get(1);
-            Node left = node.getChildren().get(0);
-
-            return (isValidExpression(right, typeRequired) && isValidExpression(left, typeRequired));
-        }
-    }
-
-    private void conditionHandler(Node node) {
-        if (node.isLeaf()) {
-            if (node.getData().getToken().equalsIgnoreCase("identifier")) {
-                try {
-                    Data valueData;
-                    if ((valueData = getIdentifierData(node)).getValue() == null) {
-                        reportVariableNotInitialized(node);
-                    } else {
-                        node.getData().setValue(valueData.getValue());
-                        if (!node.getData().getType().equalsIgnoreCase("boolean")) {
-                            reportTypeMismatch(node, "boolean");
-                        }
-                    }
-                } catch (NullPointerException npe) {
-                    reportVariableNotDeclared(node);
-                }
+                checkIdentifier(node, "boolean");
             } else {
                 if (!node.getData().getType().equalsIgnoreCase("boolean")) {
                     reportTypeMismatch(node, "boolean");
@@ -201,26 +161,56 @@ public class SemanticAnalyzer {
         } else {
             String label = node.label;
             if (Arrays.asList(COMPARISON_OPERATORS).contains(label)) {
-
-                //int < int ; int >= int ; int == int
-                isValidExpression(node, "int");
+                if (label.equalsIgnoreCase("==") || label.equalsIgnoreCase("!=")) {
+                    Node left = node.getChildren().get(0);
+                    Node right = node.getChildren().get(1);
+                    if (left.getData().getType().equalsIgnoreCase("boolean") || right.getData().getType().equalsIgnoreCase("boolean")) {
+                        //if either one has a boolean type, checkConditions on both.
+                        checkConditions(left);
+                        checkConditions(right);
+                    } else {
+                        checkExpression(node, "int");
+                    }
+                } else {
+                    checkExpression(node, "int");
+                }
             } else if (Arrays.asList(LOGICAL_OPERATORS).contains(label)) {
                 Node left = node.getChildren().get(0);
                 Node right = node.getChildren().get(1);
-                conditionHandler(left);
-                conditionHandler(right);
+                checkConditions(left);
+                checkConditions(right);
             } else if (Arrays.asList(ARITHMETIC_OPERATORS).contains(node.label)) {
-                String message = "Boolean expression expected.";
-                reportError(node, message);
+                reportError(node, "Boolean expression expected.");
             }
         }
     }
 
-    private void functionHandler(Node node) {
-        Node body = node.getChildren().get(0); //el unico hijo qe deberia de tener
+    private void checkFunction(Node node) {
+        Node body = node.getChildren().get(0); //el unico hijo que deberia de tener
         for (Node function : body.getChildren()) {
             //cada hijo tendria su propio scope.
             System.out.println(function.getData().getValue());
+        }
+    }
+
+    private void checkCaseStatement(Node node) {
+        setupScopeStack(node.label);
+        Node parent = node.getParent();
+        if (parent.label.equalsIgnoreCase("body")) {
+            parent = parent.getParent();
+        }
+        if (!parent.label.equalsIgnoreCase("switch")) {
+            reportError(node, "Case out of switch statement.");
+        }
+        for (Node child : node.getChildren()) {
+            traverse(child);
+        }
+    }
+
+    private void checkReturn(Node returnNode) {
+        if (Node.findInPrevious(returnNode, "function") == null) {
+            String message = "return out of function?";
+            reportError(returnNode, message);
         }
     }
 
@@ -228,33 +218,59 @@ public class SemanticAnalyzer {
         String variableType = variable.getData().getType();
         if (Arrays.asList(ARITHMETIC_OPERATORS).contains(value.label)) { //arithmetic expr
             if (variableType.equalsIgnoreCase("int") || variableType.equalsIgnoreCase("double")) { //double or int only for this kind of expr
-                if (isValidExpression(value, variableType)) {
+                int temporal = semanticErrors;
+                checkExpression(value, variableType);
+                if (temporal == semanticErrors) {
                     checkArithmetic(value);
                 }
             } else {
-                String message = "The expression can't be applied to type: " + variableType + ". Expected type: 'int' or 'double'.";
-                reportError(variable, message);
+                String message = "The expression can't be applied to type: '" + variableType + "'. Expected type: 'int' or 'double'.";
+                if (variable.label.equalsIgnoreCase("declare")) {
+                    reportError(variable.getChildren().get(0), message);
+                } else {
+                    reportError(variable, message);
+                }
             }
         } else if (Arrays.asList(COMPARISON_OPERATORS).contains(value.label) || Arrays.asList(LOGICAL_OPERATORS).contains(value.label)) { //boolean expr
-            conditionHandler(value);
+            checkConditions(value);
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
-                try {
-                    Data valueData;
-                    if ((valueData = getIdentifierData(value)).getValue() == null) {
-                        reportVariableNotInitialized(value);
-                    } else {
-                        value.getData().setValue(valueData.getValue());
-                        if (!value.getData().getType().equalsIgnoreCase(variableType)) {
-                            reportTypeMismatch(value, variableType);
-                        }
-                    }
-                } catch (NullPointerException npe) {
-                    reportVariableNotDeclared(value);
-                }
+                checkIdentifier(value, variableType);
             } else if (!value.getData().getType().equalsIgnoreCase(variableType)) { //literal
                 reportTypeMismatch(value, variableType);
             }
+        }
+    }
+
+    private void checkExpression(Node node, String typeRequired) {
+        if (node.isLeaf()) {
+            if (node.getData().getToken().equalsIgnoreCase("identifier")) {
+                checkIdentifier(node, typeRequired);
+            } else if (!node.getData().getType().equalsIgnoreCase(typeRequired)) {
+                reportTypeMismatch(node, typeRequired);
+            }
+        } else {
+            Node right = node.getChildren().get(1);
+            Node left = node.getChildren().get(0);
+
+            checkExpression(right, typeRequired);
+            checkExpression(left, typeRequired);
+        }
+    }
+
+    private void checkIdentifier(Node identifier, String variableType) {
+        try {
+            Data valueData;
+            if ((valueData = getIdentifierData(identifier)).getValue() == null) {
+                reportVariableNotInitialized(identifier);
+            } else {
+                identifier.getData().setValue(valueData.getValue());
+                if (!identifier.getData().getType().equalsIgnoreCase(variableType)) {
+                    reportTypeMismatch(identifier, variableType);
+                }
+            }
+        } catch (NullPointerException npe) {
+            reportVariableNotDeclared(identifier);
         }
     }
 
@@ -287,13 +303,41 @@ public class SemanticAnalyzer {
                 } catch (ArithmeticException ae) {
                     return null;
                 }
-
             }
-
         }
     }
 
-    private Data getIdentifierData(Node variable) throws NullPointerException {
+    private void checkSwitchParameter(Node arg) {
+        if (arg.isLeaf()) {
+            if (arg.getData().getToken().equalsIgnoreCase("identifier")) {
+                try {
+                    Data valueData;
+                    if ((valueData = getIdentifierData(arg)).getValue() == null) {
+                        reportVariableNotInitialized(arg);
+                    } else {
+                        arg.getData().setValue(valueData.getValue());
+                        if (!valueData.getType().equalsIgnoreCase("char") && !valueData.getType().equalsIgnoreCase("int")) {
+                            reportTypeMismatch(arg, "'int' or 'char'");
+                        }
+                    }
+                } catch (NullPointerException npe) {
+                    reportVariableNotDeclared(arg);
+                }
+            } else {
+                if (!arg.getData().getType().equalsIgnoreCase("int") && !arg.getData().getType().equalsIgnoreCase("char")) {
+                    reportTypeMismatch(arg, "'int' or 'char'");
+                }
+            }
+        } else {
+            if (Arrays.asList(ARITHMETIC_OPERATORS).contains(arg.label)) {
+                checkExpression(arg, "int");
+            } else {
+                reportError(arg, "Invalid expression. Expected 'int' or 'char'.");
+            }
+        }
+    }
+
+    public Data getIdentifierData(Node variable) throws NullPointerException {
         Data data = Scope.findInPrevious(scopeStack.peek(), variable.label);
         if (data != null) return data;
         else {
@@ -306,7 +350,6 @@ public class SemanticAnalyzer {
     }
 
     //<editor-fold desc="Error reporting">
-    //different types of error reports
     private static void reportVariableNotInitialized(Node node) {
         int line = node.getData().getLine();
         int column = node.getData().getColumn();
@@ -351,8 +394,8 @@ public class SemanticAnalyzer {
             Editor.console.setText(Editor.console.getText()
                     + "\nError: (line: " + line + ", column: " + column + ")\n"
                     + "    " + (++semanticErrors) + "==> " + "INCOMPATIBLE types"
-                    + "\n" + "        " + " found: " + found.getData().getType()
-                    + "\n" + "        " + " required: " + required
+                    + "\n" + "        " + " found: '" + found.getData().getType() + "'"
+                    + "\n" + "        " + " required: '" + required + "'"
                     + "\n");
             if (!errors.contains(line)) {
                 errors.add(line);
@@ -371,6 +414,5 @@ public class SemanticAnalyzer {
             errors.add(line);
         }
     }
-
     //</editor-fold>
 }

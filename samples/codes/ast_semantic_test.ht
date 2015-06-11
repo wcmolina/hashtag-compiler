@@ -16,6 +16,17 @@ begin
         int s1 = 3 + 5 + 1 - 5 * 3;
         string str = "Hola mundo";
         double db = 0.32;
+        
+        switch (expr) do
+            case 1: do
+                int hola = false;
+            end
+            break;
+        end
+        
+        break;
+        
+        return 8;
 
         double mult = db * var2;
         int a,b,c = 0;
