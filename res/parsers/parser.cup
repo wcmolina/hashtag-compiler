@@ -48,7 +48,7 @@ non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionL
 non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
 non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,CaseExpr,Case,Other;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return;
-non terminal Node Print,LlamadoMetodos,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
+non terminal Node Print,FunctionCall,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
 
 precedence left  SUMA,MENOS;
@@ -71,12 +71,10 @@ Program                     ::= BEGIN Functions:f Main:mn END
                                     parser.root = RESULT;
                                 :}
                                 |
-                                error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END
-                                ;
+                                error {: parser.report_error("syntax. Missing token 'begin'.","WRONG"); :} Main END;
 
 Functions                   ::= FunctionList:fl
-                                {: RESULT = new Node("FUNCTIONS",fl); :}
-                                ;
+                                {: RESULT = new Node("FUNCTIONS",fl); :};
 
 Main                        ::= MAINBEGIN Statements:st
                                 {: RESULT = new Node("MAIN",st); :}
@@ -89,15 +87,13 @@ Statements                  ::= DO BodyList:bdl END
                                 DO END
                                 {: RESULT = new Node("null"); :}
                                 |
-                                error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END
-                                ;
+                                error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END;
 
 BodyList                    ::= BodyPart:bp BodyList:bdl
                                 {: RESULT = bdl.add(bp); :}
                                 |
                                 BodyPart:bp
-                                {: RESULT = new Node("body", bp); :}
-                                ;
+                                {: RESULT = new Node("body", bp); :};
 
 BodyPart                    ::= Block:bq
                                 {: RESULT = bq; :}
@@ -117,8 +113,7 @@ BodyPart                    ::= Block:bq
                                 CaseExpr:cs
                                 {: RESULT = cs; :}
                                 |
-                                error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart
-                                ;
+                                error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart;
 
 Instruccion                 ::= VarDeclare:vd
                                 {: RESULT = vd; :}
@@ -129,8 +124,7 @@ Instruccion                 ::= VarDeclare:vd
                                 Llamado:l
                                 {: RESULT = l; :}
                                 |
-                                error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA
-                                ;
+                                error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA;
 
 Lectura                     ::= READINT PARIZQ PARDER
                                 {: RESULT = new Node("READINT"); :}
@@ -142,15 +136,13 @@ Lectura                     ::= READINT PARIZQ PARDER
                                 {: RESULT = new Node("READSTRING"); :}
                                 |
                                 READCHAR PARIZQ PARDER
-                                {: RESULT = new Node("READCHAR"); :}
-                                ;
+                                {: RESULT = new Node("READCHAR"); :};
 
 Break                       ::= BREAK
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"BREAK");
-                                :}
-                                ;
+                                :};
 
 CaseExpr                    ::= Case:cs Value:val DOSPUNTOS Statements:st
                                 {: RESULT = cs.add(new Node("case_arg",val),st); :}
@@ -160,46 +152,24 @@ CaseExpr                    ::= Case:cs Value:val DOSPUNTOS Statements:st
                                 |
                                 CASE error {: parser.report_error("'CASE' syntax.","WRONG"); :} Statements
                                 |
-                                OTHER error {: parser.report_error("'OTHER' syntax.","WRONG"); :} Statements
-                                ;
+                                OTHER error {: parser.report_error("'OTHER' syntax.","WRONG"); :} Statements;
 
 Case                        ::= CASE
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"CASE");
-                                :}
-                                ;
+                                :};
 
 Other                       ::= OTHER
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"OTHER");
-                                :}
-                                ;
-                /*
---------------------------------------------------------------------------------
-                S-Atribuida ejemplo (como deberia de ser):
-                    V -> L
-                    T -> int | double | char | string | boolean
-                    L -> L,P
-                    L -> TP
-                    P -> id
-
-                    donde:
-                    V = VarDeclare
-                    L = VarDeclarationList
-                    P = Identifier
-                    T = Type
-
-                    Identifier not necessary anymore?
---------------------------------------------------------------------------------
-                */
+                                :};
 
 VarDeclare                  ::= VarDeclarationList:vdl
                                 {:
                                     RESULT = vdl;
-                                :}
-                                ;
+                                :};
 
 VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
                                 {:
@@ -212,8 +182,7 @@ VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
                                     iden.getData().setType(tp.label); //habria que hacer clase Tipo propia?
                                     RESULT = new Node("declare", iden);
                                     RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
-                                :}
-                                ;
+                                :};
 
 Identifier                  ::= IDENTIFICADOR:id
                                 {:
@@ -221,8 +190,7 @@ Identifier                  ::= IDENTIFICADOR:id
 
                                     Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, id);
-                                :}
-                                ;
+                                :};
 
 VarInit                     ::= VarDeclare:vd ASIGNACION Value:av
                                 {:
@@ -233,12 +201,13 @@ VarInit                     ::= VarDeclare:vd ASIGNACION Value:av
                                 :}
                                 |
                                 VarDeclare:vd ASIGNACION Lectura:lec
-                                {: RESULT = new Node("init",vd,lec); :}
-                                ;
+                                {: RESULT = new Node("init",vd,lec); :};
 
 Value                       ::= Expression:eb
                                 {: RESULT = eb; :}
-                                ;
+                                |
+                                FunctionCall:fc
+                                {: RESULT = fc; :};
 
 Asignacion                  ::= Identifier:iden ASIGNACION Value:val
                                 {: RESULT = new Node("assign",iden,val); :}
@@ -247,8 +216,7 @@ Asignacion                  ::= Identifier:iden ASIGNACION Value:val
                                 {: RESULT = new Node("assign",iden,lec); :}
                                 |
                                 ExprIncDec:update
-                                {: RESULT = update; :}
-                                ;
+                                {: RESULT = update; :};
 
 Type                        ::= INT
                                 {: RESULT = new Node("int"); :}
@@ -263,30 +231,27 @@ Type                        ::= INT
                                 {: RESULT = new Node("boolean"); :}
                                 |
                                 STRING
-                                {: RESULT = new Node("string"); :}
-                                ;
+                                {: RESULT = new Node("string"); :};
 
 //--------------------------Method calls-------------------------------
 
 Llamado                     ::= Print:pr
                                 {: RESULT = pr; :}
                                 |
-                                LlamadoMetodos:lm
-                                {: RESULT = lm; :}
-                                ;
+                                FunctionCall:lm
+                                {: RESULT = lm; :};
 
-LlamadoMetodos              ::= Identifier:id PARIZQ Contenido:cont PARDER
+FunctionCall                ::= Identifier:id PARIZQ Contenido:cont PARDER
                                 {: RESULT = new Node("function_call",id,cont); :}
                                 |
                                 Identifier:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", id, new Node("params",new Node("null"))); :}
-                                ;
+                                {: RESULT = new Node("function_call", id, new Node("parameters",new Node("null"))); :};
 
 Contenido                   ::= Value:val COMA Contenido:cont
                                 {: RESULT = cont.add(val); :}
                                 |
                                 Value:val
-                                {: RESULT = new Node("params",val); :};
+                                {: RESULT = new Node("parameters",val); :};
 
 //--------------------------Parameters-------------------------------
 
@@ -296,11 +261,7 @@ Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
 PrintParam                  ::= Value:val
                                 {: RESULT = val; :}
                                 |
-                                LlamadoMetodos:lm
-                                {: RESULT = lm; :}
-                                |
-                                {: RESULT = new Node("null"); :}
-                                ;
+                                {: RESULT = new Node("null"); :};
 
 //--------------------------Functions-------------------------------
 
@@ -344,8 +305,7 @@ FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:pa
                                 |
                                 FUNCTION error {:
                                             parser.report_error("function declaration. Usage example: function <type> <id> () do ... end","WRONG");
-                                        :} Statements
-                                ;
+                                        :} Statements;
 
 Parametros                  ::= Parametros:params COMA Param:param
                                 {: RESULT = params.add(param); :}
@@ -353,22 +313,11 @@ Parametros                  ::= Parametros:params COMA Param:param
                                 Param:param
                                 {: RESULT = new Node("parameters",param); :}
                                 |
-                                {: RESULT = new Node("parameters"); :}
-                                ;
+                                {: RESULT = new Node("parameters"); :};
 
 Param                       ::= Type:tp Identifier:id
                                 {:
                                     RESULT = id;
-                /*
-                --------------------------------------------------------------------
-                    why do I do this?
-                    - variables in parameters are basically declarations with no value (until someone calls the function and sends values)
-                    - during type checking, if I leave this parameters with 'null' values, it will cause a 'variableNotInitialized' error if they
-                        are used in the function's body.
-                    - to 'fix' this, I assign 'default' values to the parameters depending on their types, just so it won't trigger the error.
-                    - not sure it's the right way but... whatever
-                --------------------------------------------------------------------
-                */
                                     if (tp.label.equalsIgnoreCase("int")) {
                                         RESULT.getData().setValue(0);
                                     } else if (tp.label.equalsIgnoreCase("double")) {
@@ -380,22 +329,16 @@ Param                       ::= Type:tp Identifier:id
                                     } else if (tp.label.equalsIgnoreCase("char")) {
                                         RESULT.getData().setValue(' ');
                                     }
-                                :}
-                                ;
+                                :};
 
-ReturnExpr                  ::= Return:ret LlamadoMetodos:call
-                                {: RESULT = ret.add(call); :}
-                                |
-                                Return:ret Value:val
-                                {: RESULT = ret.add(val); :}
-                                ;
+ReturnExpr                  ::= Return:ret Value:val
+                                {: RESULT = ret.add(val); :};
 
 Return                      ::= RETURN
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol), "RETURN");
-                                :}
-                                ;
+                                :};
 
 //--------------------------Blocks (if, switch, while, for)-------------------------------
 
@@ -403,15 +346,13 @@ Block                       ::= Loops:lp
                                 {: RESULT = lp; :}
                                 |
                                 Conditional:cond
-                                {: RESULT = cond; :}
-                                ;
+                                {: RESULT = cond; :};
 
 Loops                       ::= ForStmt:flp
                                 {: RESULT = flp; :}
                                 |
                                 WhileStmt:wlp
-                                {: RESULT = wlp; :}
-                                ;
+                                {: RESULT = wlp; :};
 
 Conditional                 ::= IfStmt:ic
                                 {: RESULT = ic; :}
@@ -438,8 +379,7 @@ WhileStmt                   ::= WHILE PARIZQ Expression:expr PARDER Statements:s
                                 |
                                 WHILE PARIZQ PARDER error {: parser.report_error("WHILE statement declaration, missing boolean expression.","WRONG"); :} Statements
                                 |
-                                WHILE error {: parser.report_error("WHILE statement declaration. Usage example:\n\n\twhile (<boolean expression>) do \n\t\t...\n\tend","WRONG"); :} Statements
-                                ;
+                                WHILE error {: parser.report_error("WHILE statement declaration. Usage example:\n\n\twhile (<boolean expression>) do \n\t\t...\n\tend","WRONG"); :} Statements;
 
 IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
                                 {:
@@ -458,15 +398,13 @@ SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER Statements:
                                     RESULT.getData().setType("switch_statement");
                                 :}
                                 |
-                                SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Statements
-                                ;
+                                SWITCH error {:parser.report_error("SWITCH statement declaration.","WRONG"); :} Statements;
 
 
 //--------------------------Boolean expressions-------------------------------
 
 Expression                  ::= BooleanExprList:bel
-                                {: RESULT = bel; :}
-                                ;
+                                {: RESULT = bel; :};
 
 BooleanExprList             ::= BooleanExprList:list LogicalOperator:lop BooleanExprPart:part
                                 {:
@@ -475,12 +413,10 @@ BooleanExprList             ::= BooleanExprList:list LogicalOperator:lop Boolean
                                 :}
                                 |
                                 BooleanExprPart:part
-                                {: RESULT = part; :}
-                                ;
+                                {: RESULT = part; :};
 
 BooleanExprPart             ::= ExprComparacion:ec
-                                {: RESULT = ec; :}
-                                ;
+                                {: RESULT = ec; :};
 
 ExprComparacion             ::= ArithmeticExpr:ae1 RelationalOper:oprel ArithmeticExpr:ae2
                                 {:
@@ -492,8 +428,7 @@ ExprComparacion             ::= ArithmeticExpr:ae1 RelationalOper:oprel Arithmet
                                 {: RESULT = new Node("negation", exprc); :}
                                 |
                                 ArithmeticExpr:ae
-                                {: RESULT = ae; :}
-                                ;
+                                {: RESULT = ae; :};
 
 RelationalOper              ::= MAYOR
                                 {:
@@ -529,8 +464,7 @@ RelationalOper              ::= MAYOR
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"!=");
-                                :}
-                                ;
+                                :};
 
 LogicalOperator             ::= AND
                                 {:
@@ -542,8 +476,7 @@ LogicalOperator             ::= AND
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"OR");
-                                :}
-                                ;
+                                :};
 
 
 //--------------------------Arithmetic expression-------------------------------
@@ -552,22 +485,19 @@ ArithmeticExpr              ::= ArithmeticExpr:ea AddOrSubstract:aos Factor:fct
                                 {: RESULT = aos.add(ea,fct); :}
                                 |
                                 Factor:fct
-                                {: RESULT = fct; :}
-                                ;
+                                {: RESULT = fct; :};
 
 Factor                      ::= Factor:fct MultiplyOrDivide:mdm Term:trm
                                 {: RESULT = mdm.add(fct,trm); :}
                                 |
                                 Term:trm
-                                {: RESULT = trm; :}
-                                ;
+                                {: RESULT = trm; :};
 
 Term                        ::= PARIZQ Expression:expr PARDER
                                 {: RESULT = expr; :}
                                 |
                                 Literals:lit
-                                {: RESULT = lit; :}
-                                ;
+                                {: RESULT = lit; :};
 
 AddOrSubstract              ::= SUMA
                                 {:
@@ -579,8 +509,7 @@ AddOrSubstract              ::= SUMA
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol), "-");
-                                :}
-                                ;
+                                :};
 
 MultiplyOrDivide            ::= MULT
                                 {:
@@ -598,8 +527,7 @@ MultiplyOrDivide            ::= MULT
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol), "%");
-                                :}
-                                ;
+                                :};
 
 Literals                    ::= NumLiterals:nl
                                 {: RESULT = nl; :}
@@ -611,8 +539,7 @@ Literals                    ::= NumLiterals:nl
                                 {: RESULT = bl; :}
                                 |
                                 Identifier:id
-                                {: RESULT = id; :}
-                                ;
+                                {: RESULT = id; :};
 
 NumLiterals                 ::= NUMERO:num
                                 {:
@@ -644,8 +571,7 @@ NumLiterals                 ::= NUMERO:num
 
                                     Data dat = new Data(symbol.getLexeme(), "REAL", real*-1, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, Double.toString(real*-1));
-                                :}
-                                ;
+                                :};
 
 StringLiterals              ::= CADENA:str
                                 {:
@@ -661,8 +587,7 @@ StringLiterals              ::= CADENA:str
 
                                     Data dat = new Data(symbol.getLexeme(), "CHARACTER", ch, symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, ("'").concat(Character.toString(ch)).concat("'"));
-                                :}
-                                ;
+                                :};
 
 BooleanLiterals             ::= TRUE
                                 {:
@@ -678,9 +603,7 @@ BooleanLiterals             ::= TRUE
 
                                     Data dat = new Data(symbol.getLexeme(), "FALSE", new Boolean(false), symbol.getLine(), symbol.getColumn());
                                     RESULT = new Node(dat, "false");
-                                :}
-                                ;
-
+                                :};
 
 //------------------------------- Increment/decrement expressions -------------------------------
 

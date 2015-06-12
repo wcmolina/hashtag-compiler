@@ -8,6 +8,7 @@ import com.compiler.hashtag.Editor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -61,7 +62,7 @@ public class SemanticAnalyzer {
                 } else if (node.label.equalsIgnoreCase("functions")) {
                     checkFunction(node);
                 } else if (node.label.equalsIgnoreCase("structure")) {
-                    System.out.println("structure handler missing");
+                    System.out.println("structure handler missing!");
                 } else if (node.label.equalsIgnoreCase("return")) {
                     checkReturn(node);
                 } else if (node.label.equalsIgnoreCase("case")) {
@@ -70,6 +71,8 @@ public class SemanticAnalyzer {
                     checkSwitchParameter(node.getChildren().get(0));
                 } else if (node.label.equalsIgnoreCase("parameters")) {
                     checkDeclaration(node);
+                } else if (node.label.equalsIgnoreCase("function_call")) {
+                    System.out.println("function_call handler missing!");
                 } else {
                     System.out.println("can't recognize node: " + node.label);
                 }
@@ -125,7 +128,11 @@ public class SemanticAnalyzer {
         checkDeclaration(variable);
 
         //analyze what kind of expression is this value
-        analyzeValue(value, variable);
+        if (value.label.equalsIgnoreCase("function_call")) {
+            System.out.println("type check function call!");
+        } else {
+            analyzeValue(value, variable);
+        }
     }
 
     private void checkAssignment(Node assign) {
@@ -375,14 +382,14 @@ public class SemanticAnalyzer {
     //testing how function_call nodes are going to work...
     public void getRootScope() {
         Scope root = scopeStack.firstElement();
+        Scope functions = null;
         System.out.println("first stack element: " + root.getID());
         for (Scope scope : root.getChildren()) {
-            System.out.println("scope child of root: " + scope.getID());
-            if(scope.getLabel().equalsIgnoreCase("functions")){
+            if (scope.getLabel().equalsIgnoreCase("functions")) {
                 //this is the scope where function_call nodes should look for their functions...
+                functions = scope;
             }
         }
-
     }
 
     //<editor-fold desc="Error reporting">
