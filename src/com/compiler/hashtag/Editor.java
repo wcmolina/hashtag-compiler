@@ -1,7 +1,6 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.Node;
-import com.compiler.util.SemanticAnalyzer;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
@@ -41,7 +40,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 
-//todo: highlight in red the lines that have errors (done, seems to work)
+//todo: highlight in red the lines that have errors (update: done, seems to work...)
 
 public class Editor extends JFrame {
 

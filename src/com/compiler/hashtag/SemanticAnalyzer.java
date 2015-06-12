@@ -1,10 +1,10 @@
-package com.compiler.util;
+package com.compiler.hashtag;
 
 import com.compiler.ast.Data;
 import com.compiler.ast.FunctionType;
 import com.compiler.ast.Node;
 import com.compiler.ast.Scope;
-import com.compiler.hashtag.Editor;
+import com.compiler.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;

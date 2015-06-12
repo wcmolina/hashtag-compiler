@@ -313,7 +313,7 @@ Parametros                  ::= Parametros:params COMA Param:param
                                 Param:param
                                 {: RESULT = new Node("parameters",param); :}
                                 |
-                                {: RESULT = new Node("parameters"); :};
+                                {: RESULT = new Node("parameters",new Node("null")); :};
 
 Param                       ::= Type:tp Identifier:id
                                 {:
