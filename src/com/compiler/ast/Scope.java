@@ -12,15 +12,19 @@ public class Scope extends HashMap<String, Data> {
     private Scope previous = null;
     private String label = "";
     private String ID = "";
-    private ArrayList<Scope> sub_scopes;
+    private ArrayList<Scope> children;
 
     public Scope(Scope prev) {
         this.previous = prev;
-        this.sub_scopes = new ArrayList<Scope>();
+        this.children = new ArrayList<Scope>();
     }
 
     public Scope getPrevious() {
         return previous;
+    }
+
+    public ArrayList<Scope> getChildren() {
+        return this.children;
     }
 
     public String getID() {
@@ -66,10 +70,10 @@ public class Scope extends HashMap<String, Data> {
     }
 
     public void addScope(Scope sc) {
-        if (this.sub_scopes == null) { //from some reason
-            this.sub_scopes = new ArrayList<Scope>();
+        if (this.children == null) { //from some reason
+            this.children = new ArrayList<Scope>();
         }
-        this.sub_scopes.add(sc);
+        this.children.add(sc);
     }
 
     public static String labelFromPrevious(Scope scope, String label) {

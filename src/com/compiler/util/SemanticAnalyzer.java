@@ -372,6 +372,19 @@ public class SemanticAnalyzer {
         return this.errors;
     }
 
+    //testing how function_call nodes are going to work...
+    public void getRootScope() {
+        Scope root = scopeStack.firstElement();
+        System.out.println("first stack element: " + root.getID());
+        for (Scope scope : root.getChildren()) {
+            System.out.println("scope child of root: " + scope.getID());
+            if(scope.getLabel().equalsIgnoreCase("functions")){
+                //this is the scope where function_call nodes should look for their functions...
+            }
+        }
+
+    }
+
     //<editor-fold desc="Error reporting">
     private static void reportVariableNotInitialized(Node node) {
         int line = node.getData().getLine();
