@@ -119,12 +119,12 @@ public class Editor extends JFrame {
         console.setEditable(false);
         console.setBackground(new java.awt.Color(40, 40, 40));
         console.setColumns(20);
-        console.setFont(new java.awt.Font("Lucida Console", 0, 12)); // NOI18N
+        console.setFont(new java.awt.Font("Consolas", 0, 12)); // NOI18N
         console.setForeground(new java.awt.Color(255, 255, 255));
         console.setRows(5);
         console.setTabSize(4);
         console.setToolTipText("");
-        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        console.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 6, 6, 6));
         consolePane.setViewportView(console);
 
         editorPane.setBackground(new java.awt.Color(38, 43, 53));
@@ -627,7 +627,7 @@ public class Editor extends JFrame {
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
                     Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
-                    SemanticAnalyzer analyzer = new SemanticAnalyzer(); //aqui se le manda el AST...
+                    SemanticAnalyzer analyzer = new SemanticAnalyzer();
                     analyzer.traverse(parser.root);
                     System.out.println("errors: " + SemanticAnalyzer.semanticErrors);
 
