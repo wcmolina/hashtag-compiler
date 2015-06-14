@@ -62,7 +62,7 @@ public class SemanticAnalyzer {
                 } else if (node.label.equalsIgnoreCase("functions")) {
                     checkFunction(node);
                 } else if (node.label.equalsIgnoreCase("structure")) {
-                    System.out.println("structure handler missing!");
+                    checkForStructure(node);
                 } else if (node.label.equalsIgnoreCase("return")) {
                     checkReturn(node);
                 } else if (node.label.equalsIgnoreCase("case")) {
@@ -124,10 +124,10 @@ public class SemanticAnalyzer {
         value = init.getChildren().get(1); //value
         variable = init.getChildren().get(0); //id, which is actually a declare node, but it holds info on the type (as well as its children)
 
-        //adding all variables of 'declare' to the symbol table
+        //adds all variables of 'declare' to the symbol table, if possible
         checkDeclaration(variable);
 
-        //analyze what kind of expression is this value
+        //check what kind of expression is this value
         if (value.label.equalsIgnoreCase("function_call")) {
             System.out.println("type check function call!");
         } else {
@@ -223,6 +223,35 @@ public class SemanticAnalyzer {
         }
     }
 
+    private void checkForStructure(Node struct) {
+        Node init = struct.getChildren().get(0);
+        Node decl = init.getChildren().get(0);
+        if (decl.getChildren().size() > 1) {
+            reportError(decl.getChildren().get(0), "Too many declarations in this for statement.");
+        } else {
+            Node temp;
+            if (!(temp = decl.getChildren().get(0)).getData().getType().equalsIgnoreCase("int")) {
+                reportError(temp, "For loop can only by applied to type 'int'.");
+            } else {
+                checkInitialization(init);
+            }
+        }
+        Node cond = struct.getChildren().get(1);
+        checkConditions(cond);
+        Node update = struct.getChildren().get(2);
+        Node variable = update.getChildren().get(0);
+        Data varData = null;
+        try {
+            varData = getIdentifierData(variable);
+            variable.setData(varData);
+            if (!varData.getType().equalsIgnoreCase("int")) {
+                reportTypeMismatch(variable, "int");
+            }
+        } catch (NullPointerException npe) {
+            reportVariableNotDeclared(variable);
+        }
+    }
+
     private void checkReturn(Node returnNode) {
         Node function;
         if ((function = (Node.findInPrevious(returnNode, "function"))) == null) {
@@ -264,9 +293,21 @@ public class SemanticAnalyzer {
             checkConditions(value);
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
+                int temp = semanticErrors;
                 checkIdentifier(value, variableType);
+                if (temp == semanticErrors) {
+                    if (variable.label.equalsIgnoreCase("declare")) {
+                        for (Node node : variable.getChildren()) {
+                            node.getData().setValue(value.getData().getValue());
+                        }
+                    } else {
+                        variable.getData().setValue(value.getData().getValue());
+                    }
+                }
             } else if (!value.getData().getType().equalsIgnoreCase(variableType)) { //literal
                 reportTypeMismatch(value, variableType);
+            } else {
+                variable.getData().setValue(value.getData().getValue());
             }
         }
     }
