@@ -1,5 +1,7 @@
 package com.compiler.ast;
 
+import com.compiler.hashtag.SemanticAnalyzer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -126,7 +128,11 @@ public class Node {
     }
 
     public String toString(String prefix, boolean isTail) {
-        if (this.label.equalsIgnoreCase("body")) inverse();
+        if (this.label.equalsIgnoreCase("body")
+                || SemanticAnalyzer.ARITHMETIC_OPERATORS.contains(this.label)
+                || SemanticAnalyzer.LOGICAL_OPERATORS.contains(this.label)
+                || SemanticAnalyzer.COMPARISON_OPERATORS.contains(this.label))
+            inverse();
         print = print.concat(prefix + (isTail ? "└── " : "├── ") + label) + "\n";
         if (!children.isEmpty()) {
             for (int i = 0; i < children.size() - 1; i++) {
@@ -137,5 +143,10 @@ public class Node {
             print = print.concat(children.get(children.size() - 1).toString(prefix + (isTail ? "    " : "│   "), true));
         }
         return print;
+    }
+
+    @Override
+    public String toString() {
+        return this.label;
     }
 }

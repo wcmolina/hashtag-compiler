@@ -45,9 +45,9 @@ terminal String    CADENA,IDENTIFICADOR;
 terminal Boolean   FALSE,TRUE;
 
 non terminal Node Main,BodyList,BodyPart,Type,Asignacion,Value,Program,FunctionList,FunctionPart,Statements;
-non terminal Node Instruccion,Llamado,ExprComparacion,LogicalOperator,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExprList,BooleanExprPart;
+non terminal Node Instruccion,Llamado,Comparison,RelationalOper,ExprIncDec,Incremento,Decremento,BooleanExpression,BooleanFactor;
 non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,CaseExpr,Case,Other;
-non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return;
+non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return,AndOperator,OrOperator;
 non terminal Node Print,FunctionCall,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
 non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
 
@@ -388,7 +388,10 @@ IfStmt                      ::= IF PARIZQ Expression:expr PARDER Statements:st
                                 :}
                                 |
                                 IF PARIZQ Expression:expr PARDER Statements:st1 ELSE Statements:st2
-                                {: RESULT = new Node("IF",new Node("conditions",expr),st1,new Node("ELSE",st2)); :}
+                                {:
+                                    RESULT = new Node("IF",new Node("conditions",expr),st1,new Node("ELSE",st2));
+                                    RESULT.getData().setType("if_else_statement");
+                                :}
                                 |
                                 IF error {: parser.report_error("IF statement declaration. Usage example:\n\n\tif (<boolean expression>) do \n\t\t...\n\tend", "WRONG"); :} Statements;
 
@@ -403,32 +406,50 @@ SwitchStmt                  ::= SWITCH PARIZQ Expression:expr PARDER Statements:
 
 //--------------------------Boolean expressions-------------------------------
 
-Expression                  ::= BooleanExprList:bel
+Expression                  ::= BooleanExpression:bel
                                 {: RESULT = bel; :};
 
-BooleanExprList             ::= BooleanExprList:list LogicalOperator:lop BooleanExprPart:part
+BooleanExpression           ::= BooleanExpression:expr OrOperator:or BooleanFactor:bf
                                 {:
-                                    RESULT = new Node(lop.label,list,part);
+                                    RESULT = or.add(expr,bf);
                                     RESULT.getData().setType("boolean");
                                 :}
                                 |
-                                BooleanExprPart:part
-                                {: RESULT = part; :};
+                                BooleanFactor:fact
+                                {: RESULT = fact; :};
 
-BooleanExprPart             ::= ExprComparacion:ec
-                                {: RESULT = ec; :};
+BooleanFactor               ::= BooleanFactor:bf AndOperator:and Comparison:comp
+                                {:
+                                    RESULT = and.add(bf,comp);
+                                    RESULT.getData().setType("boolean");
+                                :}
+                                |
+                                Comparison:comp
+                                {: RESULT = comp; :};
 
-ExprComparacion             ::= ArithmeticExpr:ae1 RelationalOper:oprel ArithmeticExpr:ae2
+Comparison                  ::= ArithmeticExpr:ae1 RelationalOper:oprel ArithmeticExpr:ae2
                                 {:
                                     RESULT = oprel.add(ae1,ae2);
                                     RESULT.getData().setType("boolean");
                                 :}
                                 |
-                                NOT ExprComparacion:exprc
-                                {: RESULT = new Node("negation", exprc); :}
+                                NOT Comparison:exprc
+                                {: RESULT = new Node("NOT", exprc); :}
                                 |
                                 ArithmeticExpr:ae
                                 {: RESULT = ae; :};
+
+OrOperator                  ::= OR
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"OR");
+                                :};
+
+AndOperator                 ::= AND
+                                {:
+                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(symbol),"AND");
+                                :};
 
 RelationalOper              ::= MAYOR
                                 {:
@@ -464,18 +485,6 @@ RelationalOper              ::= MAYOR
                                 {:
                                     JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
                                     RESULT = new Node(new Data(symbol),"!=");
-                                :};
-
-LogicalOperator             ::= AND
-                                {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"AND");
-                                :}
-                                |
-                                OR
-                                {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"OR");
                                 :};
 
 

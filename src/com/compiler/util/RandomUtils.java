@@ -1,11 +1,13 @@
 package com.compiler.util;
 
+import com.compiler.ast.Node;
+
 /**
  * Created by Wilmer Carranza on 04/06/2015.
  */
-public class StringUtils {
+public class RandomUtils {
 
-    public StringUtils() {
+    public RandomUtils() {
         super();
     }
 
@@ -51,7 +53,6 @@ public class StringUtils {
                 }
             }
         }
-
         return null;
     }
 }

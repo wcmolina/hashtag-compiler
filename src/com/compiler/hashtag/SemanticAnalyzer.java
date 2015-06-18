@@ -4,7 +4,8 @@ import com.compiler.ast.Data;
 import com.compiler.ast.FunctionType;
 import com.compiler.ast.Node;
 import com.compiler.ast.Scope;
-import com.compiler.util.StringUtils;
+import com.compiler.codegeneration.IntermediateCode;
+import com.compiler.util.RandomUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,28 +17,28 @@ import java.util.Stack;
 
 public class SemanticAnalyzer {
 
-    private static final String[] ARITHMETIC_OPERATORS = {"+", "-", "*", "/", "%"};
-    private static final String[] COMPARISON_OPERATORS = {">", "<", "==", "<=", ">=", "!="};
-    private static final String[] LOGICAL_OPERATORS = {"AND", "OR"};
-    private static final String[] BLOCK_STATEMENTS = {"PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"};
+    public static final ArrayList<String> ARITHMETIC_OPERATORS = new ArrayList<String>(Arrays.asList("+", "-", "*", "/", "%"));
+    public static final ArrayList<String> COMPARISON_OPERATORS = new ArrayList<String>(Arrays.asList(">", "<", "==", "<=", ">=", "!="));
+    public static final ArrayList<String> LOGICAL_OPERATORS = new ArrayList<String>(Arrays.asList("AND", "OR"));
+    public static final ArrayList<String> BLOCK_STATEMENTS = new ArrayList<String>(Arrays.asList("PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"));
 
     public static int semanticErrors = 0;
 
     //used for my Editor class to highlight in red the lines contained here.
-    private static ArrayList<Integer> errors;
+    private static ArrayList<Integer> errorsList;
 
     //while traversing the tree, I lose track of which scope is which, or which one is the current. This stack controls that.
     private Stack<Scope> scopeStack;
 
     public SemanticAnalyzer() {
         semanticErrors = 0;
-        errors = new ArrayList<Integer>();
+        errorsList = new ArrayList<Integer>();
         scopeStack = new Stack<Scope>();
     }
 
     public void traverse(Node node) {
         if (!node.isLeaf()) {
-            if (Arrays.asList(BLOCK_STATEMENTS).contains(node.label)) {
+            if (BLOCK_STATEMENTS.contains(node.label)) {
                 //since a block has been found, it should have its own scope, so I need to setup my stack
                 setupScopeStack(node.label);
                 for (Node block : node.getChildren()) {
@@ -163,10 +164,10 @@ public class SemanticAnalyzer {
             }
         } else {
             String label = node.label;
-            if (Arrays.asList(COMPARISON_OPERATORS).contains(label)) {
+            if (COMPARISON_OPERATORS.contains(label)) {
                 if (label.equalsIgnoreCase("==") || label.equalsIgnoreCase("!=")) {
-                    Node left = node.getChildren().get(0);
                     Node right = node.getChildren().get(1);
+                    Node left = node.getChildren().get(0);
                     if (left.getData().getType().equalsIgnoreCase("boolean") || right.getData().getType().equalsIgnoreCase("boolean")) {
                         checkConditions(left);
                         checkConditions(right);
@@ -176,12 +177,12 @@ public class SemanticAnalyzer {
                 } else {
                     checkExpression(node, "int");
                 }
-            } else if (Arrays.asList(LOGICAL_OPERATORS).contains(label)) {
-                Node left = node.getChildren().get(0);
-                Node right = node.getChildren().get(1);
+            } else if (LOGICAL_OPERATORS.contains(label)) {
+                Node left = node.getChildren().get(1);
+                Node right = node.getChildren().get(0);
                 checkConditions(left);
                 checkConditions(right);
-            } else if (Arrays.asList(ARITHMETIC_OPERATORS).contains(node.label)) {
+            } else if (ARITHMETIC_OPERATORS.contains(node.label)) {
                 reportError(node, "Boolean expression expected.");
             }
         }
@@ -259,7 +260,7 @@ public class SemanticAnalyzer {
         } else {
             FunctionType functionType = (FunctionType) function.getData().getValue();
             Node rtrn = returnNode.getChildren().get(0);
-            if (Arrays.asList(COMPARISON_OPERATORS).contains(rtrn.label) || Arrays.asList(LOGICAL_OPERATORS).contains(rtrn.label)) {
+            if (COMPARISON_OPERATORS.contains(rtrn.label) || LOGICAL_OPERATORS.contains(rtrn.label)) {
                 if (functionType.getRange().equalsIgnoreCase("boolean") && rtrn.getData().getType().equalsIgnoreCase("boolean")) {
                     checkConditions(rtrn);
                 } else {
@@ -273,7 +274,7 @@ public class SemanticAnalyzer {
 
     private void analyzeValue(Node value, Node variable) {
         String variableType = variable.getData().getType();
-        if (Arrays.asList(ARITHMETIC_OPERATORS).contains(value.label)) { //arithmetic expr
+        if (ARITHMETIC_OPERATORS.contains(value.label)) { //arithmetic expr
             if (variableType.equalsIgnoreCase("int") || variableType.equalsIgnoreCase("double")) { //double or int only for this kind of expr
                 int temporal = semanticErrors;
                 checkExpression(value, variableType);
@@ -288,7 +289,7 @@ public class SemanticAnalyzer {
                     reportError(variable, message);
                 }
             }
-        } else if (Arrays.asList(COMPARISON_OPERATORS).contains(value.label) || Arrays.asList(LOGICAL_OPERATORS).contains(value.label)) { //boolean expr
+        } else if (COMPARISON_OPERATORS.contains(value.label) || LOGICAL_OPERATORS.contains(value.label)) { //boolean expr
             checkConditions(value);
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
@@ -319,8 +320,8 @@ public class SemanticAnalyzer {
                 reportTypeMismatch(node, typeRequired);
             }
         } else {
-            Node right = node.getChildren().get(1);
-            Node left = node.getChildren().get(0);
+            Node right = node.getChildren().get(0);
+            Node left = node.getChildren().get(1);
 
             checkExpression(right, typeRequired);
             checkExpression(left, typeRequired);
@@ -349,8 +350,8 @@ public class SemanticAnalyzer {
                 return getIdentifierData(node).getValue();
             } else return node.getData().getValue();
         } else {
-            Node right = node.getChildren().get(1);
-            Node left = node.getChildren().get(0);
+            Node right = node.getChildren().get(0);
+            Node left = node.getChildren().get(1);
 
             Object val1 = checkArithmetic(left);
             Object val2 = checkArithmetic(right);
@@ -366,7 +367,7 @@ public class SemanticAnalyzer {
                         reportError(right, "This expression results in a division by zero.");
                         return null;
                     }
-                    Object result = StringUtils.operate(node.label, val1, val2);
+                    Object result = RandomUtils.operate(node.label, val1, val2);
                     node.getData().setValue(result);
                     return result;
                 } catch (ArithmeticException ae) {
@@ -399,7 +400,7 @@ public class SemanticAnalyzer {
                 }
             }
         } else {
-            if (Arrays.asList(ARITHMETIC_OPERATORS).contains(arg.label)) {
+            if (ARITHMETIC_OPERATORS.contains(arg.label)) {
                 checkExpression(arg, "int");
             } else {
                 reportError(arg, "Invalid expression. Expected 'int' or 'char'.");
@@ -416,7 +417,7 @@ public class SemanticAnalyzer {
     }
 
     public ArrayList<Integer> getErrorLines() {
-        return this.errors;
+        return this.errorsList;
     }
 
     //testing how function_call nodes are going to work...
@@ -440,8 +441,8 @@ public class SemanticAnalyzer {
                 + "\nError: (line: " + line + ", column: " + column + ")\n"
                 + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' might have not been initialized."
                 + "\n");
-        if (!errors.contains(line)) {
-            errors.add(line);
+        if (!errorsList.contains(line)) {
+            errorsList.add(line);
         }
     }
 
@@ -452,8 +453,8 @@ public class SemanticAnalyzer {
                 + "\nError: (line: " + line + ", column: " + column + ")\n"
                 + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has not been declared."
                 + "\n");
-        if (!errors.contains(line)) {
-            errors.add(line);
+        if (!errorsList.contains(line)) {
+            errorsList.add(line);
         }
 
     }
@@ -465,8 +466,8 @@ public class SemanticAnalyzer {
                 + "\nError: (line: " + line + ", column: " + column + ")\n"
                 + "    " + (++semanticErrors) + "==> " + "Variable '" + node.getData().getLexeme() + "' has already been declared in the scope."
                 + "\n");
-        if (!errors.contains(line)) {
-            errors.add(line);
+        if (!errorsList.contains(line)) {
+            errorsList.add(line);
         }
     }
 
@@ -480,8 +481,8 @@ public class SemanticAnalyzer {
                     + "\n" + "        " + " found: '" + found.getData().getType() + "'"
                     + "\n" + "        " + " required: '" + required + "'"
                     + "\n");
-            if (!errors.contains(line)) {
-                errors.add(line);
+            if (!errorsList.contains(line)) {
+                errorsList.add(line);
             }
         }
     }
@@ -493,8 +494,8 @@ public class SemanticAnalyzer {
                 + "\nError: (line: " + line + ", column: " + column + ")\n"
                 + "    " + (++semanticErrors) + "==> " + message
                 + "\n");
-        if (!errors.contains(line)) {
-            errors.add(line);
+        if (!errorsList.contains(line)) {
+            errorsList.add(line);
         }
     }
     //</editor-fold>

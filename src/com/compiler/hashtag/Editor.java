@@ -1,6 +1,7 @@
 package com.compiler.hashtag;
 
 import com.compiler.ast.Node;
+import com.compiler.codegeneration.IntermediateCode;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
 import jsyntaxpane.DefaultSyntaxKit;
@@ -633,12 +634,16 @@ public class Editor extends JFrame {
 
                     for (int num : analyzer.getErrorLines()) {
                         try {
-                            //highlight error line
                             editorPane.getHighlighter().addHighlight(getLineEnd(editorPane.getText(), num - 1) + 1, getLineEnd(editorPane.getText(), num), err);
                         } catch (BadLocationException e) {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
                     }
+
+                    System.out.println("trying out intermediate motherfucking code.");
+                    IntermediateCode IR = new IntermediateCode();
+                    IR.generateIntermediateCode(parser.root);
+                    System.out.println(IR.toString());
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + parser.errors);
                     Editor.console.setText(Editor.console.getText() + "\nNumber of unexpected errors: " + parser.fatal);
