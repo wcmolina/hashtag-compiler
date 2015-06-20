@@ -42,7 +42,8 @@ public class IntermediateCode {
     }
 
     private void generateIf(Node node) {
-        propagateLabel = "";
+        checkPropagatedLabel();
+
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node body = node.getChildren().get(1);
         String ifLabel = generateLabel();
@@ -52,19 +53,17 @@ public class IntermediateCode {
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, nextLabel);
         }
-        Quadruple quadruple = new Quadruple(ifLabel.concat(":"));
-        quadrupleList.add(quadruple);
         if (propagateLabel.isEmpty())
             propagateLabel = ifLabel;
         generateCode(body);
-        quadruple = new Quadruple(nextLabel.concat(":"));
-        quadrupleList.add(quadruple);
+
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }
 
     private void generateIfElse(Node node) {
-        propagateLabel = "";
+        checkPropagatedLabel();
+
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node ifBody = node.getChildren().get(1);
         Node elseBody = node.getChildren().get(2).getChildren().get(0);
@@ -76,34 +75,28 @@ public class IntermediateCode {
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, elseLabel);
         }
-        Quadruple quadruple = new Quadruple(ifLabel.concat(":"));
-        quadrupleList.add(quadruple);
         if (propagateLabel.isEmpty())
             propagateLabel = ifLabel;
         generateCode(ifBody);
-        quadruple = new Quadruple("goto ".concat(nextLabel));
+        Quadruple quadruple = new Quadruple("goto ".concat(nextLabel));
         quadrupleList.add(quadruple);
-        quadruple = new Quadruple(elseLabel.concat(":"));
-        quadrupleList.add(quadruple);
+
         if (propagateLabel.isEmpty())
             propagateLabel = elseLabel;
         generateCode(elseBody);
-        quadruple = new Quadruple(nextLabel.concat(":"));
-        quadrupleList.add(quadruple);
+
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }
 
     private void generateWhile(Node node) {
+
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node whileBody = node.getChildren().get(1);
-
         String startLabel;
-        if (propagateLabel.isEmpty()) {
-            startLabel = generateLabel();
-            Quadruple quadruple = new Quadruple(startLabel.concat(":"));
-            quadrupleList.add(quadruple);
-        } else startLabel = propagateLabel;
+        startLabel = (propagateLabel.isEmpty()) ? generateLabel() : propagateLabel;
+        Quadruple quadruple = new Quadruple(startLabel.concat(":"));
+        quadrupleList.add(quadruple);
 
         propagateLabel = "";
         String whileLabel = generateLabel();
@@ -115,20 +108,25 @@ public class IntermediateCode {
             generateAnd(conditions, whileLabel, nextLabel);
         }
 
-        Quadruple quadruple = new Quadruple(whileLabel.concat(":"));
-        quadrupleList.add(quadruple);
         propagateLabel = whileLabel;
         generateCode(whileBody);
         quadruple = new Quadruple("goto ".concat(startLabel));
         quadrupleList.add(quadruple);
-        quadruple = new Quadruple(nextLabel.concat(":"));
-        quadrupleList.add(quadruple);
+
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }
 
-    private void generateAssignment(Node assign) {
+    private void checkPropagatedLabel() {
+        if (!propagateLabel.isEmpty()) {
+            Quadruple quadruple = new Quadruple(propagateLabel.concat(":"));
+            quadrupleList.add(quadruple);
+        }
         propagateLabel = "";
+    }
+
+    private void generateAssignment(Node assign) {
+        checkPropagatedLabel();
         Node variable = assign.getChildren().get(0);
         Node value = assign.getChildren().get(1);
         if (value.isLeaf()) {

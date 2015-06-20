@@ -120,24 +120,18 @@ public class Data {
     public void setValue(Object obj) { //sets the value while updating the type if necessary
         if (obj != null) {
             if (obj instanceof String) {
-                type = "string";
                 value = obj;
                 //fix column number
                 column -= ((String) obj).length() - 1;
             } else if (obj instanceof Integer) {
-                type = "int";
                 value = ((Integer) obj).intValue();
             } else if (obj instanceof Boolean) {
-                type = "boolean";
                 value = ((Boolean) obj).booleanValue();
             } else if (obj instanceof Character) {
-                type = "char";
                 value = ((Character) obj).charValue();
             } else if (obj instanceof Double) {
-                type = "double";
                 value = ((Double) obj).doubleValue();
             } else if (obj instanceof FunctionType) {
-                type = "function";
                 value = (FunctionType) obj;
             }
         }

@@ -642,10 +642,10 @@ public class Editor extends JFrame {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
                     }
-                    /*System.out.println("Symbol table (single) created: ");
+                    System.out.println("Symbol table (single) created: ");
                     for (Map.Entry<String, Data> entry : SymbolTable.flatten(analyzer.getRootTable()).entrySet()) {
                         System.out.println(entry.getValue().getTabularForm());
-                    }*/
+                    }
                     System.out.println("trying out intermediate code.");
                     IntermediateCode IR = new IntermediateCode();
                     IR.generateCode(parser.root);

@@ -282,7 +282,13 @@ public class SemanticAnalyzer {
                 int temporal = semanticErrors;
                 checkExpression(value, variableType);
                 if (temporal == semanticErrors) {
-                    checkArithmetic(value);
+                    try {
+                        checkArithmetic(value);
+                    } catch (ClassCastException cce) {
+                        System.err.println("Warning: error found in arithmetic check, but it was caught. (debugging)");
+                    } catch (Exception e) {
+                        System.err.println("Warning: error found in arithmetic check, but it was caught. (debugging)");
+                    }
                 }
             } else {
                 String message = "The expression can't be applied to type: '" + variableType + "'. Expected type: 'int' or 'double'.";
@@ -334,7 +340,7 @@ public class SemanticAnalyzer {
         }
     }
 
-    private Object checkArithmetic(Node node) {
+    private Object checkArithmetic(Node node) throws ClassCastException {
         if (node.isLeaf()) {
             if (node.getData().getToken().equalsIgnoreCase("identifier")) {
                 return getIdentifierData(node).getValue();
