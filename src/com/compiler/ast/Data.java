@@ -12,9 +12,11 @@ public class Data {
     private String token;
     private int line;
     private int column;
+    private int direction;
+    private int context;
     private String type;
     private Object value;
-    private Scope scope;
+    private SymbolTable table;
 
     /*
     Constructor for IDs, mostly for assign and declare
@@ -30,9 +32,10 @@ public class Data {
         token = tok;
         line = lin;
         column = col;
+        context = -1;
         type = "null";
         value = null;
-        scope = null;
+        table = null;
         //get the type from val
         if (val != null) {
             if (val instanceof String) {
@@ -60,18 +63,20 @@ public class Data {
         }
     }
 
+
     public Data(JavaSymbol symbol) {
         lexeme = symbol.getLexeme();
         token = symbol.getTokenName();
         line = symbol.getLine();
         column = symbol.getColumn();
         type = "null";
-        value = scope = null;
+        context = -1;
+        value = table = null;
     }
 
     public Data() { //can't think of a use for this, but i'll leave it just in case...
         lexeme = token = type = "null";
-        line = column = -1;
+        line = column = context = -1;
         value = null;
     }
 
@@ -83,17 +88,25 @@ public class Data {
         return token;
     }
 
+    public int getContext() {
+        return context;
+    }
+
+    public Data setContext(int context) {
+        this.context = context;
+        return this;
+    }
+
     public int getLine() {
         return line;
     }
 
-    public Scope getScope() {
-        return scope;
+    public SymbolTable getTable() {
+        return table;
     }
 
-    public void setScope(Scope scope) {
-        this.scope = scope;
-        System.out.println("scope of " + this.lexeme + " is: " + scope.getID());
+    public void setTable(SymbolTable table) {
+        this.table = table;
     }
 
     public int getColumn() {
@@ -148,11 +161,12 @@ public class Data {
                 ", column=" + column +
                 ", type='" + type + '\'' +
                 ", value=" + value +
-                ", scope=" + (this.getToken().equalsIgnoreCase("identifier") ? scope.getID() : "scope?") +
+                ", scope=" + (this.getToken().equalsIgnoreCase("identifier") ? table.getID() : "scope...?") +
+                ", context=" + context +
                 '}';
     }
 
     public String getTabularForm() { //for CSV saving purposes (makes it easier I think)
-        return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column + "," + scope.getID();
+        return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column + "," + table.getID() + "," + direction;
     }
 }

@@ -1,32 +1,28 @@
 package com.compiler.codegeneration;
 
+import com.compiler.hashtag.SemanticAnalyzer;
+
 /**
  * Created by Wilmer Carranza on 14/06/2015.
  */
 public class Quadruple {
 
-    private String op;
-    private Object arg1, arg2, result;
+    private String op = "", arg1 = "", arg2 = "", result = "";
 
-    public Quadruple() {
-        op = "";
-        arg1 = arg2 = result = null;
-    }
-
-    public Quadruple(String op, Object arg1, Object arg2, Object result) {
+    public Quadruple(String op, String arg1, String arg2, String result) {
         this.op = op;
         this.arg1 = arg1;
         this.arg2 = arg2;
         this.result = result;
     }
 
-    public Quadruple(String op, Object arg1, Object result) {
+    public Quadruple(String op, String arg1, String result) {
         this.op = op;
         this.arg1 = arg1;
         this.result = result;
     }
 
-    public Quadruple(String op, Object result) {
+    public Quadruple(String op, String result) {
         this.op = op;
         this.result = result;
     }
@@ -39,15 +35,15 @@ public class Quadruple {
         return op;
     }
 
-    public Object getArg1() {
+    public String getArg1() {
         return arg1;
     }
 
-    public Object getArg2() {
+    public String getArg2() {
         return arg2;
     }
 
-    public Object getResult() {
+    public String getResult() {
         return result;
     }
 
@@ -61,20 +57,27 @@ public class Quadruple {
                 '}';
     }
 
+    //all this just for pretty printing.......
     public String visualize() {
         StringBuilder builder = new StringBuilder();
-        if (!op.equalsIgnoreCase("")) {
-            builder.append("'").append(op).append("' ");
+        if (SemanticAnalyzer.ARITHMETIC_OPERATORS.contains(op)) {
+            builder.append(result + " = ");
+            builder.append(arg1 + " ");
+            builder.append(op + " ");
+            builder.append(arg2);
+            return builder.toString();
+        } else if (op == "=") {
+            builder.append(result + " ");
+            builder.append(op + " ");
+            builder.append(arg1 + " ");
+            builder.append(arg2);
+            return builder.toString();
+        } else {
+            builder.append(op + " ");
+            builder.append(arg1 + " ");
+            builder.append(arg2 + " ");
+            builder.append(result);
+            return builder.toString();
         }
-        if (arg1 != null) {
-            builder.append("'").append(arg1).append("' ");
-        }
-        if (arg2 != null) {
-            builder.append("'").append(arg2).append("' ");
-        }
-        if (result != null) {
-            builder.append(result).append(" ");
-        }
-        return builder.toString();
     }
 }

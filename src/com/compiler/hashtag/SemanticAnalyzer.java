@@ -3,8 +3,7 @@ package com.compiler.hashtag;
 import com.compiler.ast.Data;
 import com.compiler.ast.FunctionType;
 import com.compiler.ast.Node;
-import com.compiler.ast.Scope;
-import com.compiler.codegeneration.IntermediateCode;
+import com.compiler.ast.SymbolTable;
 import com.compiler.util.RandomUtils;
 
 import java.util.ArrayList;
@@ -17,10 +16,13 @@ import java.util.Stack;
 
 public class SemanticAnalyzer {
 
-    public static final ArrayList<String> ARITHMETIC_OPERATORS = new ArrayList<String>(Arrays.asList("+", "-", "*", "/", "%"));
-    public static final ArrayList<String> COMPARISON_OPERATORS = new ArrayList<String>(Arrays.asList(">", "<", "==", "<=", ">=", "!="));
-    public static final ArrayList<String> LOGICAL_OPERATORS = new ArrayList<String>(Arrays.asList("AND", "OR"));
-    public static final ArrayList<String> BLOCK_STATEMENTS = new ArrayList<String>(Arrays.asList("PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"));
+    public static final ArrayList<String> ARITHMETIC_OPERATORS = new ArrayList<>(Arrays.asList("+", "-", "*", "/", "%"));
+    public static final ArrayList<String> COMPARISON_OPERATORS = new ArrayList<>(Arrays.asList(">", "<", "==", "<=", ">=", "!="));
+    public static final ArrayList<String> LOGICAL_OPERATORS = new ArrayList<>(Arrays.asList("AND", "OR"));
+    public static final ArrayList<String> BLOCK_STATEMENTS = new ArrayList<>(Arrays.asList("PROG", "MAIN", "IF", "ELSE", "SWITCH", "FOR", "WHILE"));
+    private final int DECLARED = 0;
+    private final int INITIALIZED = 1;
+    private final int ASSIGNED = 2;
 
     public static int semanticErrors = 0;
 
@@ -28,19 +30,19 @@ public class SemanticAnalyzer {
     private static ArrayList<Integer> errorsList;
 
     //while traversing the tree, I lose track of which scope is which, or which one is the current. This stack controls that.
-    private Stack<Scope> scopeStack;
+    private Stack<SymbolTable> tableStack;
 
     public SemanticAnalyzer() {
         semanticErrors = 0;
         errorsList = new ArrayList<Integer>();
-        scopeStack = new Stack<Scope>();
+        tableStack = new Stack<SymbolTable>();
     }
 
     public void traverse(Node node) {
         if (!node.isLeaf()) {
             if (BLOCK_STATEMENTS.contains(node.label)) {
                 //since a block has been found, it should have its own scope, so I need to setup my stack
-                setupScopeStack(node.label);
+                setupTableStack(node.label);
                 for (Node block : node.getChildren()) {
                     //most of the time there are only two children, 'body' (always) and 'conditions', or 'structure', etc
                     traverse(block);
@@ -50,11 +52,11 @@ public class SemanticAnalyzer {
                     for (Node bodyNode : node.getChildren()) {
                         traverse(bodyNode);
                     }
-                    scopeStack.pop();
+                    tableStack.pop();
                 } else if (node.label.equalsIgnoreCase("init")) {
                     checkInitialization(node);
                 } else if (node.label.equalsIgnoreCase("declare")) {
-                    checkDeclaration(node);
+                    checkDeclaration(node, DECLARED);
                 } else if (node.label.equalsIgnoreCase("assign")) {
                     checkAssignment(node);
                 } else if (node.label.equalsIgnoreCase("conditions")) {
@@ -70,7 +72,7 @@ public class SemanticAnalyzer {
                 } else if (node.label.equalsIgnoreCase("case_arg") || node.label.equalsIgnoreCase("switch_arg")) {
                     checkSwitchParameter(node.getChildren().get(0));
                 } else if (node.label.equalsIgnoreCase("parameters")) {
-                    checkDeclaration(node);
+                    checkDeclaration(node, INITIALIZED);
                 } else if (node.label.equalsIgnoreCase("function_call")) {
                     System.out.println("function_call handler missing!");
                 } else {
@@ -89,30 +91,31 @@ public class SemanticAnalyzer {
         }
     }
 
-    private void setupScopeStack(String label) {
-        Scope current;
+    private void setupTableStack(String label) {
+        SymbolTable current;
 
         //create a new Scope, which should be the current one with the previous one as its parent
-        current = (scopeStack.empty()) ? new Scope(null) : new Scope(scopeStack.peek());
+        current = (tableStack.empty()) ? new SymbolTable(null) : new SymbolTable(tableStack.peek());
         current.setLabel(label);
 
         //now add the newly created scope as a child to the previous one.
-        if (!scopeStack.empty()) {
-            scopeStack.peek().addScope(current);
+        if (!tableStack.empty()) {
+            tableStack.peek().addScope(current);
         }
 
         //now push the new scope to the stack.
-        scopeStack.push(current);
+        tableStack.push(current);
     }
 
-    private void checkDeclaration(Node declare) {
+    private void checkDeclaration(Node declare, int context) {
         Data data;
         for (Node variable : declare.getChildren()) {
             data = variable.getData();
-            if (!Scope.isInPrevious(scopeStack.peek(), data.getLexeme())) {
-                variable.getData().setScope(scopeStack.peek());
-                data = variable.getData();
-                scopeStack.peek().put(data.getLexeme(), data);
+            if (!SymbolTable.isInPrevious(tableStack.peek(), data.getLexeme())) {
+                variable.getData().setTable(tableStack.peek());
+                variable.getData().setContext(context);
+                data = variable.getData(); //updated data
+                tableStack.peek().put(data.getLexeme(), data);
             } else {
                 reportVariableAlreadyDeclared(variable);
             }
@@ -125,7 +128,7 @@ public class SemanticAnalyzer {
         variable = init.getChildren().get(0); //id, which is actually a declare node, but it holds info on the type (as well as its children)
 
         //adds all variables of 'declare' to the symbol table, if possible
-        checkDeclaration(variable);
+        checkDeclaration(variable, INITIALIZED);
 
         //check what kind of expression is this value
         if (value.label.equalsIgnoreCase("function_call")) {
@@ -143,7 +146,7 @@ public class SemanticAnalyzer {
 
         try {
             //attempting to find this variable in the ST
-            variableData = getIdentifierData(variable);
+            variableData = getIdentifierData(variable).setContext(ASSIGNED);
 
             //found it, now update its data (for error reporting) and analyze the value being assigned.
             variable.setData(variableData);
@@ -189,28 +192,28 @@ public class SemanticAnalyzer {
     }
 
     private void checkFunction(Node node) {
-        setupScopeStack(node.label);
+        setupTableStack(node.label);
         Node body = node.getChildren().get(0); //el unico hijo que deberia de tener
         for (Node function : body.getChildren()) {
             Data data = function.getData();
-            if (!Scope.isInPrevious(scopeStack.peek(), data.getValue().toString())) {
-                function.getData().setScope(scopeStack.peek());
+            if (!SymbolTable.isInPrevious(tableStack.peek(), data.getValue().toString())) {
+                function.getData().setTable(tableStack.peek());
                 data = function.getData();
-                scopeStack.peek().put(data.getValue().toString(), data);
+                tableStack.peek().put(data.getValue().toString(), data);
             } else {
                 reportVariableAlreadyDeclared(function);
             }
-            setupScopeStack(function.label);
+            setupTableStack(function.label);
 
             for (Node child : function.getChildren()) {
                 traverse(child);
             }
         }
-        scopeStack.pop();
+        tableStack.pop();
     }
 
     private void checkCaseStatement(Node node) {
-        setupScopeStack(node.label);
+        setupTableStack(node.label);
         Node parent = node.getParent();
         if (parent.label.equalsIgnoreCase("body")) {
             parent = parent.getParent();
@@ -293,21 +296,9 @@ public class SemanticAnalyzer {
             checkConditions(value);
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
-                int temp = semanticErrors;
                 checkIdentifier(value, variableType);
-                if (temp == semanticErrors) {
-                    if (variable.label.equalsIgnoreCase("declare")) {
-                        for (Node node : variable.getChildren()) {
-                            node.getData().setValue(value.getData().getValue());
-                        }
-                    } else {
-                        variable.getData().setValue(value.getData().getValue());
-                    }
-                }
             } else if (!value.getData().getType().equalsIgnoreCase(variableType)) { //literal
                 reportTypeMismatch(value, variableType);
-            } else {
-                variable.getData().setValue(value.getData().getValue());
             }
         }
     }
@@ -322,7 +313,6 @@ public class SemanticAnalyzer {
         } else {
             Node right = node.getChildren().get(0);
             Node left = node.getChildren().get(1);
-
             checkExpression(right, typeRequired);
             checkExpression(left, typeRequired);
         }
@@ -331,11 +321,11 @@ public class SemanticAnalyzer {
     private void checkIdentifier(Node identifier, String variableType) {
         try {
             Data valueData;
-            if ((valueData = getIdentifierData(identifier)).getValue() == null) {
+            if ((valueData = getIdentifierData(identifier)).getContext() == DECLARED) {
                 reportVariableNotInitialized(identifier);
             } else {
-                identifier.getData().setValue(valueData.getValue());
-                if (!identifier.getData().getType().equalsIgnoreCase(variableType)) {
+                identifier.getData().setType(valueData.getType());
+                if (!valueData.getType().equalsIgnoreCase(variableType)) {
                     reportTypeMismatch(identifier, variableType);
                 }
             }
@@ -352,7 +342,6 @@ public class SemanticAnalyzer {
         } else {
             Node right = node.getChildren().get(0);
             Node left = node.getChildren().get(1);
-
             Object val1 = checkArithmetic(left);
             Object val2 = checkArithmetic(right);
 
@@ -383,10 +372,10 @@ public class SemanticAnalyzer {
             if (arg.getData().getToken().equalsIgnoreCase("identifier")) {
                 try {
                     Data valueData;
-                    if ((valueData = getIdentifierData(arg)).getValue() == null) {
+                    if ((valueData = getIdentifierData(arg)).getContext() == DECLARED) {
                         reportVariableNotInitialized(arg);
                     } else {
-                        arg.getData().setValue(valueData.getValue());
+                        arg.getData().setType(valueData.getType());
                         if (!valueData.getType().equalsIgnoreCase("char") && !valueData.getType().equalsIgnoreCase("int")) {
                             reportTypeMismatch(arg, "'int' or 'char'");
                         }
@@ -409,7 +398,7 @@ public class SemanticAnalyzer {
     }
 
     public Data getIdentifierData(Node variable) throws NullPointerException {
-        Data data = Scope.findInPrevious(scopeStack.peek(), variable.label);
+        Data data = SymbolTable.findInPrevious(tableStack.peek(), variable.label);
         if (data != null) return data;
         else {
             throw new NullPointerException();
@@ -420,17 +409,8 @@ public class SemanticAnalyzer {
         return this.errorsList;
     }
 
-    //testing how function_call nodes are going to work...
-    public void getRootScope() {
-        Scope root = scopeStack.firstElement();
-        Scope functions = null;
-        System.out.println("first stack element: " + root.getID());
-        for (Scope scope : root.getChildren()) {
-            if (scope.getLabel().equalsIgnoreCase("functions")) {
-                //this is the scope where function_call nodes should look for their functions...
-                functions = scope;
-            }
-        }
+    public SymbolTable getRootTable() {
+        return tableStack.firstElement();
     }
 
     //<editor-fold desc="Error reporting">

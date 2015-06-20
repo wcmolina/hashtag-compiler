@@ -1,6 +1,8 @@
 package com.compiler.hashtag;
 
+import com.compiler.ast.Data;
 import com.compiler.ast.Node;
+import com.compiler.ast.SymbolTable;
 import com.compiler.codegeneration.IntermediateCode;
 import com.compiler.util.LineEnumerator;
 import com.compiler.util.LinePainter;
@@ -40,6 +42,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Map;
 
 //todo: highlight in red the lines that have errors (update: done, seems to work...)
 
@@ -470,7 +473,7 @@ public class Editor extends JFrame {
     private int getLineEnd(String text, int lineNo) {
         int lineEnd = 0;
         for (int i = 1; i <= lineNo && lineEnd + 1 < text.length(); i++) {
-            lineEnd = text.indexOf('\n', lineEnd + 1);
+            lineEnd = text.indexOf("\n", lineEnd + 1);
         }
         return lineEnd;
     }
@@ -639,10 +642,13 @@ public class Editor extends JFrame {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
                     }
-
-                    System.out.println("trying out intermediate motherfucking code.");
+                    /*System.out.println("Symbol table (single) created: ");
+                    for (Map.Entry<String, Data> entry : SymbolTable.flatten(analyzer.getRootTable()).entrySet()) {
+                        System.out.println(entry.getValue().getTabularForm());
+                    }*/
+                    System.out.println("trying out intermediate code.");
                     IntermediateCode IR = new IntermediateCode();
-                    IR.generateIntermediateCode(parser.root);
+                    IR.generateCode(parser.root);
                     System.out.println(IR.toString());
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + parser.errors);
