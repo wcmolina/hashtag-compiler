@@ -18,15 +18,6 @@ public class Data {
     private Object value;
     private SymbolTable table;
 
-    /*
-    Constructor for IDs, mostly for assign and declare
-        * lex: the current lexeme of the symbol sent
-        * tok: the type of token the lexeme is part of
-        * val: the value the token has
-        * l: line
-        * col: column
-    */
-
     public Data(String lex, String tok, Object val, int lin, int col) {
         lexeme = lex;
         token = tok;
@@ -36,7 +27,6 @@ public class Data {
         type = "null";
         value = null;
         table = null;
-        //get the type from val
         if (val != null) {
             if (val instanceof String) {
                 type = "string";
@@ -57,7 +47,6 @@ public class Data {
                 value = ((Double) val).doubleValue();
             } else if (val instanceof FunctionType) {
                 type = "function";
-                //assign the whole object... FunctionType should contain information about the function being declared.
                 value = (FunctionType) val;
             }
         }
@@ -101,7 +90,7 @@ public class Data {
         return line;
     }
 
-    public SymbolTable getTable() {
+    public SymbolTable getScope() {
         return table;
     }
 
@@ -137,7 +126,6 @@ public class Data {
         }
     }
 
-
     public String getType() {
         return type;
     }
@@ -160,7 +148,8 @@ public class Data {
                 '}';
     }
 
-    public String getTabularForm() { //for CSV saving purposes (makes it easier I think)
+    public String getTabularForm() {
+        //for CSV saving purposes (makes it easier to visualize, I think)
         return "" + lexeme + "," + token + "," + type + "," + value + "," + line + "," + column + "," + table.getID() + "," + direction;
     }
 }

@@ -300,6 +300,7 @@ FunctionPart                ::= FUNCTION VOID Identifier:id PARIZQ Parametros:pa
                                     FunctionType function = new FunctionType(id, domain.toString(), tp.label);
                                     Data data = id.getData();
                                     data.setValue(function);
+                                    data.setType("function");
                                     RESULT = new Node(data, id.label, param, st);
                                 :}
                                 |
@@ -318,17 +319,7 @@ Parametros                  ::= Parametros:params COMA Param:param
 Param                       ::= Type:tp Identifier:id
                                 {:
                                     RESULT = id;
-                                    if (tp.label.equalsIgnoreCase("int")) {
-                                        RESULT.getData().setValue(0);
-                                    } else if (tp.label.equalsIgnoreCase("double")) {
-                                        RESULT.getData().setValue(0.0);
-                                    } else if (tp.label.equalsIgnoreCase("boolean")) {
-                                        RESULT.getData().setValue(false);
-                                    } else if (tp.label.equalsIgnoreCase("string")) {
-                                        RESULT.getData().setValue("");
-                                    } else if (tp.label.equalsIgnoreCase("char")) {
-                                        RESULT.getData().setValue(' ');
-                                    }
+                                    RESULT.getData().setType(tp.label);
                                 :};
 
 ReturnExpr                  ::= Return:ret Value:val

@@ -10,21 +10,10 @@ import jsyntaxpane.DefaultSyntaxKit;
 import jsyntaxpane.syntaxkits.HashtagSyntaxKit;
 import jsyntaxpane.util.Configuration;
 
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.Utilities;
+import javax.swing.text.*;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -363,10 +352,10 @@ public class Editor extends JFrame {
     //</editor-fold>
 
     private int getRow(int pos, JTextComponent editor) {
-        int row = (pos == 0) ? 1 : 0;
+        int row = 0;
         try {
             int offs = pos;
-            while (offs > 0) {
+            while (offs >= 0) {
                 offs = Utilities.getRowStart(editor, offs) - 1;
                 row++;
             }
@@ -637,7 +626,8 @@ public class Editor extends JFrame {
 
                     for (int num : analyzer.getErrorLines()) {
                         try {
-                            editorPane.getHighlighter().addHighlight(getLineEnd(editorPane.getText(), num - 1) + 1, getLineEnd(editorPane.getText(), num), err);
+                            String text = editorPane.getDocument().getText(0, editorPane.getDocument().getLength());
+                            editorPane.getHighlighter().addHighlight(getLineEnd(text, num - 1) + 1, getLineEnd(text, num), err);
                         } catch (BadLocationException e) {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }

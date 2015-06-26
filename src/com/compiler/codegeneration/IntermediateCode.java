@@ -4,7 +4,7 @@ import com.compiler.ast.*;
 import com.compiler.hashtag.SemanticAnalyzer;
 
 import java.util.ArrayList;
-import java.util.Stack;
+import java.util.HashMap;
 
 /**
  * Created by Wilmer Carranza on 15/06/2015.
@@ -142,7 +142,7 @@ public class IntermediateCode {
         //this is tricky, because i can have something like: int x,y,z = 10;
     }
 
-    private static String generateArithmetic(Node expr) {
+    private String generateArithmetic(Node expr) {
         if (expr.isLeaf()) {
             return expr.label;
         } else {
@@ -152,14 +152,6 @@ public class IntermediateCode {
             quadrupleList.add(quadruple);
             return quadruple.getResult();
         }
-    }
-
-    private static String generateTemporal() {
-        return "t" + (++temporalCount);
-    }
-
-    private static String generateLabel() {
-        return "etiq" + (++labelCount);
     }
 
     private void generateOr(Node bool, String trueLabel, String falseLabel) {
@@ -182,7 +174,6 @@ public class IntermediateCode {
             quadrupleList.add(quadruple);
             generateOr(expr2, trueLabel, falseLabel);
         } else if (bool.isLeaf()) {
-            System.out.println("boolean expr is leaf");
         } else {
         }
     }
@@ -207,9 +198,16 @@ public class IntermediateCode {
             quadrupleList.add(quadruple);
             generateAnd(expr2, trueLabel, falseLabel);
         } else if (bool.isLeaf()) {
-            System.out.println("bool expr is leaf...");
         } else {
         }
+    }
+
+    private String generateTemporal() {
+        return "t" + (++temporalCount);
+    }
+
+    private String generateLabel() {
+        return "etiq" + (++labelCount);
     }
 
     @Override

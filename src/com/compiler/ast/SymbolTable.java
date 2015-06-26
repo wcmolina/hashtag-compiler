@@ -14,6 +14,7 @@ public class SymbolTable extends HashMap<String, Data> {
     private String label = "";
     private String ID = "";
     private ArrayList<SymbolTable> children;
+    private static HashMap<String, Data> singleTable = new HashMap<>();
 
     public SymbolTable(SymbolTable prev) {
         this.previous = prev;
@@ -70,7 +71,7 @@ public class SymbolTable extends HashMap<String, Data> {
         }
     }
 
-    public void addScope(SymbolTable sc) {
+    public void addTable(SymbolTable sc) {
         if (this.children == null) { //for some weird reason...
             this.children = new ArrayList<>();
         }
@@ -86,11 +87,11 @@ public class SymbolTable extends HashMap<String, Data> {
     }
 
     public static HashMap<String, Data> flatten(SymbolTable rootTable) {
-        HashMap<String, Data> singleTable = new HashMap<>();
         for (SymbolTable subTable : rootTable.getChildren()) {
             for (Map.Entry<String, Data> entry : subTable.entrySet()) {
                 singleTable.put(entry.getKey(), entry.getValue());
             }
+            flatten(subTable);
         }
         return singleTable;
     }

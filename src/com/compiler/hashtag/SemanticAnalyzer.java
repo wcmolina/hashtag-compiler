@@ -48,35 +48,51 @@ public class SemanticAnalyzer {
                     traverse(block);
                 }
             } else {
-                if (node.label.equalsIgnoreCase("body")) {
-                    for (Node bodyNode : node.getChildren()) {
-                        traverse(bodyNode);
-                    }
-                    tableStack.pop();
-                } else if (node.label.equalsIgnoreCase("init")) {
-                    checkInitialization(node);
-                } else if (node.label.equalsIgnoreCase("declare")) {
-                    checkDeclaration(node, DECLARED);
-                } else if (node.label.equalsIgnoreCase("assign")) {
-                    checkAssignment(node);
-                } else if (node.label.equalsIgnoreCase("conditions")) {
-                    checkConditions(node.getChildren().get(0));
-                } else if (node.label.equalsIgnoreCase("functions")) {
-                    checkFunction(node);
-                } else if (node.label.equalsIgnoreCase("structure")) {
-                    checkForStructure(node);
-                } else if (node.label.equalsIgnoreCase("return")) {
-                    checkReturn(node);
-                } else if (node.label.equalsIgnoreCase("case")) {
-                    checkCaseStatement(node);
-                } else if (node.label.equalsIgnoreCase("case_arg") || node.label.equalsIgnoreCase("switch_arg")) {
-                    checkSwitchParameter(node.getChildren().get(0));
-                } else if (node.label.equalsIgnoreCase("parameters")) {
-                    checkDeclaration(node, INITIALIZED);
-                } else if (node.label.equalsIgnoreCase("function_call")) {
-                    System.out.println("function_call handler missing!");
-                } else {
-                    System.out.println("can't recognize node: " + node.label);
+                switch (node.label.toLowerCase()) {
+                    case "body":
+                        for (Node bodyNode : node.getChildren()) {
+                            traverse(bodyNode);
+                        }
+                        tableStack.pop();
+                        break;
+                    case "init":
+                        checkInitialization(node);
+                        break;
+                    case "declare":
+                        checkDeclaration(node, DECLARED);
+                        break;
+                    case "parameters":
+                        //initialized para que type check no llame a varNotInit error por tener null value
+                        checkDeclaration(node, INITIALIZED);
+                        break;
+                    case "assign":
+                        checkAssignment(node, ASSIGNED);
+                        break;
+                    case "conditions":
+                        checkConditions(node.getChildren().get(0));
+                        break;
+                    case "functions":
+                        checkFunction(node);
+                        break;
+                    case "structure":
+                        checkForStructure(node);
+                        break;
+                    case "return":
+                        checkReturn(node);
+                        break;
+                    case "case": //lol
+                        checkCaseStatement(node);
+                        break;
+                    case "case_arg":
+                    case "switch_arg":
+                        checkSwitchParameter(node.getChildren().get(0));
+                        break;
+                    case "function_call":
+                        System.out.println("missing function call check!");
+                        break;
+                    default:
+                        System.out.println("can't recognize node: " + node.label);
+                        break;
                 }
             }
         } else {
@@ -100,7 +116,7 @@ public class SemanticAnalyzer {
 
         //now add the newly created scope as a child to the previous one.
         if (!tableStack.empty()) {
-            tableStack.peek().addScope(current);
+            tableStack.peek().addTable(current);
         }
 
         //now push the new scope to the stack.
@@ -124,8 +140,9 @@ public class SemanticAnalyzer {
 
     private void checkInitialization(Node init) {
         Node variable, value;
-        value = init.getChildren().get(1); //value
-        variable = init.getChildren().get(0); //id, which is actually a declare node, but it holds info on the type (as well as its children)
+        value = init.getChildren().get(1);
+        //identifier, which is actually a declare node, but it holds info on the type (as well as its children)
+        variable = init.getChildren().get(0);
 
         //adds all variables of 'declare' to the symbol table, if possible
         checkDeclaration(variable, INITIALIZED);
@@ -138,7 +155,7 @@ public class SemanticAnalyzer {
         }
     }
 
-    private void checkAssignment(Node assign) {
+    private void checkAssignment(Node assign, int context) {
         Node variable, value;
         value = assign.getChildren().get(1);
         variable = assign.getChildren().get(0);
@@ -146,7 +163,7 @@ public class SemanticAnalyzer {
 
         try {
             //attempting to find this variable in the ST
-            variableData = getIdentifierData(variable).setContext(ASSIGNED);
+            variableData = getIdentifierData(variable).setContext(context);
 
             //found it, now update its data (for error reporting) and analyze the value being assigned.
             variable.setData(variableData);
@@ -285,9 +302,9 @@ public class SemanticAnalyzer {
                     try {
                         checkArithmetic(value);
                     } catch (ClassCastException cce) {
-                        System.err.println("Warning: error found in arithmetic check, but it was caught. (debugging)");
+                        System.err.println("Warning: error caught during arithmetic check (debugging)");
                     } catch (Exception e) {
-                        System.err.println("Warning: error found in arithmetic check, but it was caught. (debugging)");
+                        System.err.println("Warning: error caught during arithmetic check (debugging)");
                     }
                 }
             } else {
@@ -372,7 +389,6 @@ public class SemanticAnalyzer {
         }
     }
 
-    //similar code checkExpression has, but with a different approach
     private void checkSwitchParameter(Node arg) {
         if (arg.isLeaf()) {
             if (arg.getData().getToken().equalsIgnoreCase("identifier")) {
