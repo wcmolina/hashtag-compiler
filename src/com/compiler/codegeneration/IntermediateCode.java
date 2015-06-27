@@ -4,7 +4,7 @@ import com.compiler.ast.*;
 import com.compiler.hashtag.SemanticAnalyzer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 
 /**
  * Created by Wilmer Carranza on 15/06/2015.
@@ -13,11 +13,23 @@ public class IntermediateCode {
 
     private static int temporalCount;
     private static int labelCount;
-    private static ArrayList<Quadruple> quadrupleList;
+    private ArrayList<Quadruple> quadrupleList;
+    public static final ArrayList<Temporal> TEMPORALS = new ArrayList<>(Arrays.asList(
+            new Temporal("$t0", true),
+            new Temporal("$t1", true),
+            new Temporal("$t2", true),
+            new Temporal("$t3", true),
+            new Temporal("$t4", true),
+            new Temporal("$t5", true),
+            new Temporal("$t6", true),
+            new Temporal("$t7", true),
+            new Temporal("$t8", true)));
+    ;
     private String propagateLabel;
 
     public IntermediateCode() {
         quadrupleList = new ArrayList<Quadruple>();
+
         temporalCount = 0;
         labelCount = 0;
         propagateLabel = "";
@@ -27,17 +39,21 @@ public class IntermediateCode {
         ArrayList<Node> children = node.getChildren();
         for (int i = 0; i < children.size(); i++) {
             Node current = children.get(i);
-            if (current.label.equalsIgnoreCase("if")) {
-                if (current.getData().getType().equalsIgnoreCase("if_statement")) generateIf(current);
-                else generateIfElse(current);
-            } else if (current.label.equalsIgnoreCase("assign")) {
-                generateAssignment(current);
-            } else if (current.label.equalsIgnoreCase("while")) {
-                generateWhile(current);
-            } else {
-                generateCode(children.get(i));
+            switch (current.label.toLowerCase()) {
+                case "if":
+                    if (current.getData().getType().equalsIgnoreCase("if_statement")) generateIf(current);
+                    else generateIfElse(current);
+                    break;
+                case "assign":
+                    generateAssignment(current);
+                    break;
+                case "while":
+                    generateWhile(current);
+                    break;
+                default:
+                    generateCode(children.get(i));
+                    break;
             }
-
         }
     }
 
@@ -148,7 +164,7 @@ public class IntermediateCode {
         } else {
             Node left = expr.getChildren().get(1);
             Node right = expr.getChildren().get(0);
-            Quadruple quadruple = new Quadruple(expr.label, generateArithmetic(left), generateArithmetic(right), generateTemporal());
+            Quadruple quadruple = new Quadruple(expr.label, generateArithmetic(left), generateArithmetic(right), generateFreeTemporal());
             quadrupleList.add(quadruple);
             return quadruple.getResult();
         }
@@ -198,12 +214,24 @@ public class IntermediateCode {
             quadrupleList.add(quadruple);
             generateAnd(expr2, trueLabel, falseLabel);
         } else if (bool.isLeaf()) {
+            //check if its 'true' or 'false'; these will generate 'goto' right away
         } else {
         }
     }
 
     private String generateTemporal() {
-        return "t" + (++temporalCount);
+        return "$t" + (++temporalCount);
+    }
+
+    private String generateFreeTemporal() {
+        for (Temporal temporal : TEMPORALS) {
+            if (temporal.isFree()) {
+                temporal.setFree(false);
+                return temporal.getName();
+            }
+        }
+        //no free temp, possible?
+        return "$t";
     }
 
     private String generateLabel() {

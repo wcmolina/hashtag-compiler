@@ -9,6 +9,7 @@ parser code {:
     public Node root = null;
     public int errors = 0;
     public int fatal = 0;
+    public JavaSymbol currentSymbol;
 
     public void report_error(String message, Object info){
         StringBuilder m = new StringBuilder("");
@@ -126,22 +127,34 @@ Instruccion                 ::= VarDeclare:vd
                                 |
                                 error {: parser.report_error("variable initialization, declaration or function call","WRONG"); :} PUNTOCOMA;
 
-Lectura                     ::= READINT PARIZQ PARDER
-                                {: RESULT = new Node("READINT"); :}
+Lectura                     ::= READINT {: parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek(); :} PARIZQ PARDER
+                                {:
+                                    RESULT = new Node(new Data(parser.currentSymbol),"READINT");
+                                    RESULT.getData().setType("int");
+                                :}
                                 |
-                                READDOUBLE PARIZQ PARDER
-                                {: RESULT = new Node("READDOUBLE"); :}
+                                READDOUBLE {: parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek(); :} PARIZQ PARDER
+                                {:
+                                    RESULT = new Node(new Data(parser.currentSymbol),"READDOUBLE");
+                                    RESULT.getData().setType("double");
+                                :}
                                 |
-                                READSTRING PARIZQ PARDER
-                                {: RESULT = new Node("READSTRING"); :}
+                                READSTRING {: parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek(); :} PARIZQ PARDER
+                                {:
+                                    RESULT = new Node(new Data(parser.currentSymbol),"READSTRING");
+                                    RESULT.getData().setType("string");
+                                :}
                                 |
-                                READCHAR PARIZQ PARDER
-                                {: RESULT = new Node("READCHAR"); :};
+                                READCHAR {: parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek(); :} PARIZQ PARDER
+                                {:
+                                    RESULT = new Node(new Data(parser.currentSymbol),"READCHAR");
+                                    RESULT.getData().setType("char");
+                                :};
 
 Break                       ::= BREAK
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"BREAK");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"BREAK");
                                 :};
 
 CaseExpr                    ::= Case:cs Value:val DOSPUNTOS Statements:st
@@ -156,14 +169,14 @@ CaseExpr                    ::= Case:cs Value:val DOSPUNTOS Statements:st
 
 Case                        ::= CASE
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"CASE");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"CASE");
                                 :};
 
 Other                       ::= OTHER
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"OTHER");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"OTHER");
                                 :};
 
 VarDeclare                  ::= VarDeclarationList:vdl
@@ -186,9 +199,9 @@ VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
 
 Identifier                  ::= IDENTIFICADOR:id
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "IDENTIFIER", null, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "IDENTIFIER", null, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, id);
                                 :};
 
@@ -327,8 +340,8 @@ ReturnExpr                  ::= Return:ret Value:val
 
 Return                      ::= RETURN
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "RETURN");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "RETURN");
                                 :};
 
 //--------------------------Blocks (if, switch, while, for)-------------------------------
@@ -432,50 +445,50 @@ Comparison                  ::= ArithmeticExpr:ae1 RelationalOper:oprel Arithmet
 
 OrOperator                  ::= OR
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"OR");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"OR");
                                 :};
 
 AndOperator                 ::= AND
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"AND");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"AND");
                                 :};
 
 RelationalOper              ::= MAYOR
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),">");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),">");
                                 :}
                                 |
                                 MENOR
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"<");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"<");
                                 :}
                                 |
                                 MAYORIGUAL
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),">=");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),">=");
                                 :}
                                 |
                                 MENORIGUAL
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"<=");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"<=");
                                 :}
                                 |
                                 IGUAL
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"==");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"==");
                                 :}
                                 |
                                 DIFERENTE
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol),"!=");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol),"!=");
                                 :};
 
 
@@ -501,32 +514,32 @@ Term                        ::= PARIZQ Expression:expr PARDER
 
 AddOrSubstract              ::= SUMA
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "+");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "+");
                                 :}
                                 |
                                 MENOS
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "-");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "-");
                                 :};
 
 MultiplyOrDivide            ::= MULT
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "*");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "*");
                                 :}
                                 |
                                 DIV
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "/");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "/");
                                 :}
                                 |
                                 MOD
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
-                                    RESULT = new Node(new Data(symbol), "%");
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    RESULT = new Node(new Data(parser.currentSymbol), "%");
                                 :};
 
 Literals                    ::= NumLiterals:nl
@@ -543,65 +556,65 @@ Literals                    ::= NumLiterals:nl
 
 NumLiterals                 ::= NUMERO:num
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "NUMBER", num, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, Integer.toString(num));
                                 :}
                                 |
                                 REAL:real
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "REAL", real, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "REAL", real, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, Double.toString(real));
                                 :}
                                 |
                                 MENOS NUMERO:num
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "NUMBER", num*-1, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "NUMBER", num*-1, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, Integer.toString(num*-1));
                                 :}
                                 |
                                 MENOS REAL:real
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "REAL", real*-1, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "REAL", real*-1, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, Double.toString(real*-1));
                                 :};
 
 StringLiterals              ::= CADENA:str
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "STRING", str, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "STRING", str, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat,"\""+str+"\"");
                                 :}
                                 |
                                 CARACTER:ch
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "CHARACTER", ch, symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "CHARACTER", ch, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, ("'").concat(Character.toString(ch)).concat("'"));
                                 :};
 
 BooleanLiterals             ::= TRUE
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "TRUE", new Boolean(true), symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "TRUE", new Boolean(true), parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, "true");
                                 :}
                                 |
                                 FALSE
                                 {:
-                                    JavaSymbol symbol = (JavaSymbol)CUP$Parser$stack.peek();
+                                    parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
-                                    Data dat = new Data(symbol.getLexeme(), "FALSE", new Boolean(false), symbol.getLine(), symbol.getColumn());
+                                    Data dat = new Data(parser.currentSymbol.getLexeme(), "FALSE", new Boolean(false), parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
                                     RESULT = new Node(dat, "false");
                                 :};
 

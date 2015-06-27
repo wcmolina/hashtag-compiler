@@ -14,12 +14,15 @@ public class Quadruple {
         this.arg1 = arg1;
         this.arg2 = arg2;
         this.result = result;
+        isTemporal(arg1);
+        isTemporal(arg2);
     }
 
     public Quadruple(String op, String arg1, String result) {
         this.op = op;
         this.arg1 = arg1;
         this.result = result;
+        isTemporal(arg1);
     }
 
     public Quadruple(String op, String result) {
@@ -78,6 +81,12 @@ public class Quadruple {
             builder.append(arg2 + " ");
             builder.append(result);
             return builder.toString();
+        }
+    }
+
+    private void isTemporal(String arg) {
+        if (arg.startsWith("$")) {
+            IntermediateCode.TEMPORALS.get(Integer.parseInt(arg.split("t")[1])).setFree(true);
         }
     }
 }

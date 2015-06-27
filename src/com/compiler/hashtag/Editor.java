@@ -662,6 +662,7 @@ public class Editor extends JFrame {
         parse.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
         try {
             parse.setIcon(new ImageIcon("res/img/icons/run-icon.png"));
+            clear.setIcon(new ImageIcon("res/img/icons/clear-icon.png"));
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(rootPane, ex.getMessage());
         }
