@@ -45,6 +45,7 @@ public class IntermediateCode {
                     else generateIfElse(current);
                     break;
                 case "assign":
+                case "init":
                     generateAssignment(current);
                     break;
                 case "while":
@@ -54,6 +55,11 @@ public class IntermediateCode {
                     generateCode(children.get(i));
                     break;
             }
+        }
+        if (node.label.equalsIgnoreCase("main")) {
+            checkPropagatedLabel();
+            Quadruple quadruple = new Quadruple("END");
+            quadrupleList.add(quadruple);
         }
     }
 
@@ -69,10 +75,12 @@ public class IntermediateCode {
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, nextLabel);
         }
+        propagateLabel = "";
         if (propagateLabel.isEmpty())
             propagateLabel = ifLabel;
         generateCode(body);
 
+        propagateLabel = "";
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }
@@ -91,16 +99,20 @@ public class IntermediateCode {
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, elseLabel);
         }
+
         if (propagateLabel.isEmpty())
             propagateLabel = ifLabel;
         generateCode(ifBody);
-        Quadruple quadruple = new Quadruple("goto ".concat(nextLabel));
+        Quadruple quadruple = new Quadruple("goto ".concat(nextLabel)); //aqui deberia de ser goto a la propagarted label
         quadrupleList.add(quadruple);
 
+        //just in case body is empty
+        propagateLabel = "";
         if (propagateLabel.isEmpty())
             propagateLabel = elseLabel;
         generateCode(elseBody);
 
+        propagateLabel = "";
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }
@@ -129,6 +141,7 @@ public class IntermediateCode {
         quadruple = new Quadruple("goto ".concat(startLabel));
         quadrupleList.add(quadruple);
 
+        propagateLabel = "";
         if (propagateLabel.isEmpty())
             propagateLabel = nextLabel;
     }

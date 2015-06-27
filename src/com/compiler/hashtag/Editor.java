@@ -51,7 +51,7 @@ public class Editor extends JFrame {
         //finally got it working (JSyntaxPane)
         DefaultSyntaxKit.initKit();
         Configuration config = DefaultSyntaxKit.getConfig(HashtagSyntaxKit.class);
-        config.put("DefaultFont", "Consolas 13");
+        config.put("DefaultFont", "Consolas 14");
         editorPane.setContentType("text/hashtag");
         initPopupMenu();
 
@@ -235,6 +235,7 @@ public class Editor extends JFrame {
                 parseMenuItemActionPerformed(evt);
             }
         });
+        parseMenuItem.setIcon(new ImageIcon("res/img/icons/run-icon.png"));
         toolsMenu.add(parseMenuItem);
 
         menuBar.add(toolsMenu);
@@ -619,10 +620,9 @@ public class Editor extends JFrame {
                         showTreeMenuItem.setEnabled(true);
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
-                    Editor.console.setText(Editor.console.getText() + "\n\n> Traversing the tree to find other possible errors...\n");
+                    Editor.console.setText(Editor.console.getText() + "\n\n> Proceeding to semantic analysis...\n");
                     SemanticAnalyzer analyzer = new SemanticAnalyzer();
                     analyzer.traverse(parser.root);
-                    System.out.println("errors: " + SemanticAnalyzer.semanticErrors);
 
                     for (int num : analyzer.getErrorLines()) {
                         try {
@@ -632,6 +632,8 @@ public class Editor extends JFrame {
                             JOptionPane.showMessageDialog(rootPane, "Error: something happened while highlighting error lines." + "\n" + e.getMessage());
                         }
                     }
+
+                    Editor.console.setText(Editor.console.getText() + "\n > Number of errors found: " + analyzer.semanticErrors);
                     System.out.println("Symbol table (single) created: ");
                     for (Map.Entry<String, Data> entry : SymbolTable.flatten(analyzer.getRootTable()).entrySet()) {
                         System.out.println(entry.getValue().getTabularForm());
@@ -650,7 +652,9 @@ public class Editor extends JFrame {
                 }
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(rootPane, "Oops! Exception triggered\n" + e.getMessage());
+            JOptionPane.showMessageDialog(rootPane, "Oops! Exception caught: "
+                    + "\n" + e.getClass().toString()
+                    + "\n" + e.getMessage());
             e.printStackTrace();
         }
     }

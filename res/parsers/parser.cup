@@ -50,7 +50,7 @@ non terminal Node Instruccion,Llamado,Comparison,RelationalOper,ExprIncDec,Incre
 non terminal Node Block,Loops,Conditional,ForStmt,WhileStmt,IfStmt,SwitchStmt,ForExpr,Break,CaseExpr,Case,Other;
 non terminal Node Expression,ArithmeticExpr,Factor,Term,Contenido,PrintParam,Return,AndOperator,OrOperator;
 non terminal Node Print,FunctionCall,Parametros,Param,ReturnExpr,Functions,Lectura,AddOrSubstract,MultiplyOrDivide;
-non terminal Node VarDeclare,VarInit,VarDeclarationList,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
+non terminal Node VarDeclarationList,VarDeclarationPart,Identifier,Literals,StringLiterals,NumLiterals,BooleanLiterals;
 
 precedence left  SUMA,MENOS;
 precedence left  MULT,DIV,MOD;
@@ -86,7 +86,7 @@ Statements                  ::= DO BodyList:bdl END
                                 {: RESULT = bdl; :}
                                 |
                                 DO END
-                                {: RESULT = new Node("null"); :}
+                                {: RESULT = new Node(" "); :}
                                 |
                                 error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END;
 
@@ -116,11 +116,14 @@ BodyPart                    ::= Block:bq
                                 |
                                 error {: parser.report_error("start of expression.","ILLEGAL"); :} BodyPart;
 
-Instruccion                 ::= VarDeclare:vd
-                                {: RESULT = vd; :}
-                                |
-                                VarInit:vi
-                                {: RESULT = vi; :}
+Instruccion                 ::= VarDeclarationList:vdl
+                                {:
+                                    String type = vdl.getData().getType();
+                                    for (Node decl : vdl.getChildren()) {
+                                        decl.getChildren().get(0).getData().setType(type);
+                                    }
+                                    RESULT = vdl;
+                                :}
                                 |
                                 Llamado:l
                                 {: RESULT = l; :}
@@ -179,23 +182,20 @@ Other                       ::= OTHER
                                     RESULT = new Node(new Data(parser.currentSymbol),"OTHER");
                                 :};
 
-VarDeclare                  ::= VarDeclarationList:vdl
+VarDeclarationList          ::= VarDeclarationList:vdl COMA VarDeclarationPart:vp
+                                {: RESULT = vdl.add(vp); :}
+                                |
+                                Type:tp VarDeclarationPart:vdp
                                 {:
-                                    RESULT = vdl;
+                                    RESULT = new Node("declarations", vdp);
+                                    RESULT.getData().setType(tp.label);
                                 :};
 
-VarDeclarationList          ::= VarDeclarationList:vdl COMA Identifier:iden
-                                {:
-                                    iden.getData().setType(vdl.getData().getType());
-                                    RESULT = vdl.add(iden);
-                                :}
+VarDeclarationPart          ::= Identifier:iden
+                                {: RESULT = new Node("declare", iden); :}
                                 |
-                                Type:tp Identifier:iden
-                                {:
-                                    iden.getData().setType(tp.label); //habria que hacer clase Tipo propia?
-                                    RESULT = new Node("declare", iden);
-                                    RESULT.getData().setType(tp.label); //temporal solution so that every child of "declare" updates their type
-                                :};
+                                Identifier:id ASIGNACION Value:val
+                                {: RESULT = new Node("init",id,val); :};
 
 Identifier                  ::= IDENTIFICADOR:id
                                 {:
@@ -205,28 +205,17 @@ Identifier                  ::= IDENTIFICADOR:id
                                     RESULT = new Node(dat, id);
                                 :};
 
-VarInit                     ::= VarDeclare:vd ASIGNACION Value:av
-                                {:
-                                    for (Node declared: vd.getChildren()) {
-                                        declared.getData().setValue(av.getData().getValue());
-                                    }
-                                    RESULT = new Node("init",vd,av);
-                                :}
-                                |
-                                VarDeclare:vd ASIGNACION Lectura:lec
-                                {: RESULT = new Node("init",vd,lec); :};
-
 Value                       ::= Expression:eb
                                 {: RESULT = eb; :}
                                 |
                                 FunctionCall:fc
-                                {: RESULT = fc; :};
+                                {: RESULT = fc; :}
+                                |
+                                Lectura:lec
+                                {: RESULT = lec; :};
 
 Asignacion                  ::= Identifier:iden ASIGNACION Value:val
                                 {: RESULT = new Node("assign",iden,val); :}
-                                |
-                                Identifier:iden ASIGNACION Lectura:lec
-                                {: RESULT = new Node("assign",iden,lec); :}
                                 |
                                 ExprIncDec:update
                                 {: RESULT = update; :};
@@ -258,7 +247,7 @@ FunctionCall                ::= Identifier:id PARIZQ Contenido:cont PARDER
                                 {: RESULT = new Node("function_call",id,cont); :}
                                 |
                                 Identifier:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", id, new Node("parameters",new Node("null"))); :};
+                                {: RESULT = new Node("function_call", id, new Node("parameters",new Node(" "))); :};
 
 Contenido                   ::= Value:val COMA Contenido:cont
                                 {: RESULT = cont.add(val); :}
@@ -274,7 +263,7 @@ Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
 PrintParam                  ::= Value:val
                                 {: RESULT = val; :}
                                 |
-                                {: RESULT = new Node("null"); :};
+                                {: RESULT = new Node(" "); :};
 
 //--------------------------Functions-------------------------------
 
@@ -327,7 +316,7 @@ Parametros                  ::= Parametros:params COMA Param:param
                                 Param:param
                                 {: RESULT = new Node("parameters",param); :}
                                 |
-                                {: RESULT = new Node("parameters",new Node("null")); :};
+                                {: RESULT = new Node("parameters",new Node(" ")); :};
 
 Param                       ::= Type:tp Identifier:id
                                 {:
@@ -372,8 +361,14 @@ ForStmt                     ::= FOR PARIZQ ForExpr:expr PARDER Statements:st
                                 |
                                 FOR error {: parser.report_error("FOR statement declaration","WRONG"); :} Statements;
 
-ForExpr                     ::= VarInit:init PUNTOCOMA Expression:expr PUNTOCOMA ExprIncDec:update
-                                {: RESULT = new Node("structure",init,expr,update); :};
+ForExpr                     ::= VarDeclarationList:vdl PUNTOCOMA Expression:expr PUNTOCOMA ExprIncDec:update
+                                {:
+                                    String type = vdl.getData().getType();
+                                    for (Node decl : vdl.getChildren()) {
+                                        decl.getChildren().get(0).getData().setType(type);
+                                    }
+                                    RESULT = new Node("structure",vdl,expr,update);
+                                :};
 
 WhileStmt                   ::= WHILE PARIZQ Expression:expr PARDER Statements:st
                                 {:

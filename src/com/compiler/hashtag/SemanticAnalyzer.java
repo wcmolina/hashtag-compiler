@@ -55,15 +55,21 @@ public class SemanticAnalyzer {
                         }
                         tableStack.pop();
                         break;
+                    case "declarations":
+                        for (Node declare : node.getChildren()) {
+                            traverse(declare);
+                        }
+                        break;
                     case "init":
-                        checkInitialization(node);
+                        checkInitialization(node, INITIALIZED);
                         break;
                     case "declare":
                         checkDeclaration(node, DECLARED);
                         break;
                     case "parameters":
                         //initialized para que type check no llame a varNotInit error por tener null value
-                        checkDeclaration(node, INITIALIZED);
+                        for (Node param : node.getChildren())
+                            checkDeclaration(param, INITIALIZED);
                         break;
                     case "assign":
                         checkAssignment(node, ASSIGNED);
@@ -125,27 +131,28 @@ public class SemanticAnalyzer {
 
     private void checkDeclaration(Node declare, int context) {
         Data data;
-        for (Node variable : declare.getChildren()) {
-            data = variable.getData();
-            if (!SymbolTable.isInPrevious(tableStack.peek(), data.getLexeme())) {
-                variable.getData().setTable(tableStack.peek());
-                variable.getData().setContext(context);
-                data = variable.getData(); //updated data
-                tableStack.peek().put(data.getLexeme(), data);
-            } else {
-                reportVariableAlreadyDeclared(variable);
-            }
+        Node variable;
+        if (declare.label.equalsIgnoreCase("declare"))
+            variable = declare.getChildren().get(0);
+        else variable = declare;
+
+        data = variable.getData();
+        if (!SymbolTable.isInPrevious(tableStack.peek(), data.getLexeme())) {
+            variable.getData().setTable(tableStack.peek());
+            variable.getData().setContext(context);
+            data = variable.getData(); //updated data
+            tableStack.peek().put(data.getLexeme(), data);
+        } else {
+            reportVariableAlreadyDeclared(variable);
         }
     }
 
-    private void checkInitialization(Node init) {
+    private void checkInitialization(Node init, int context) {
         Node variable, value;
         value = init.getChildren().get(1);
-        //identifier, which is actually a declare node, but it holds info on the type (as well as its children)
         variable = init.getChildren().get(0);
 
-        //adds all variables of 'declare' to the symbol table, if possible
-        checkDeclaration(variable, INITIALIZED);
+        checkDeclaration(variable, context);
 
         //check what kind of expression is this value
         if (value.label.equalsIgnoreCase("function_call")) {
@@ -244,16 +251,20 @@ public class SemanticAnalyzer {
     }
 
     private void checkForStructure(Node struct) {
+        //declarations node
         Node init = struct.getChildren().get(0);
-        Node decl = init.getChildren().get(0);
-        if (decl.getChildren().size() > 1) {
-            reportError(decl.getChildren().get(0), "Too many declarations in this for statement.");
+        Node temp = init.getChildren().get(0);
+        if (init.getChildren().size() > 1) {
+            reportError(temp.getChildren().get(0), "Too many declarations in this for statement.");
         } else {
-            Node temp;
-            if (!(temp = decl.getChildren().get(0)).getData().getType().equalsIgnoreCase("int")) {
-                reportError(temp, "For loop can only by applied to type 'int'.");
+            Node var;
+            if (!(var = temp.getChildren().get(0)).getData().getType().equalsIgnoreCase("int")) {
+                System.out.println("error porque "+var.label+" es tipo: "+var.getData().getType());
+                reportError(var, "For loop can only by applied to type 'int'.");
             } else {
-                checkInitialization(init);
+                if (temp.label.equalsIgnoreCase("init"))
+                    checkInitialization(temp, INITIALIZED);
+                else checkDeclaration(var, DECLARED);
             }
         }
         Node cond = struct.getChildren().get(1);
@@ -309,11 +320,7 @@ public class SemanticAnalyzer {
                 }
             } else {
                 String message = "The expression can't be applied to type: '" + variableType + "'. Expected type: 'int' or 'double'.";
-                if (variable.label.equalsIgnoreCase("declare")) {
-                    reportError(variable.getChildren().get(0), message);
-                } else {
-                    reportError(variable, message);
-                }
+                reportError(variable, message);
             }
         } else if (COMPARISON_OPERATORS.contains(value.label) || LOGICAL_OPERATORS.contains(value.label)) { //boolean expr
             checkConditions(value);
