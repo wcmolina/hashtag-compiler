@@ -204,7 +204,9 @@ public class IntermediateCode {
         propagateLabel = forLabel;
 
         generateCode(forBody, updateLabel);
-        if (!isLastElement) {
+
+        //this if is optional, if it causes problems try removing it.
+        if (!quadrupleList.get(quadrupleList.size() - 1).getOperator().startsWith("goto")) {
             quadruple = new Quadruple("goto ".concat(updateLabel));
             quadrupleList.add(quadruple);
         }
