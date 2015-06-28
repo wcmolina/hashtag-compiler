@@ -26,13 +26,15 @@ public class IntermediateCode {
             new Temporal("$t8", true)));
     ;
     private String propagateLabel;
+    private String nextJump;
 
     public IntermediateCode() {
         quadrupleList = new ArrayList<Quadruple>();
 
         temporalCount = 0;
         labelCount = 0;
-        propagateLabel = "";
+        propagateLabel = nextJump = "";
+
     }
 
     public void generateCode(Node node) {
@@ -41,15 +43,19 @@ public class IntermediateCode {
             Node current = children.get(i);
             switch (current.label.toLowerCase()) {
                 case "if":
-                    if (current.getData().getType().equalsIgnoreCase("if_statement")) generateIf(current);
-                    else generateIfElse(current);
+                    if (current.getData().getType().equalsIgnoreCase("if_statement"))
+                        generateIf(current, i == children.size() - 1);
+                    else generateIfElse(current, i == children.size() - 1);
                     break;
                 case "assign":
                 case "init":
                     generateAssignment(current);
                     break;
                 case "while":
-                    generateWhile(current);
+                    generateWhile(current, i == children.size() - 1);
+                    break;
+                case "for":
+                    generateFor(current, i == children.size() - 1);
                     break;
                 default:
                     generateCode(children.get(i));
@@ -63,29 +69,33 @@ public class IntermediateCode {
         }
     }
 
-    private void generateIf(Node node) {
+    private void generateIf(Node node, boolean isLastElement) {
         checkPropagatedLabel();
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node body = node.getChildren().get(1);
         String ifLabel = generateLabel();
-        String nextLabel = generateLabel();
+        String nextLabel;
+        if (isLastElement) {
+            if (nextJump.isEmpty()) {
+                nextJump = generateLabel();
+                nextLabel = nextJump;
+            } else nextLabel = nextJump;
+
+        } else nextLabel = generateLabel();
+
         if (conditions.label.equalsIgnoreCase("or") || SemanticAnalyzer.COMPARISON_OPERATORS.contains(conditions.label)) {
             generateOr(conditions, ifLabel, nextLabel);
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, nextLabel);
         }
-        propagateLabel = "";
-        if (propagateLabel.isEmpty())
-            propagateLabel = ifLabel;
+        propagateLabel = ifLabel;
         generateCode(body);
 
-        propagateLabel = "";
-        if (propagateLabel.isEmpty())
-            propagateLabel = nextLabel;
+        propagateLabel = nextLabel;
     }
 
-    private void generateIfElse(Node node) {
+    private void generateIfElse(Node node, boolean isLastElement) {
         checkPropagatedLabel();
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
@@ -93,31 +103,34 @@ public class IntermediateCode {
         Node elseBody = node.getChildren().get(2).getChildren().get(0);
         String ifLabel = generateLabel();
         String elseLabel = generateLabel();
-        String nextLabel = generateLabel();
+        String nextLabel;
+        if (isLastElement) {
+            if (nextJump.isEmpty()) {
+                nextJump = generateLabel();
+                nextLabel = nextJump;
+            } else nextLabel = nextJump;
+
+        } else nextLabel = generateLabel();
         if (conditions.label.equalsIgnoreCase("or") || SemanticAnalyzer.COMPARISON_OPERATORS.contains(conditions.label)) {
             generateOr(conditions, ifLabel, elseLabel);
         } else if (conditions.label.equalsIgnoreCase("and")) {
             generateAnd(conditions, ifLabel, elseLabel);
         }
 
-        if (propagateLabel.isEmpty())
-            propagateLabel = ifLabel;
+        propagateLabel = ifLabel;
         generateCode(ifBody);
-        Quadruple quadruple = new Quadruple("goto ".concat(nextLabel)); //aqui deberia de ser goto a la propagarted label
+
+        //jump to next instruction
+        Quadruple quadruple = new Quadruple("goto ".concat(nextLabel));
         quadrupleList.add(quadruple);
 
-        //just in case body is empty
-        propagateLabel = "";
-        if (propagateLabel.isEmpty())
-            propagateLabel = elseLabel;
+        propagateLabel = elseLabel;
         generateCode(elseBody);
 
-        propagateLabel = "";
-        if (propagateLabel.isEmpty())
-            propagateLabel = nextLabel;
+        propagateLabel = nextLabel;
     }
 
-    private void generateWhile(Node node) {
+    private void generateWhile(Node node, boolean isLastElement) {
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node whileBody = node.getChildren().get(1);
@@ -126,9 +139,15 @@ public class IntermediateCode {
         Quadruple quadruple = new Quadruple(startLabel.concat(":"));
         quadrupleList.add(quadruple);
 
-        propagateLabel = "";
         String whileLabel = generateLabel();
-        String nextLabel = generateLabel();
+        String nextLabel;
+        if (isLastElement) {
+            if (nextJump.isEmpty()) {
+                nextJump = generateLabel();
+                nextLabel = nextJump;
+            } else nextLabel = nextJump;
+
+        } else nextLabel = generateLabel();
 
         if (conditions.label.equalsIgnoreCase("or") || SemanticAnalyzer.COMPARISON_OPERATORS.contains(conditions.label)) {
             generateOr(conditions, whileLabel, nextLabel);
@@ -141,9 +160,53 @@ public class IntermediateCode {
         quadruple = new Quadruple("goto ".concat(startLabel));
         quadrupleList.add(quadruple);
 
-        propagateLabel = "";
-        if (propagateLabel.isEmpty())
-            propagateLabel = nextLabel;
+        propagateLabel = nextLabel;
+    }
+
+    private void generateFor(Node node, boolean isLastElement) {
+        checkPropagatedLabel();
+
+        Node structure = node.getChildren().get(0);
+        Node init = structure.getChildren().get(0).getChildren().get(0);
+        Node conditions = structure.getChildren().get(1);
+        Node update = structure.getChildren().get(2);
+        Node forBody = node.getChildren().get(1);
+
+        String startLabel;
+        String forLabel = generateLabel();
+        String nextLabel;
+        String updateLabel = generateLabel();
+
+        if (isLastElement) {
+            if (nextJump.isEmpty()) {
+                nextJump = generateLabel();
+                nextLabel = nextJump;
+            } else nextLabel = nextJump;
+
+        } else nextLabel = generateLabel();
+
+        generateAssignment(init);
+        startLabel = (propagateLabel.isEmpty()) ? generateLabel() : propagateLabel;
+        Quadruple quadruple = new Quadruple(startLabel.concat(":"));
+        quadrupleList.add(quadruple);
+
+        if (conditions.label.equalsIgnoreCase("or") || SemanticAnalyzer.COMPARISON_OPERATORS.contains(conditions.label)) {
+            generateOr(conditions, forLabel, nextLabel);
+        } else if (conditions.label.equalsIgnoreCase("and")) {
+            generateAnd(conditions, forLabel, nextLabel);
+        }
+        quadruple = new Quadruple(updateLabel.concat(":"));
+        quadrupleList.add(quadruple);
+        generateAssignment(update);
+        quadruple = new Quadruple("goto ".concat(startLabel));
+        quadrupleList.add(quadruple);
+
+        propagateLabel = forLabel;
+        generateCode(forBody);
+        quadruple = new Quadruple("goto ".concat(updateLabel));
+        quadrupleList.add(quadruple);
+
+        propagateLabel = nextLabel;
     }
 
     private void checkPropagatedLabel() {
@@ -165,10 +228,6 @@ public class IntermediateCode {
             Quadruple quadruple = new Quadruple("=", generateArithmetic(value), variable.label);
             quadrupleList.add(quadruple);
         }
-    }
-
-    private void generateInitialization(Node init) {
-        //this is tricky, because i can have something like: int x,y,z = 10;
     }
 
     private String generateArithmetic(Node expr) {

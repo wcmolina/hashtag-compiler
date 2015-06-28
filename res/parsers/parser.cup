@@ -616,10 +616,20 @@ BooleanLiterals             ::= TRUE
 //------------------------------- Increment/decrement expressions -------------------------------
 
 ExprIncDec                  ::= Identifier:id Incremento
-                                {: RESULT = new Node("increase", id); :}
+                                {:
+                                    Node increase = new Node("1");
+                                    increase.getData().setType("int");
+                                    increase.getData().setValue(1);
+                                    RESULT = new Node("assign",id, new Node("+",new Node(id.label),increase));
+                                :}
                                 |
                                 Identifier:id Decremento
-                                {: RESULT = new Node("decrease", id); :};
+                                {:
+                                    Node decrease = new Node("1");
+                                    decrease.getData().setType("int");
+                                    decrease.getData().setValue(1);
+                                    RESULT = new Node("assign", id, new Node("-",new Node(id.label),decrease));
+                                :};
 
 Incremento                  ::= SUMA SUMA;
 

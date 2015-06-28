@@ -51,7 +51,7 @@ public class Editor extends JFrame {
         //finally got it working (JSyntaxPane)
         DefaultSyntaxKit.initKit();
         Configuration config = DefaultSyntaxKit.getConfig(HashtagSyntaxKit.class);
-        config.put("DefaultFont", "Consolas 14");
+        config.put("DefaultFont", "Consolas 13");
         editorPane.setContentType("text/hashtag");
         initPopupMenu();
 
