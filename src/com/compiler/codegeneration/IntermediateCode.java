@@ -26,39 +26,39 @@ public class IntermediateCode {
             new Temporal("$t8", true)));
     ;
     private String propagateLabel;
-    private String nextJump;
 
     public IntermediateCode() {
         quadrupleList = new ArrayList<Quadruple>();
 
         temporalCount = 0;
         labelCount = 0;
-        propagateLabel = nextJump = "";
+        propagateLabel = "";
 
     }
 
-    public void generateCode(Node node) {
+    public void generateCode(Node node, String next) {
         ArrayList<Node> children = node.getChildren();
         for (int i = 0; i < children.size(); i++) {
             Node current = children.get(i);
             switch (current.label.toLowerCase()) {
                 case "if":
                     if (current.getData().getType().equalsIgnoreCase("if_statement"))
-                        generateIf(current, i == children.size() - 1);
-                    else generateIfElse(current, i == children.size() - 1);
+                        generateIf(current, next, i == children.size() - 1);
+                    else generateIfElse(current, next, i == children.size() - 1);
                     break;
                 case "assign":
                 case "init":
                     generateAssignment(current);
                     break;
                 case "while":
-                    generateWhile(current, i == children.size() - 1);
+                    generateWhile(current, next, i == children.size() - 1);
                     break;
                 case "for":
-                    generateFor(current, i == children.size() - 1);
+                    generateFor(current, next, i == children.size() - 1);
                     break;
                 default:
-                    generateCode(children.get(i));
+                    System.out.println("no i-code for " + current.label);
+                    generateCode(children.get(i), next);
                     break;
             }
         }
@@ -69,7 +69,7 @@ public class IntermediateCode {
         }
     }
 
-    private void generateIf(Node node, boolean isLastElement) {
+    private void generateIf(Node node, String nextJump, boolean isLastElement) {
         checkPropagatedLabel();
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
@@ -90,12 +90,12 @@ public class IntermediateCode {
             generateAnd(conditions, ifLabel, nextLabel);
         }
         propagateLabel = ifLabel;
-        generateCode(body);
+        generateCode(body, nextLabel);
 
         propagateLabel = nextLabel;
     }
 
-    private void generateIfElse(Node node, boolean isLastElement) {
+    private void generateIfElse(Node node, String nextJump, boolean isLastElement) {
         checkPropagatedLabel();
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
@@ -118,19 +118,19 @@ public class IntermediateCode {
         }
 
         propagateLabel = ifLabel;
-        generateCode(ifBody);
+        generateCode(ifBody, nextLabel);
 
         //jump to next instruction
         Quadruple quadruple = new Quadruple("goto ".concat(nextLabel));
         quadrupleList.add(quadruple);
 
         propagateLabel = elseLabel;
-        generateCode(elseBody);
+        generateCode(elseBody, nextLabel);
 
         propagateLabel = nextLabel;
     }
 
-    private void generateWhile(Node node, boolean isLastElement) {
+    private void generateWhile(Node node, String nextJump, boolean isLastElement) {
 
         Node conditions = node.getChildren().get(0).getChildren().get(0);
         Node whileBody = node.getChildren().get(1);
@@ -156,14 +156,14 @@ public class IntermediateCode {
         }
 
         propagateLabel = whileLabel;
-        generateCode(whileBody);
+        generateCode(whileBody, nextLabel);
         quadruple = new Quadruple("goto ".concat(startLabel));
         quadrupleList.add(quadruple);
 
         propagateLabel = nextLabel;
     }
 
-    private void generateFor(Node node, boolean isLastElement) {
+    private void generateFor(Node node, String nextJump, boolean isLastElement) {
         checkPropagatedLabel();
 
         Node structure = node.getChildren().get(0);
@@ -202,9 +202,12 @@ public class IntermediateCode {
         quadrupleList.add(quadruple);
 
         propagateLabel = forLabel;
-        generateCode(forBody);
-        quadruple = new Quadruple("goto ".concat(updateLabel));
-        quadrupleList.add(quadruple);
+
+        generateCode(forBody, updateLabel);
+        if (!isLastElement) {
+            quadruple = new Quadruple("goto ".concat(updateLabel));
+            quadrupleList.add(quadruple);
+        }
 
         propagateLabel = nextLabel;
     }

@@ -640,7 +640,7 @@ public class Editor extends JFrame {
                     }
                     System.out.println("trying out intermediate code.");
                     IntermediateCode IR = new IntermediateCode();
-                    IR.generateCode(parser.root);
+                    IR.generateCode(parser.root, "");
                     System.out.println(IR.toString());
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + parser.errors);
