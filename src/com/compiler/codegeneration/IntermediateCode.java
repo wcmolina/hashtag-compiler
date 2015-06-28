@@ -57,7 +57,6 @@ public class IntermediateCode {
                     generateFor(current, next, i == children.size() - 1);
                     break;
                 default:
-                    System.out.println("no i-code for " + current.label);
                     generateCode(children.get(i), next);
                     break;
             }

@@ -41,6 +41,11 @@ public class Editor extends JFrame {
     private JFrame treeFrame;
     private boolean contentChanged;
 
+    //pretty printing
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+
     public Editor() {
         initComponents();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -593,6 +598,8 @@ public class Editor extends JFrame {
                     Editor.console.setText("Number of errors: 0\n"
                             + "Finished parsing successfully"
                             + "\n\n> Generating the AST...");
+                    System.out.println(ANSI_GREEN + "Finished parsing successfully" + ANSI_RESET);
+                    System.out.println("\nGenerating the AST...");
 
                     if (!consolePane.isVisible()) {
                         consolePane.setVisible(true);
@@ -618,8 +625,11 @@ public class Editor extends JFrame {
                         treeFrame.getContentPane().add(scroll);
                         treeFrame.setTitle((filePath.isEmpty()) ? "[AST]" : "[AST] - " + filePath);
                         showTreeMenuItem.setEnabled(true);
+                        System.out.println(ANSI_GREEN + "Done!" + ANSI_RESET);
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
+                    System.out.println("\nProceeding to semantic analysis...");
+                    System.out.println("-------------------------------------\n");
                     Editor.console.setText(Editor.console.getText() + "\n\n> Proceeding to semantic analysis...\n");
                     SemanticAnalyzer analyzer = new SemanticAnalyzer();
                     analyzer.traverse(parser.root);
@@ -633,15 +643,24 @@ public class Editor extends JFrame {
                         }
                     }
 
-                    Editor.console.setText(Editor.console.getText() + "\n > Number of errors found: " + analyzer.semanticErrors);
-                    System.out.println("Symbol table (single) created: ");
+                    Editor.console.setText(Editor.console.getText() + "\n> Number of errors found: " + analyzer.semanticErrors);
+                    System.out.println("\nNumber of errors found: " + analyzer.semanticErrors);
+/*                    System.out.println("\nSymbol table (flat) created: ");
                     for (Map.Entry<String, Data> entry : SymbolTable.flatten(analyzer.getRootTable()).entrySet()) {
                         System.out.println(entry.getValue().getTabularForm());
+                    }*/
+
+                    if (analyzer.semanticErrors == 0) {
+                        System.out.println("Generating intermediate code representation...");
+                        IntermediateCode IR = new IntermediateCode();
+                        IR.generateCode(parser.root, "");
+                        System.out.println(IR.toString());
+                        System.out.println(ANSI_GREEN + "Done!" + ANSI_RESET);
+                    } else {
+                        Editor.console.setText(Editor.console.getText() + "\n> Can't proceed to intermediate code generation.");
+                        System.out.println(ANSI_RED + "Can't proceed to intermediate code generation." + ANSI_RESET);
                     }
-                    System.out.println("trying out intermediate code.");
-                    IntermediateCode IR = new IntermediateCode();
-                    IR.generateCode(parser.root, "");
-                    System.out.println(IR.toString());
+
                 } else {
                     Editor.console.setText(Editor.console.getText() + "\nNumber of syntax errors found: " + parser.errors);
                     Editor.console.setText(Editor.console.getText() + "\nNumber of unexpected errors: " + parser.fatal);
