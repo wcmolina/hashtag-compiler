@@ -234,7 +234,7 @@ public class Editor extends JFrame {
         toolsMenu.setText("Tools");
 
         parseMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
-        parseMenuItem.setText("Parse");
+        parseMenuItem.setText("Run");
         parseMenuItem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 parseMenuItemActionPerformed(evt);
@@ -629,7 +629,7 @@ public class Editor extends JFrame {
                         Editor.console.setText(Editor.console.getText() + "\nDone! Go to 'View > Show AST' if you want to visualize the tree.");
                     }
                     System.out.println("\nProceeding to semantic analysis...");
-                    System.out.println("-------------------------------------\n");
+                    System.out.println("----------------------------------\n");
                     Editor.console.setText(Editor.console.getText() + "\n\n> Proceeding to semantic analysis...\n");
                     SemanticAnalyzer analyzer = new SemanticAnalyzer();
                     analyzer.traverse(parser.root);
@@ -645,13 +645,15 @@ public class Editor extends JFrame {
 
                     Editor.console.setText(Editor.console.getText() + "\n> Number of errors found: " + analyzer.semanticErrors);
                     System.out.println("\nNumber of errors found: " + analyzer.semanticErrors);
-/*                    System.out.println("\nSymbol table (flat) created: ");
+                    System.out.println("\nSymbol table (flat) created: ");
                     for (Map.Entry<String, Data> entry : SymbolTable.flatten(analyzer.getRootTable()).entrySet()) {
                         System.out.println(entry.getValue().getTabularForm());
-                    }*/
+                    }
 
                     if (analyzer.semanticErrors == 0) {
-                        System.out.println("Generating intermediate code representation...");
+                        System.out.println("\nGenerating intermediate code representation...");
+                        System.out.println("--------------------------------------------\n");
+                        Editor.console.setText(Editor.console.getText() + "\n\n> Generating intermediate code representation...\n");
                         IntermediateCode IR = new IntermediateCode();
                         IR.generateCode(parser.root, "");
                         System.out.println(IR.toString());
@@ -680,7 +682,7 @@ public class Editor extends JFrame {
 
     // <editor-fold desc="init right click popup menu">
     private void initPopupMenu() {
-        JMenuItem parse = new JMenuItem("Parse");
+        JMenuItem parse = new JMenuItem("Run");
         JMenuItem clear = new JMenuItem("Clear highlights");
         parse.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
         try {

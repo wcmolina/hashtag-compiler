@@ -16,8 +16,9 @@ public class FunctionType {
         signature = dom.concat("->").concat(ran);
     }
 
-    public String getDomain() {
-        return domain;
+    public String[] getDomain() {
+        if (domain.isEmpty()) return new String[0];
+        return domain.split("x");
     }
 
     public void setDomain(String domain) {

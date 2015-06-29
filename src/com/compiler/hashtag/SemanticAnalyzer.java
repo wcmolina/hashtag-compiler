@@ -5,6 +5,7 @@ import com.compiler.ast.FunctionType;
 import com.compiler.ast.Node;
 import com.compiler.ast.SymbolTable;
 import com.compiler.util.RandomUtils;
+import jdk.nashorn.internal.ir.Symbol;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,7 +95,7 @@ public class SemanticAnalyzer {
                         checkSwitchParameter(node.getChildren().get(0));
                         break;
                     case "function_call":
-                        System.out.println("missing function call check!");
+                        checkFunctionCall("", node);
                         break;
                     default:
                         System.out.println("can't recognize node: " + node.label);
@@ -155,11 +156,7 @@ public class SemanticAnalyzer {
         checkDeclaration(variable, context);
 
         //check what kind of expression is this value
-        if (value.label.equalsIgnoreCase("function_call")) {
-            System.out.println("type check function call!");
-        } else {
-            analyzeValue(value, variable);
-        }
+        analyzeValue(value, variable);
     }
 
     private void checkAssignment(Node assign, int context) {
@@ -259,7 +256,6 @@ public class SemanticAnalyzer {
         } else {
             Node var;
             if (!(var = temp.getChildren().get(0)).getData().getType().equalsIgnoreCase("int")) {
-                System.out.println("error porque "+var.label+" es tipo: "+var.getData().getType());
                 reportError(var, "For loop can only by applied to type 'int'.");
             } else {
                 if (temp.label.equalsIgnoreCase("init"))
@@ -324,6 +320,8 @@ public class SemanticAnalyzer {
             }
         } else if (COMPARISON_OPERATORS.contains(value.label) || LOGICAL_OPERATORS.contains(value.label)) { //boolean expr
             checkConditions(value);
+        } else if (value.label.equalsIgnoreCase("function_call")) {
+            checkFunctionCall(variableType, value);
         } else {
             if (value.getData().getToken().equalsIgnoreCase("identifier")) { //if true, find the id through scopes and get its type.
                 checkIdentifier(value, variableType);
@@ -345,6 +343,51 @@ public class SemanticAnalyzer {
             Node left = node.getChildren().get(1);
             checkExpression(right, typeRequired);
             checkExpression(left, typeRequired);
+        }
+    }
+
+    private void checkFunctionCall(String typeRequired, Node functionCall) {
+        SymbolTable root = getRootTable();
+        SymbolTable functions = root.getChildren().get(0);
+
+        Node functionToCall = functionCall.getChildren().get(0);
+        Node parameters = functionCall.getChildren().get(1);
+
+        Data functionData;
+
+        if ((functionData = functions.getFunctionValue(functionToCall.label)) != null) {
+            FunctionType functionType = (FunctionType) functionData.getValue();
+            String type = functionType.getRange();
+            if (!type.equalsIgnoreCase(typeRequired) && !typeRequired.isEmpty()) {
+                functionToCall.getData().setType(type);
+                reportTypeMismatch(functionToCall, typeRequired);
+            } else {
+                //check parameters
+                String[] domain = functionType.getDomain();
+                if (domain.length == parameters.getChildren().size()) {
+                    Node current;
+                    for (int i = 0; i < domain.length; i++) {
+                        current = parameters.getChildren().get(i);
+                        if (current.label.equalsIgnoreCase("function_call")) {
+                            checkFunctionCall(domain[i], current);
+                        } else if (current.getData().getToken().equalsIgnoreCase("identifier")) {
+                            checkIdentifier(current, domain[i]);
+                        } else if (ARITHMETIC_OPERATORS.contains(current.label)) {
+                            checkExpression(current, domain[i]);
+                        } else if (LOGICAL_OPERATORS.contains(current.label) || COMPARISON_OPERATORS.contains(current.label)) {
+                            checkConditions(current);
+                        } else if (!current.getData().getType().equalsIgnoreCase(domain[i])) {
+                            reportTypeMismatch(current, domain[i]);
+                        }
+                    }
+                } else {
+                    String message = "Wrong number of parameters. The function you are calling needs " + domain.length + ".";
+                    reportError(functionToCall, message);
+                }
+            }
+        } else {
+            String message = "Function '" + functionToCall.label + "' has not been declared.";
+            reportError(functionToCall, message);
         }
     }
 

@@ -295,9 +295,9 @@ public class IntermediateCode {
         }
     }
 
-    private String generateTemporal() {
+/*    private String generateTemporal() {
         return "$t" + (++temporalCount);
-    }
+    }*/
 
     private String generateFreeTemporal() {
         for (Temporal temporal : TEMPORALS) {

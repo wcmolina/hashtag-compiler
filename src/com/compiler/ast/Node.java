@@ -129,6 +129,7 @@ public class Node {
 
     public String toString(String prefix, boolean isTail) {
         if (this.label.equalsIgnoreCase("body")
+                || this.label.equalsIgnoreCase("parameters")
                 || SemanticAnalyzer.ARITHMETIC_OPERATORS.contains(this.label)
                 || SemanticAnalyzer.LOGICAL_OPERATORS.contains(this.label)
                 || SemanticAnalyzer.COMPARISON_OPERATORS.contains(this.label))

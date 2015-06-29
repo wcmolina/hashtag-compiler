@@ -86,7 +86,7 @@ Statements                  ::= DO BodyList:bdl END
                                 {: RESULT = bdl; :}
                                 |
                                 DO END
-                                {: RESULT = new Node(" "); :}
+                                {: RESULT = new Node(""); :}
                                 |
                                 error {: parser.report_error("block declaration syntax. Unmatched 'do' 'end' tokens.","WRONG"); :} BodyList END;
 
@@ -202,6 +202,7 @@ Identifier                  ::= IDENTIFICADOR:id
                                     parser.currentSymbol = (JavaSymbol)CUP$Parser$stack.peek();
 
                                     Data dat = new Data(parser.currentSymbol.getLexeme(), "IDENTIFIER", null, parser.currentSymbol.getLine(), parser.currentSymbol.getColumn());
+                                    dat.setType("identifier");
                                     RESULT = new Node(dat, id);
                                 :};
 
@@ -247,7 +248,7 @@ FunctionCall                ::= Identifier:id PARIZQ Contenido:cont PARDER
                                 {: RESULT = new Node("function_call",id,cont); :}
                                 |
                                 Identifier:id PARIZQ PARDER
-                                {: RESULT = new Node("function_call", id, new Node("parameters",new Node(" "))); :};
+                                {: RESULT = new Node("function_call", id, new Node("parameters",new Node(""))); :};
 
 Contenido                   ::= Value:val COMA Contenido:cont
                                 {: RESULT = cont.add(val); :}
@@ -263,7 +264,7 @@ Print                       ::= PRINT PARIZQ PrintParam:pp PARDER
 PrintParam                  ::= Value:val
                                 {: RESULT = val; :}
                                 |
-                                {: RESULT = new Node(" "); :};
+                                {: RESULT = new Node(""); :};
 
 //--------------------------Functions-------------------------------
 
@@ -316,7 +317,7 @@ Parametros                  ::= Parametros:params COMA Param:param
                                 Param:param
                                 {: RESULT = new Node("parameters",param); :}
                                 |
-                                {: RESULT = new Node("parameters",new Node(" ")); :};
+                                {: RESULT = new Node("parameters",new Node("")); :};
 
 Param                       ::= Type:tp Identifier:id
                                 {:
@@ -620,7 +621,7 @@ ExprIncDec                  ::= Identifier:id Incremento
                                     Node increase = new Node("1");
                                     increase.getData().setType("int");
                                     increase.getData().setValue(1);
-                                    RESULT = new Node("assign",id, new Node("+",new Node(id.label),increase));
+                                    RESULT = new Node("assign",id, new Node("+",new Node(id.getData(),id.label),increase));
                                 :}
                                 |
                                 Identifier:id Decremento
@@ -628,7 +629,7 @@ ExprIncDec                  ::= Identifier:id Incremento
                                     Node decrease = new Node("1");
                                     decrease.getData().setType("int");
                                     decrease.getData().setValue(1);
-                                    RESULT = new Node("assign", id, new Node("-",new Node(id.label),decrease));
+                                    RESULT = new Node("assign", id, new Node("-",new Node(id.getData(),id.label),decrease));
                                 :};
 
 Incremento                  ::= SUMA SUMA;

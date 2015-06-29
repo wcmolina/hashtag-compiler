@@ -14,11 +14,12 @@ public class SymbolTable extends HashMap<String, Data> {
     private String label = "";
     private String ID = "";
     private ArrayList<SymbolTable> children;
-    private static HashMap<String, Data> singleTable = new HashMap<>();
+    private static HashMap<String, Data> singleTable;
 
     public SymbolTable(SymbolTable prev) {
         this.previous = prev;
         this.children = new ArrayList<>();
+        singleTable = new HashMap<>();
     }
 
     public SymbolTable getPrevious() {
@@ -94,6 +95,16 @@ public class SymbolTable extends HashMap<String, Data> {
             flatten(subTable);
         }
         return singleTable;
+    }
+
+    //used only for getting function keys, they are composed of something like this: suma:intxint->int
+    //for function overload, this would need to return a list of Data
+    public Data getFunctionValue(String functionID) {
+        for (Map.Entry<String, Data> entry : this.entrySet()) {
+            if (entry.getKey().split(":")[0].equalsIgnoreCase(functionID)) ;
+            return entry.getValue();
+        }
+        return null;
     }
 
     @Override

@@ -5,7 +5,7 @@ begin
         i = 0;
         suma = 0;
         
-        if (i < 10) do
+        while (i < 10) do
             suma = suma+i*i;
             i = i+i;
         end
@@ -34,4 +34,5 @@ end
     
     -etiq3:
     print suma
+    end
 }
