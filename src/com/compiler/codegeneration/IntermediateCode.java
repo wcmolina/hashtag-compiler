@@ -29,7 +29,6 @@ public class IntermediateCode {
 
     public IntermediateCode() {
         quadrupleList = new ArrayList<Quadruple>();
-
         temporalCount = 0;
         labelCount = 0;
         propagateLabel = "";
@@ -312,6 +311,10 @@ public class IntermediateCode {
 
     private String generateLabel() {
         return "etiq" + (++labelCount);
+    }
+
+    public ArrayList<Quadruple> getQuadrupleList() {
+        return this.quadrupleList;
     }
 
     @Override

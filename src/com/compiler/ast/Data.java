@@ -106,6 +106,14 @@ public class Data {
         return value;
     }
 
+    public int getDirection() {
+        return this.direction;
+    }
+
+    public void setDirection(int dir) {
+        this.direction = dir;
+    }
+
     public void setValue(Object obj) { //sets the value while updating the type if necessary
         if (obj != null) {
             if (obj instanceof String) {

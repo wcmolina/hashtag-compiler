@@ -32,9 +32,11 @@ public class SemanticAnalyzer {
 
     //while traversing the tree, I lose track of which scope is which, or which one is the current. This stack controls that.
     private Stack<SymbolTable> tableStack;
+    private int offset;
 
     public SemanticAnalyzer() {
         semanticErrors = 0;
+        offset = 0;
         errorsList = new ArrayList<Integer>();
         tableStack = new Stack<SymbolTable>();
     }
@@ -128,6 +130,7 @@ public class SemanticAnalyzer {
 
         //now push the new scope to the stack.
         tableStack.push(current);
+        offset = 0;
     }
 
     private void checkDeclaration(Node declare, int context) {
@@ -141,6 +144,8 @@ public class SemanticAnalyzer {
         if (!SymbolTable.isInPrevious(tableStack.peek(), data.getLexeme())) {
             variable.getData().setTable(tableStack.peek());
             variable.getData().setContext(context);
+            variable.getData().setDirection(offset);
+            prepareOffset(variable.getData().getType());
             data = variable.getData(); //updated data
             tableStack.peek().put(data.getLexeme(), data);
         } else {
@@ -474,6 +479,18 @@ public class SemanticAnalyzer {
         if (data != null) return data;
         else {
             throw new NullPointerException();
+        }
+    }
+
+    private void prepareOffset(String type) {
+        switch (type) {
+            case "int":
+                offset += 4;
+                break;
+            case "char":
+            case "boolean":
+                offset++;
+                break;
         }
     }
 
