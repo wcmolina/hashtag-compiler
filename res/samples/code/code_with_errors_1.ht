@@ -1,0 +1,88 @@
+begin
+
+	do #ERROR: falta token 'mainbegin'
+        int var1 = 8;
+        int var2 = 11 #ERROR: falta token ';'
+        int var3 = 21 #ERROR: falta token ';'
+        boolean b1 = false;
+        int s1 = 3 + 5 + 1 - 5 * 3;
+        string str = "Hola_mundo" ;
+        double db = 0.32;
+
+
+        if () do #ERROR: la condicion del if no puede estar vacia
+            if (var1 == 9) do
+                result = var1+var2/var3-var2;
+            end else do
+                result = var1 - var2 * var3;
+                if (result == 0) do
+                    if (var == 0) do
+                        if (var1 == 9) do
+                            result = var1+var2/var3-var2;
+                        end else do
+                            result = var1 - var2 * var3;
+                            if (result == 0) do
+                                print ( "Dio_0!" );
+                            end
+                        end
+                    end
+                    print ( "Dio_0!" );
+                end
+            end
+        end
+
+        double mult = db * var2;
+        int a,b,c = 0 #ERROR: falta token ';'
+
+        contador = 0;
+
+        while (contador != 5) do
+
+            for (int i = 0; i < 100; i++) #ERROR: falta token 'do'
+                if (i % 7 == 0) do
+                    contador++;
+                end
+            end
+        end
+
+        switch (contador) do
+
+            case 1: do
+                print ( "Encontro solo 1." );
+            end
+			break;
+            case 2: do
+                print ( "Encontro 2." );
+            end
+            break ;
+
+            case 3: #ERROR: falta token 'do'
+                print ( "Encontro 4." );
+            end
+			break;
+            other : do
+                while ( true ) do
+                    if ( true ) do
+                    end
+                end
+            end
+            break ;
+
+        end
+
+        int result;
+        if (var == 0 do #ERROR: falta token ')'
+            if (var1 == 9) do
+                result = var1+var2/var3-var2;
+            end else do
+                result = var1 - var2 * var3;
+                if (result == 0) do
+                    print ( "Dio_0!" );
+                end
+            end
+        end
+
+        b1 = true;
+        print ( "Hola_mundo" );
+    end
+end

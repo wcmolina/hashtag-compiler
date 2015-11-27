@@ -1,0 +1,38 @@
+begin
+    mainbegin do
+        int i;
+        int suma;
+        i = 0;
+        suma = 0;
+        
+        while (i < 10) do
+            suma = suma+i*i;
+            i = i+i;
+        end
+        print(suma);
+    end
+end
+
+{
+    should generate:
+    t1 = 0             -> new Quadruple("=",0,newTemporal())
+    i = t1             -> new Quadruple("=",t1,i)
+    t2 = 0             -> new Quadruple("=",0,tempNuevo())
+    suma = t2          -> new Quadruple("=",t2,suma)
+    
+    -etiq1:
+    if i<10 goto -etiq2
+    goto -etiq3
+    
+    -etiq2:
+    t3 = i*i           -> new Quadruple("*",i,i,tempNuevo())
+    t4 = suma+t3       -> new Quadruple("+",suma,t3,tempNuevo())
+    suma = t4
+    t5 = i+1
+    i = t5
+    goto -etiq1
+    
+    -etiq3:
+    print suma
+    end
+}

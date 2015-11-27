@@ -1,0 +1,145 @@
+begin
+
+    function int suma(int a, int b) do
+        return a + b;
+    end
+
+    #function with no parameters
+    function string saludo() do
+        return "Hola mundo";
+    end
+
+    mainbegin do     # mainbegin do...end
+        int var1 = 8;
+        int var2 = 11;
+        int var3 = 21;
+        boolean b1 = false;
+        int s1 = 3 + 5 + 1 - 5 * 3;
+        string str = "Hola mundo";
+        double db = 0.32;
+
+        #ifception!!
+        if (var == 0) do
+            if (var1 == 9) do
+                result = var1+var2/var3-var2;
+            end else do
+                result = var1-var2*var3;
+                if (result == 0) do
+                    if (var == 0) do
+                        if (var1 == 9) do
+                            result = var1+var2/var3-var2;
+                        end else do
+                            result = var1-var2*var3;
+                            if (result == 0) do
+                                print("Dio 0!");
+                            end
+                        end
+                    end
+                    print("Dio 0!");
+                end
+            end
+        end
+
+        #print(a,b);
+        print(suma(var1,var3));
+        print(str);
+        #print(5);
+        suma (8+9+6,b,"hola");
+
+        double mult = db * var2;
+        int a,b,c = 0;
+
+        contador = 0;
+
+        while (contador != 5) do
+
+            for (int i = 0; i < 100; i++) do
+                if (i % 7 == 0) do
+                    contador++;
+                end
+            end
+        end
+
+        switch (contador) do
+
+            case 1: do
+                print("Encontro solo 1.");
+            end #end_case
+            break ; #break a fuerza en todo case
+
+            case 2: do
+                print("Encontro 2.");
+            end #end_case
+            break ;
+            case 3: do
+                        if (var == 0) do
+                            if (var1 == 9) do
+                                result = var1+var2/var3-var2;
+                            end else do
+                                result = var1 - var2 * var3;
+                                if (result == 0) do
+                                    if (var == 0) do
+                                        if (var1 == 9) do
+                                            result = var1+var2/var3-var2;
+                                        end else do
+                                            result = var1 - var2 * var3;
+                                            if (result == 0) do
+                                                print("Dio 0!" );
+                                            end
+                                        end
+                                    end
+                                    print("Dio 0!");
+                                end
+                            end
+                        end
+                print("Encontro 3.");
+            end
+            break ;
+
+            case 4: do
+                print("Encontro 4.");
+            end
+            break ;
+
+            other: do
+                while (true) do
+                    if (true) do #creo que aqui podria ir un ID tambien
+                    end
+                end
+            end
+            break ;
+
+        end
+
+        if (var1 == var2) do
+
+            for (int i = 0; i < 10; i++) do
+                var2 = var1 + i;
+            end
+            print("Se cambio el valor de var2");
+
+        end
+
+        #------------------comments----------------
+        #real*entero=real
+        #simple comment!
+
+        #------------------comments----------------
+        #coments_no_pueden_tener_espacio_:(--->(por_ahora) ---> edit: ya se puede wohoo
+
+        int result;
+        if (var == 0) do
+            if (var1 == 9) do
+                result = var1+var2/var3-var2;
+            end else do
+                result = var1 - var2 * var3;
+                if (result == 0) do
+                    print("Dio 0!");
+                end
+            end
+        end
+
+        b1 = true;
+        print("Hola mundo");
+    end
+end

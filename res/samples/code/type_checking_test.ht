@@ -1,0 +1,10 @@
+begin
+
+    mainbegin do
+        int var1 = 8;
+        int var2 = 11;
+        int var3 = 21;
+        boolean b1 = false;
+		int test = variable;
+    end
+end
